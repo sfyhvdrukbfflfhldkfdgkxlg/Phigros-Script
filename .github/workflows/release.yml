@@ -107,9 +107,9 @@ jobs:
                   result = subprocess.run([str(candidates[0]), "verify", "--print-certs", path],
                                           capture_output=True, text=True, timeout=30, check=True)
                   print("Signature verification for " + path + ":\n" + result.stdout[:8000])
-                  fingerprints = re.findall(r"(?im)^Signer[^\n]*?certificate SHA-256 digest:\s*([0-9a-f]{64})\s*$", result.stdout)
+                  fingerprints = re.findall(r"(?im)^(?:V[\d.]+ )?Signer[^\n]*?certificate SHA-256 digest:\s*([0-9a-f]{64})\s*$", result.stdout)
                   assert fingerprints, "APK signer certificate not found"
-                  return sorted(x.lower() for x in fingerprints)
+                  return sorted({x.lower() for x in fingerprints})
               old = certificate("previous/Phigros-Script-v0.1.1.apk")
               new = certificate("dist/Phigros-Script-v0.1.2.apk")
               if old == new:
