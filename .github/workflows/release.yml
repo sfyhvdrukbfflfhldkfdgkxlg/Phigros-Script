@@ -1,4 +1,4 @@
-name: Publish v0.1.1 APK
+name: Publish v0.1.2 APK
 on:
   push:
     branches: [main]
@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-v0.1.1
+  group: release-v0.1.2
   cancel-in-progress: false
 jobs:
   publish:
@@ -19,11 +19,11 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SOURCE_RUN: '37229161509'
-      SOURCE_SHA: 'f3253a67a3afdf1855db73a721bac2b255cf605f'
-      ARTIFACT_ID: '11313108238'
-      ARCHIVE_SHA256: 83081b35ba4fe5d1828ab3f35742bc2e3ffc3886388555d0d6b6d0c59c7bce8b
-      RELEASE_TAG: v0.1.1
+      SOURCE_RUN: '37231779580'
+      SOURCE_SHA: '1381051f51606e7f47275e45a894faf8c1d52cd4'
+      ARTIFACT_ID: '11313831752'
+      ARCHIVE_SHA256: f397dbb88e8743a70e6898a5ebf7fddaa20d2bee0d1e3b1124b792e2e0ed1f77
+      RELEASE_TAG: v0.1.2
     steps:
       - name: Verify tested build and unused release tag
         run: |
@@ -79,7 +79,7 @@ jobs:
               assert len(files) == 1 and files[0].filename == "app-debug.apk"
               assert 0 < files[0].file_size <= 128 * 1024 * 1024
               apk = archive.read(files[0])
-          target = output / "Phigros-Script-v0.1.1.apk"
+          target = output / "Phigros-Script-v0.1.2.apk"
           target.write_bytes(apk)
           with ZipFile(target) as package:
               assert "AndroidManifest.xml" in package.namelist()
@@ -87,35 +87,69 @@ jobs:
           print("Verified original APK archive.")
           PY
           cd dist
-          sha256sum Phigros-Script-v0.1.1.apk > SHA256SUMS.txt
+          sha256sum Phigros-Script-v0.1.2.apk > SHA256SUMS.txt
+      - name: Inspect update signing identity
+        run: |
+          mkdir previous
+          gh release download v0.1.1 --repo "$GITHUB_REPOSITORY" \
+            --pattern Phigros-Script-v0.1.1.apk --dir previous
+          python3 - <<'PY'
+          import os, re, subprocess
+          from pathlib import Path
+          root = Path(os.environ.get("ANDROID_HOME", "/usr/local/lib/android/sdk"))
+          candidates = sorted(root.glob("build-tools/*/apksigner"), reverse=True)
+          note = Path("signing-note.md")
+          if not candidates:
+              note.write_text("\n未能在发布环境核对新旧签名；若安装器报告签名冲突，请先保存校准信息再处理旧版本。\n")
+              print("SIGNING_COMPARISON=unavailable")
+          else:
+              def certificate(path):
+                  result = subprocess.run([str(candidates[0]), "verify", "--print-certs", path],
+                                          capture_output=True, text=True, timeout=30, check=True)
+                  fingerprints = re.findall(r"Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F]+)", result.stdout)
+                  assert fingerprints, "APK signer certificate not found"
+                  return sorted(x.lower() for x in fingerprints)
+              old = certificate("previous/Phigros-Script-v0.1.1.apk")
+              new = certificate("dist/Phigros-Script-v0.1.2.apk")
+              if old == new:
+                  note.write_text("\n已核对：此 APK 与 v0.1.1 的签名证书一致，可正常尝试覆盖安装。\n")
+                  print("SIGNING_COMPARISON=match")
+              else:
+                  note.write_text("\n**安装说明：此 APK 与 v0.1.1 的调试签名不同，不能直接覆盖安装。请先记下校准和曲名别名，再卸载旧版、安装此版并重新扫描谱库。卸载会清除旧版应用的设置与诊断，不会卸载 Phigros。**\n")
+                  print("SIGNING_COMPARISON=different")
+              print("New APK signer SHA256: " + ",".join(new))
+          PY
       - name: Create draft and upload APK
         run: |
           cat > release-notes.md <<'NOTES'
-          ## Phigros Script v0.1.1（实验版）
+          ## Phigros Script v0.1.2（诊断版）
 
-          下载 **Phigros-Script-v0.1.1.apk** 后安装，无需解压。
+          下载 **Phigros-Script-v0.1.2.apk** 安装，无需解压。
 
-          - 默认检测左上角暂停图标，连续新截图确认后双击暂停，在暂停菜单中识别曲名/难度并加载谱面。
-          - 确认“继续 / Resume / Continue”按钮后恢复，从新的移动音符画面重新对齐，不沿用暂停前时钟。
-          - 改善同一行曲名与难度、IN15 连写及较长曲名的单字符 OCR 错误匹配；扩大对齐范围。
-          - 支持校准暂停图标搜索区域、双击间隔，或关闭先暂停功能。“只识别，不点击”模式仍不会自动点击菜单。
-          - 区分系统无障碍开关与服务连接状态，保护初始窗口读取并清理解绑状态；新增“无障碍自查 / 复制诊断”。
+          此版本用于排查无障碍“连接后被系统移除启用状态”的情况，**尚未确认 vivo V2505A / Android 17 上自动关闭的根因，不宣称已经修复**。
 
-          若退出设置后无障碍仍自动关闭，请复制诊断提供手机型号、Android版本及日志。已修正状态误判并加入异常防护，但尚未确认具体设备上开关自动关闭的根因。
+          - 新增“记录无障碍关闭原因（Shizuku）”：用户主动开始一次约 30 秒的只读采集，然后在打开的设置中重新开启本应用无障碍，退出设置回到应用。
+          - 采集 20 秒系统日志，仅保留匹配本应用包名/UID 的无障碍、权限或进程生命周期信息，并读取本应用所属用户的两项 AppOps 前后结果。
+          - 远程报告最多 48 KiB，命令与读取有时间限制，读取失败、未知命令、超时、截断会注明。无匹配日志或 AppOps allow/default 不能排除系统策略。
+          - 结果只存本机，不会自动上传。匹配行可能提及其他应用，请先查看再复制。
+          - 增加系统无障碍设置变化记录、系统版本与安装来源，提前记录初始化崩溃。保留 v0.1.1 的左上角双击暂停、识别谱面、恢复后重新对齐流程。
 
-          **92 项单元测试、Android lint 和 APK 构建通过；尚未真机验证，不能保证所有布局的识别率或全连。此 APK 使用调试签名。**
+          使用：连接 Shizuku → 记录无障碍关闭原因 → 开始并打开设置 → 开启服务后返回 → 等待“系统诊断采集结束” → 无障碍自查 / 复制诊断。
 
-          APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37229161509)，源码提交为 f3253a67a3afdf1855db73a721bac2b255cf605f。发布标签另含发布工作流更新；工作流会校验其余文件与该构建源码完全一致。SHA256SUMS.txt 可校验下载完整性。
+          **104 项单元测试、Android lint 和 APK 构建通过；系统日志采集尚未在该真机验证。此 APK 使用调试签名。**
+
+          APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37231779580)，源码提交为 1381051f51606e7f47275e45a894faf8c1d52cd4。发布标签另含发布工作流更新；工作流会校验其余文件与该构建源码完全一致。SHA256SUMS.txt 可校验下载完整性。
           NOTES
+          cat signing-note.md >> release-notes.md
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "Phigros Script v0.1.1（实验版）" \
+            --title "Phigros Script v0.1.2（实验版）" \
             --notes-file release-notes.md \
             --draft --prerelease
           gh release upload "$RELEASE_TAG" \
-            dist/Phigros-Script-v0.1.1.apk dist/SHA256SUMS.txt \
+            dist/Phigros-Script-v0.1.2.apk dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY"
       - name: Verify assets and publish
         run: |
@@ -130,7 +164,7 @@ jobs:
           assert release["draft"] and release["prerelease"]
           assert release["target_commitish"] == os.environ["GITHUB_SHA"]
           assets = {x["name"]: x for x in release["assets"]}
-          expected = {"Phigros-Script-v0.1.1.apk", "SHA256SUMS.txt"}
+          expected = {"Phigros-Script-v0.1.2.apk", "SHA256SUMS.txt"}
           assert set(assets) == expected
           for name in expected:
               asset = assets[name]
