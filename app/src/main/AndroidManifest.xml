@@ -7,7 +7,7 @@
         <package android:name="com.PigeonGames.Phigros" />
         <package android:name="moe.shizuku.privileged.api" />
     </queries>
-    <application android:label="Phigros Script"
+    <application android:name=".PhigrosApplication" android:label="Phigros Script"
         android:theme="@style/AppTheme" android:allowBackup="false"
         android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true">

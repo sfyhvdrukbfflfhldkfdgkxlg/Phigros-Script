@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -28,6 +29,7 @@ import io.github.phiscript.assets.ApkAccess
 import io.github.phiscript.assets.ChartLibrary
 import io.github.phiscript.capture.CaptureService
 import io.github.phiscript.input.TouchService
+import io.github.phiscript.input.AccessibilityStatus
 import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
@@ -35,6 +37,8 @@ class MainActivity : ComponentActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var logView: TextView
     private lateinit var statusView: TextView
+    private lateinit var accessibilityView: TextView
+    private var nextAccessCheck = 0L
     private var scanning = false
     private var preview = true
     private val preferences by lazy { AppSettings(this) }
@@ -65,6 +69,11 @@ class MainActivity : ComponentActivity() {
                 library != null -> "谱库就绪 · " + library.snapshot.versionName +
                     " · " + library.locations.size + " 个难度"
                 else -> "等待扫描 Phigros 安装包"
+            }
+            val now = android.os.SystemClock.uptimeMillis()
+            if (now >= nextAccessCheck) {
+                accessibilityView.text = AccessibilityStatus.read(this@MainActivity).summary
+                nextAccessCheck = now + 2000
             }
             logView.text = RuntimeState.logText().ifBlank { "运行记录会显示在这里。" }
             handler.postDelayed(this, 500)
@@ -104,15 +113,17 @@ class MainActivity : ComponentActivity() {
         text("Phigros Script", 28f)
         text("从已安装的游戏读取谱面，在手机上识别和演奏。")
         statusView = text("", 16f)
+        accessibilityView = text(AccessibilityStatus.read(this).summary, 14f)
         button("扫描本机谱库") { scan() }
         button("开启无障碍触控") {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
+        button("无障碍自查 / 复制诊断") { accessibilityHelp() }
         button("连接 Shizuku（读取受限时使用）") {
             try { ApkAccess.requestPermission() }
             catch (e: Exception) { message("Shizuku：" + e.message) }
         }
-        text("先使用“只识别”检查曲名、难度与时间对齐。自动演奏需要无障碍权限。")
+        text("自动演奏：进入歌曲 → 双击暂停 → 识别谱面 → 恢复并对齐。只识别模式不会点击暂停或恢复，可手动操作。")
         button("只识别，不点击") { startSession(true) }
         button("开始自动演奏") { startSession(false) }
         button("停止") {
@@ -121,7 +132,7 @@ class MainActivity : ComponentActivity() {
                     .setAction(CaptureService.ACTION_STOP))
         }
         text("运行时保持游戏横屏。通知栏可停止；启用无障碍后，音量减键也可停止。")
-        button("校准识别区域与延迟") { calibration() }
+        button("校准暂停键、识别区域与延迟") { calibration() }
         button("修正曲名识别") { editAlias() }
         text("这是实验版。部分开头或演出谱面无法视觉对齐；无障碍触控不能保证全连。")
         logView = text("", 12f).apply { setTextIsSelectable(true) }
@@ -158,7 +169,7 @@ class MainActivity : ComponentActivity() {
         try { preferences.snapshot() }
         catch (e: Exception) { message("校准参数错误：" + e.message); return }
         if (!onlyRecognize && TouchService.current == null) {
-            message("请先开启 Phigros 多指触控无障碍服务")
+            message(AccessibilityStatus.read(this).summary + "；请在设置中确认后返回")
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
             return
         }
@@ -176,9 +187,16 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(8), dp(20), 0)
         }
+        val pauseFirst = CheckBox(this).apply {
+            text = "进入歌曲后双击暂停，再恢复并对齐"
+            isChecked = preferences.flag("pauseBeforeAlign", true)
+        }
+        layout.addView(pauseFirst)
         val fields = linkedMapOf<String, EditText>()
         val definitions = listOf(
             Triple("view", "玩法视口 x,y,宽,高", "0,0,1,1"),
+            Triple("pauseRegion", "暂停图标搜索区域 x,y,宽,高", "0,0,0.18,0.24"),
+            Triple("doubleTapInterval", "双击暂停的间隔（毫秒，80–300）", "140"),
             Triple("title", "曲名识别区域 x,y,宽,高", "0,0,1,1"),
             Triple("difficulty", "当前难度区域 x,y,宽,高", "0,0,1,1"),
             Triple("captureLag", "截图延迟补偿（毫秒）", "0"),
@@ -195,7 +213,8 @@ class MainActivity : ComponentActivity() {
         }
         layout.addView(TextView(this).apply {
             text = "区域使用屏幕比例，例如下半屏为 0,0.5,1,0.5。玩法视口不含黑边。" +
-                "选曲页同时出现多种难度时，需要限制到当前难度区域。"
+                "暂停图标默认在左上角搜索；右上角可设 0.82,0,0.18,0.24。" +
+                "应用点击实际检测到的图标中心。暂停后从“继续/Resume”文字定位恢复按钮。"
         })
         val dialog = AlertDialog.Builder(this).setTitle("设备校准")
             .setView(ScrollView(this).apply { addView(layout) })
@@ -203,7 +222,7 @@ class MainActivity : ComponentActivity() {
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 try {
-                    listOf("view", "title", "difficulty").forEach {
+                    listOf("view", "title", "difficulty", "pauseRegion").forEach {
                         AppSettings.rect(fields.getValue(it).text.toString())
                     }
                     listOf("captureLag", "touchOffset").forEach {
@@ -211,6 +230,10 @@ class MainActivity : ComponentActivity() {
                             "延迟范围为 -500 到 500 毫秒"
                         }
                     }
+                    require(fields.getValue("doubleTapInterval").text.toString().trim().toInt() in 80..300) {
+                        "双击间隔范围为 80 到 300 毫秒"
+                    }
+                    preferences.saveFlag("pauseBeforeAlign", pauseFirst.isChecked)
                     fields.forEach { (key, field) -> preferences.save(key, field.text.toString().trim()) }
                     dialog.dismiss()
                     message("已保存，下次启动识别时生效")
@@ -240,6 +263,26 @@ class MainActivity : ComponentActivity() {
             }.show()
     }
 
+    private fun accessibilityHelp() {
+        val report = Diagnostics.report(this)
+        val guidance = "如果系统开关仍开着但未连接，可关闭再开启本服务。" +
+            "如果系统提示受限制的设置，在应用详情中允许；若系统自动关闭，请复制诊断查看异常。" +
+            "后台或省电限制需按设备设置检查，应用不会自动修改系统开关。\n\n"
+        AlertDialog.Builder(this).setTitle("无障碍自查").setMessage(guidance + report)
+            .setNeutralButton("复制诊断") { _, _ ->
+                getSystemService(android.content.ClipboardManager::class.java)
+                    .setPrimaryClip(android.content.ClipData.newPlainText("Phigros Script 诊断", report))
+                Toast.makeText(this, "诊断已复制", Toast.LENGTH_SHORT).show()
+            }
+            .setPositiveButton("系统设置") { _, _ -> startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+            .setNegativeButton("关闭", null).show()
+    }
+    override fun onResume() {
+        super.onResume()
+        if (::accessibilityView.isInitialized)
+            accessibilityView.text = AccessibilityStatus.read(this).summary
+        nextAccessCheck = 0L
+    }
     private fun message(value: String) {
         RuntimeState.log(value)
         Toast.makeText(this, value, Toast.LENGTH_LONG).show()

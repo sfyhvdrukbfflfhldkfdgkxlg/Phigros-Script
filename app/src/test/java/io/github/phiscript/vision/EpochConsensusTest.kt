@@ -37,4 +37,22 @@ class EpochConsensusTest {
         assertNull(clock.observe(10_050.0, 11_240))
         assertEquals(1, clock.size)
     }
+
+    @Test fun frozenChartCannotLockEvenWithWideEpochTolerance() {
+        val clock = EpochConsensus(maximumSpreadMs = 1000.0)
+        for (i in 0..30) assertNull(clock.observe(10_000.0 + i * 80, 11_000L + i * 80))
+    }
+    @Test fun largerRequestedConsensusCanActuallyComplete() {
+        val clock = EpochConsensus(requiredFrames = 10)
+        for (i in 0 until 9) assertNull(clock.observe(10_000.0, 11_000L + i * 80))
+        assertEquals(10_000L, clock.observe(10_000.0, 11_720))
+    }
+    @Test fun countdownMustBeFollowedByFreshMovingFrames() {
+        val clock = EpochConsensus()
+        for (i in 0..8) assertNull(clock.observe(10_000.0 + i * 80, 11_000L + i * 80))
+        assertNull(clock.observe(10_800.0, 11_800))
+        assertNull(clock.observe(10_800.0, 11_880))
+        assertNull(clock.observe(10_800.0, 11_960))
+        assertEquals(10_800L, clock.observe(10_800.0, 12_040))
+    }
 }

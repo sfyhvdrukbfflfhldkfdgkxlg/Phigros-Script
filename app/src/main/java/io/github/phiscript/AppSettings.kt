@@ -8,13 +8,17 @@ data class SessionSettings(
     val titleRoi: RectF,
     val difficultyRoi: RectF,
     val captureLagMs: Int,
-    val touchOffsetMs: Int
+    val touchOffsetMs: Int,
+    val pauseBeforeAlign: Boolean = true,
+    val pauseRoi: RectF = RectF(0f, 0f, 0.18f, 0.24f),
+    val doubleTapIntervalMs: Int = 140
 )
-
 class AppSettings(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     fun text(key: String, fallback: String): String = prefs.getString(key, fallback) ?: fallback
     fun save(key: String, value: String) { prefs.edit().putString(key, value).apply() }
+    fun flag(key: String, fallback: Boolean): Boolean = prefs.getBoolean(key, fallback)
+    fun saveFlag(key: String, value: Boolean) { prefs.edit().putBoolean(key, value).apply() }
     fun alias(id: String): String = text("alias:" + id, "")
     fun setAlias(id: String, value: String) = save("alias:" + id, value.trim())
     fun snapshot() = SessionSettings(
@@ -22,7 +26,10 @@ class AppSettings(context: Context) {
         rect(text("title", "0,0,1,1")),
         rect(text("difficulty", "0,0,1,1")),
         text("captureLag", "0").toInt().also { require(it in -500..500) },
-        text("touchOffset", "0").toInt().also { require(it in -500..500) }
+        text("touchOffset", "0").toInt().also { require(it in -500..500) },
+        flag("pauseBeforeAlign", true),
+        rect(text("pauseRegion", "0,0,0.18,0.24")),
+        text("doubleTapInterval", "140").toInt().also { require(it in 80..300) }
     )
     companion object {
         fun rect(value: String): RectF {

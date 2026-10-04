@@ -5,6 +5,7 @@ import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.content.Intent
 import io.github.phiscript.capture.CaptureService
+import io.github.phiscript.Diagnostics
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -32,8 +33,18 @@ class TouchService : AccessibilityService() {
     private val cancelled = AtomicBoolean(false)
 
     override fun onServiceConnected() {
+        super.onServiceConnected()
+        foregroundPackage = try { rootInActiveWindow?.packageName?.toString() }
+        catch (e: RuntimeException) { Diagnostics.record(this, "读取初始窗口失败", e); null }
         current = this
-        foregroundPackage = rootInActiveWindow?.packageName?.toString()
+        Diagnostics.record(this, "无障碍服务已连接")
+    }
+    override fun onUnbind(intent: Intent?): Boolean {
+        cancelCurrent()
+        foregroundPackage = null
+        if (current === this) current = null
+        Diagnostics.record(this, "无障碍服务解除绑定")
+        return super.onUnbind(intent)
     }
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
@@ -42,10 +53,15 @@ class TouchService : AccessibilityService() {
             if (playing.get() && name != GAME_PACKAGE) cancelled.set(true)
         }
     }
-    override fun onInterrupt() = cancelCurrent()
+    override fun onInterrupt() {
+        cancelCurrent()
+        Diagnostics.record(this, "无障碍服务收到中断")
+    }
     override fun onDestroy() {
         cancelCurrent()
+        foregroundPackage = null
         if (current === this) current = null
+        Diagnostics.record(this, "无障碍服务已销毁")
         super.onDestroy()
     }
     override fun onKeyEvent(event: KeyEvent): Boolean {
@@ -58,6 +74,48 @@ class TouchService : AccessibilityService() {
         return false
     }
     fun cancelCurrent() { cancelled.set(true) }
+
+
+    /** Menu controls share the same single gesture owner as note playback. */
+    fun tapNormalized(x: Float, y: Float, count: Int, intervalMs: Int,
+                      screenWidth: Int, screenHeight: Int, stop: AtomicBoolean) {
+        check(android.os.Looper.myLooper() != android.os.Looper.getMainLooper())
+        require(x.isFinite() && y.isFinite() && x > 0f && x < 1f && y > 0f && y < 1f)
+        require(count in 1..2 && intervalMs in 80..300)
+        check(playing.compareAndSet(false, true)) { "已有触控在运行" }
+        cancelled.set(false)
+        try {
+            repeat(count) {
+                check(!stop.get() && !cancelled.get() && gameForeground) { "菜单操作已停止" }
+                val screen = screenDimensions()
+                check(screen.first == screenWidth && screen.second == screenHeight) { "屏幕尺寸变化，请重新开始" }
+                val point = Point(x * screenWidth, y * screenHeight)
+                val gesture = GestureDescription.Builder().addStroke(
+                    GestureDescription.StrokeDescription(path(point, point), 0, 35, false)).build()
+                val done = CountDownLatch(1)
+                val completed = AtomicBoolean(false)
+                val began = SystemClock.uptimeMillis()
+                check(dispatchGesture(gesture, object : GestureResultCallback() {
+                    override fun onCompleted(gestureDescription: GestureDescription) {
+                        completed.set(true); done.countDown()
+                    }
+                    override fun onCancelled(gestureDescription: GestureDescription) { done.countDown() }
+                }, Handler(mainLooper))) { "Android 拒绝菜单点击" }
+                while (!done.await(20, TimeUnit.MILLISECONDS)) {
+                    check(!stop.get() && !cancelled.get() && gameForeground) { "菜单操作已停止" }
+                    check(SystemClock.uptimeMillis() - began < 1500) { "菜单手势回调超时" }
+                }
+                check(completed.get()) { "菜单手势被系统取消" }
+                if (it + 1 < count) {
+                    val next = began + intervalMs
+                    while (SystemClock.uptimeMillis() < next) {
+                        check(!stop.get() && !cancelled.get() && gameForeground) { "菜单操作已停止" }
+                        Thread.sleep(minOf(10, next - SystemClock.uptimeMillis()).coerceAtLeast(1))
+                    }
+                }
+            }
+        } finally { playing.set(false) }
+    }
 
     /** Blocking worker; uptime epoch and REAL SCREEN pixels. Abort if over 70 ms behind. */
     fun play(chart: Chart, epochUptimeMs: Long, viewport: Viewport,

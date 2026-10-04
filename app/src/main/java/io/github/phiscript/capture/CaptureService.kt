@@ -118,10 +118,11 @@ class CaptureService : Service() {
         if (stop.get() || projection == null || realWidth <= 0 || realHeight <= 0) return
         if (realWidth == sourceWidth && realHeight == sourceHeight && reader != null) return
         val activeProjection = projection ?: return
-        val factor = minOf(1.0, 1280.0 / max(realWidth, realHeight))
+        val factor = minOf(1.0, 1920.0 / max(realWidth, realHeight))
         val w = max(2, (realWidth * factor).roundToInt())
         val h = max(2, (realHeight * factor).roundToInt())
         val next = ImageReader.newInstance(w, h, PixelFormat.RGBA_8888, 2)
+        val packedPixels = ByteBuffer.allocateDirect(w * h * 4)
         next.setOnImageAvailableListener({ source ->
             val image = runCatching { source.acquireLatestImage() }.getOrNull()
                 ?: return@setOnImageAvailableListener
@@ -133,7 +134,8 @@ class CaptureService : Service() {
                     val plane = it.planes[0]
                     require(plane.pixelStride == 4) { "不支持的屏幕像素格式" }
                     val buffer = plane.buffer
-                    val bytes = ByteBuffer.allocateDirect(w * h * 4)
+                    val bytes = packedPixels
+                    bytes.clear()
                     val origin = buffer.position()
                     for (row in 0 until h) {
                         val slice = buffer.duplicate()
