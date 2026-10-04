@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Phigros Script</string>
+    <string name="accessibility_description">在 Phigros 前台时按谱面执行多指触摸，并在离开游戏时停止。不会读取账号或修改游戏存档。</string>
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#2866D9</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">#F4F6FA</item>
+        <item name="android:navigationBarColor">#F4F6FA</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>
