@@ -4,7 +4,9 @@
 
 ## 下载 APK
 
-打开本仓库 **Actions → Build Android APK → 最近一次成功的运行**，在 **Artifacts** 下载 **Phigros-Script-debug**，解压后安装其中的 APK。下载 Actions 附件通常需要登录 GitHub。产物保留 30 天，也可在 Actions 手动运行重新构建。
+打开本仓库 [Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases)，在 v0.1.0 的 Assets 中直接下载 **Phigros-Script-v0.1.0.apk** 安装，无需解压。附带的 SHA256SUMS.txt 可校验下载完整性。
+
+后续开发构建仍可在 **Actions → Build Android APK → 最近一次成功的运行 → Artifacts** 下载 **Phigros-Script-debug**，解压安装。Actions 产物保留 30 天。私有仓库的 Release 和 Actions 下载都需要登录有仓库权限的 GitHub 账号。
 
 这是调试签名的实验版本。云端缓存尽量保留调试签名；缓存被清理后，新包可能需要卸载旧包才能安装。
 

@@ -1,0 +1,138 @@
+name: Publish v0.1.0 APK
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/release.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-v0.1.0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SOURCE_RUN: '37226222749'
+      SOURCE_SHA: '5209d574802a54f13d4f34d69c0941bec553156d'
+      ARTIFACT_ID: '11311908214'
+      ARCHIVE_SHA256: b140bfee460d710a85159a2d9ac0315f73c8dd6bb88c049ff707f4355a96f497
+      RELEASE_TAG: v0.1.0
+    steps:
+      - name: Verify tested build and unused release tag
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > source-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" > source-artifact.json
+          gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$RELEASE_TAG" > existing-tags.json
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > existing-releases.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          def read(name):
+              return json.loads(Path(name).read_text())
+          run = read("source-run.json")
+          artifact = read("source-artifact.json")
+          assert run["repository"]["full_name"] == os.environ["GITHUB_REPOSITORY"]
+          assert run["id"] == int(os.environ["SOURCE_RUN"])
+          assert run["head_sha"] == os.environ["SOURCE_SHA"]
+          assert run["head_branch"] == "main" and run["event"] == "push"
+          assert run["path"] == ".github/workflows/android.yml"
+          assert run["status"] == "completed" and run["conclusion"] == "success"
+          assert artifact["id"] == int(os.environ["ARTIFACT_ID"])
+          assert artifact["name"] == "Phigros-Script-debug" and not artifact["expired"]
+          assert artifact["workflow_run"]["id"] == run["id"]
+          assert artifact["workflow_run"]["head_sha"] == run["head_sha"]
+          assert artifact["digest"] == "sha256:" + os.environ["ARCHIVE_SHA256"]
+          tag = os.environ["RELEASE_TAG"]
+          assert all(x["ref"] != "refs/tags/" + tag for x in read("existing-tags.json")), "Tag already exists"
+          assert all(x["tag_name"] != tag for x in read("existing-releases.json")), "Release already exists"
+          print("Verified successful build, exact artifact and unused tag.")
+          PY
+      - name: Download and verify original APK
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > artifact.zip
+          printf '%s  %s\n' "$ARCHIVE_SHA256" artifact.zip | sha256sum --check -
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          output = Path("dist")
+          output.mkdir()
+          with ZipFile("artifact.zip") as archive:
+              files = [x for x in archive.infolist() if not x.is_dir()]
+              assert len(files) == 1 and files[0].filename == "app-debug.apk"
+              assert 0 < files[0].file_size <= 128 * 1024 * 1024
+              apk = archive.read(files[0])
+          target = output / "Phigros-Script-v0.1.0.apk"
+          target.write_bytes(apk)
+          with ZipFile(target) as package:
+              assert "AndroidManifest.xml" in package.namelist()
+              assert "classes.dex" in package.namelist()
+          print("Verified original APK archive.")
+          PY
+          cd dist
+          sha256sum Phigros-Script-v0.1.0.apk > SHA256SUMS.txt
+      - name: Create draft and upload APK
+        run: |
+          cat > release-notes.md <<'NOTES'
+          ## Phigros Script v0.1.0（实验版）
+
+          Android 本机应用，无需 Root。下载下方 **Phigros-Script-v0.1.0.apk** 后直接安装；无需下载源码压缩包。
+
+          - 读取已安装 Phigros APK/分包里的谱面；读取受限时可使用 Shizuku。
+          - 曲名与 EZ/HD/IN/AT 难度识别、多帧视觉对齐、无障碍多指演奏。
+          - 通知栏或音量减键停止。
+
+          建议先“扫描本机谱库”→“只识别，不点击”，确认识别后再启用无障碍演奏。应用最低 Android 8；手机无线调试启动 Shizuku 一般需要 Android 11 以上。
+
+          **已通过单元测试、Android lint 和 APK 构建，尚未真机验证，不能保证全连或 AP。此 APK 使用调试签名。**
+
+          APK 与[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37226222749)的产物一致，源码提交为 5209d574802a54f13d4f34d69c0941bec553156d。SHA256SUMS.txt 可用于检查下载完整性。
+          NOTES
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$SOURCE_SHA" \
+            --title "Phigros Script v0.1.0（实验版）" \
+            --notes-file release-notes.md \
+            --draft --prerelease
+          gh release upload "$RELEASE_TAG" \
+            dist/Phigros-Script-v0.1.0.apk dist/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY"
+      - name: Verify assets and publish
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > uploaded-releases.json
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          releases = json.loads(Path("uploaded-releases.json").read_text())
+          matches = [x for x in releases if x["tag_name"] == os.environ["RELEASE_TAG"]]
+          assert len(matches) == 1
+          release = matches[0]
+          assert release["draft"] and release["prerelease"]
+          assert release["target_commitish"] == os.environ["SOURCE_SHA"]
+          assets = {x["name"]: x for x in release["assets"]}
+          expected = {"Phigros-Script-v0.1.0.apk", "SHA256SUMS.txt"}
+          assert set(assets) == expected
+          for name in expected:
+              asset = assets[name]
+              source = Path("dist") / name
+              assert asset["state"] == "uploaded"
+              assert asset["size"] == source.stat().st_size
+              assert asset["digest"] == "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+          print("Both release assets verified.")
+          PY
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" > published-tag.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          tag = json.loads(Path("published-tag.json").read_text())
+          assert tag["object"]["type"] == "commit"
+          assert tag["object"]["sha"] == os.environ["SOURCE_SHA"]
+          print("Published tag points to the tested source commit.")
+          PY
