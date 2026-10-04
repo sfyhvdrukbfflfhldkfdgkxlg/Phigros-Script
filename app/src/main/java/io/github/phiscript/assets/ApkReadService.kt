@@ -8,12 +8,14 @@ import java.io.OutputStream
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.exitProcess
 
 /** Shizuku 13+ UserService (not Android Service); no arbitrary package/path/command parameters. */
 @Suppress("unused")
 class ApkReadService(private val context: Context) : IPhigrosApkReader.Stub() {
     private val clientUid = context.applicationInfo.uid
+    private val collectingDiagnostics = AtomicBoolean(false)
     private val writers = ThreadPoolExecutor(2, 2, 15, TimeUnit.SECONDS, ArrayBlockingQueue(4),
         { task -> Thread(task, "PhigrosApkPipe").apply { isDaemon = true } }, ThreadPoolExecutor.AbortPolicy())
     override fun listEntries(versionCode: Long, lastUpdateTime: Long): ParcelFileDescriptor {
@@ -35,6 +37,12 @@ class ApkReadService(private val context: Context) : IPhigrosApkReader.Stub() {
         return pipe { output ->
             checkUnchanged(snapshot); ApkFiles.copyAsset(snapshot, name, maxBytes, output)
         }
+    }
+    override fun collectAccessibilityDiagnostics(): String {
+        checkCaller()
+        check(collectingDiagnostics.compareAndSet(false, true)) { "系统诊断已在采集中。" }
+        try { return AccessibilitySystemCollector.collect(clientUid) }
+        finally { collectingDiagnostics.set(false) }
     }
     override fun destroy() {
         val uid = Binder.getCallingUid()

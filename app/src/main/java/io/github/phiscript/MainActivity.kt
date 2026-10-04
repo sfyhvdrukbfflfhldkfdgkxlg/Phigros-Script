@@ -64,6 +64,7 @@ class MainActivity : ComponentActivity() {
             if (!::statusView.isInitialized) return
             val library = RuntimeState.library
             statusView.text = when {
+                Diagnostics.isCapturing -> "系统诊断采集中 · 约 30 秒后完成"
                 RuntimeState.running.get() -> "识别运行中 · 可在通知栏停止"
                 scanning -> "正在扫描安装包…"
                 library != null -> "谱库就绪 · " + library.snapshot.versionName +
@@ -119,6 +120,7 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
         button("无障碍自查 / 复制诊断") { accessibilityHelp() }
+        button("记录无障碍关闭原因（Shizuku）") { captureAccessibilityFailure() }
         button("连接 Shizuku（读取受限时使用）") {
             try { ApkAccess.requestPermission() }
             catch (e: Exception) { message("Shizuku：" + e.message) }
@@ -142,7 +144,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun scan(after: (() -> Unit)? = null) {
-        if (scanning || RuntimeState.running.get()) {
+        if (scanning || RuntimeState.running.get() || Diagnostics.isCapturing) {
             message("请先停止当前任务")
             return
         }
@@ -164,7 +166,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startSession(onlyRecognize: Boolean) {
-        if (RuntimeState.running.get()) { message("请先停止当前任务"); return }
+        if (RuntimeState.running.get() || Diagnostics.isCapturing) { message("请先等待诊断完成或停止当前任务"); return }
         try { preferences.snapshot() }
         catch (e: Exception) { message("校准参数错误：" + e.message); return }
         if (!onlyRecognize && TouchService.current == null) {
@@ -262,11 +264,33 @@ class MainActivity : ComponentActivity() {
             }.show()
     }
 
+    private fun captureAccessibilityFailure() {
+        if (RuntimeState.running.get() || scanning || Diagnostics.isCapturing) {
+            message("请先等待当前任务完成或停止演奏")
+            return
+        }
+        if (!ApkAccess.isConnected) {
+            message("请先点击“连接 Shizuku”，授权并等待连接后再记录")
+            return
+        }
+        AlertDialog.Builder(this).setTitle("记录无障碍关闭原因")
+            .setMessage("接下来会打开系统无障碍设置。请重新开启本应用的服务，然后退出设置回到这里。\n\n" +
+                "使用 Shizuku 进行一次约 30 秒的只读采集，记录系统中提及本应用或 UID 的无障碍/权限日志，以及本应用的两项 AppOps 查询结果。" +
+                "匹配的系统日志可能包含其他应用名称或标识，复制前可查看内容。结果仅保存在本机，下一次采集会覆盖，不会自动上传。\n\n" +
+                "出现“系统诊断采集结束”后，点“无障碍自查 / 复制诊断”。系统可能不提供撤销来源，采集不保证能找到原因。")
+            .setNegativeButton("取消", null)
+            .setPositiveButton("开始并打开设置") { _, _ ->
+                if (Diagnostics.startSystemCapture(applicationContext)) {
+                    try { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+                    catch (e: RuntimeException) { message("无法打开设置，请手动打开：" + e.message) }
+                } else message("系统诊断已在采集中")
+            }.show()
+    }
     private fun accessibilityHelp() {
         val report = Diagnostics.report(this)
         val guidance = "如果系统开关仍开着但未连接，可关闭再开启本服务。" +
             "如果系统提示受限制的设置，在应用详情中允许；若系统自动关闭，请复制诊断查看异常。" +
-            "后台或省电限制需按设备设置检查，应用不会自动修改系统开关。\n\n"
+            "若已经允许但仍自动关闭，可返回主页点“记录无障碍关闭原因（Shizuku）”采集一次系统线索。\n\n"
         AlertDialog.Builder(this).setTitle("无障碍自查").setMessage(guidance + report)
             .setNeutralButton("复制诊断") { _, _ ->
                 getSystemService(android.content.ClipboardManager::class.java)

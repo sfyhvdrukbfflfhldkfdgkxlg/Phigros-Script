@@ -32,6 +32,10 @@ class TouchService : AccessibilityService() {
     private val playing = AtomicBoolean(false)
     private val cancelled = AtomicBoolean(false)
 
+    override fun onCreate() {
+        super.onCreate()
+        Diagnostics.record(this, "无障碍服务已创建")
+    }
     override fun onServiceConnected() {
         super.onServiceConnected()
         foregroundPackage = try { rootInActiveWindow?.packageName?.toString() }

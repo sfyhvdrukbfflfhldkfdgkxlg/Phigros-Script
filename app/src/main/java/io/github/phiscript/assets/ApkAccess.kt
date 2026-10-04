@@ -42,7 +42,7 @@ object ApkAccess {
         val app = context.applicationContext
         args = Shizuku.UserServiceArgs(ComponentName(app, ApkReadService::class.java))
             .daemon(false).processNameSuffix("phigros_apk_reader").tag("phigros-apk-reader-v1")
-            .version(1).debuggable(false)
+            .version(2).debuggable(false)
         Shizuku.addBinderDeadListener(died, main)
         Shizuku.addRequestPermissionResultListener(permissionResult, main)
         Shizuku.addBinderReceivedListenerSticky(received, main)
@@ -89,6 +89,12 @@ object ApkAccess {
         val descriptor = requireRemote().readAsset(entry, maxBytes, snapshot.versionCode, snapshot.lastUpdateTime)
             ?: throw ApkAccessException("Shizuku 没有返回资源数据。")
         return consume(descriptor, maxBytes)
+    }
+    /** Explicit user action only; the remote runs fixed read-only commands with a time/output limit. */
+    internal fun collectAccessibilityDiagnostics(): String {
+        check(Looper.myLooper() != Looper.getMainLooper())
+        return requireRemote().collectAccessibilityDiagnostics()
+            ?: throw ApkAccessException("系统诊断没有返回结果。")
     }
     private fun requireRemote(): IPhigrosApkReader {
         check(Looper.myLooper() != Looper.getMainLooper()) { "APK reads must run on a background thread." }
