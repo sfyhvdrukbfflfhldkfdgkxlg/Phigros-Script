@@ -20,8 +20,8 @@ class FrameStore : AutoCloseable {
         latest = frame
     }
     @Synchronized fun snapshot(): CapturedFrame? = latest?.let {
-        CapturedFrame(it.bitmap.copy(Bitmap.Config.ARGB_8888, false),
-            it.uptimeMs, it.screenWidth, it.screenHeight)
+        val copy = it.bitmap.copy(Bitmap.Config.ARGB_8888, false) ?: return@let null
+        CapturedFrame(copy, it.uptimeMs, it.screenWidth, it.screenHeight)
     }
     @Synchronized override fun close() {
         closed = true

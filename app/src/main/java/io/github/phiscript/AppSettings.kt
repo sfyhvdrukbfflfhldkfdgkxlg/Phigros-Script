@@ -29,7 +29,7 @@ class AppSettings(context: Context) {
             val n = value.split(',').map { it.trim().toFloat() }
             require(n.size == 4 && n.all { it.isFinite() }) { "区域格式为 x,y,宽,高" }
             require(n[0] >= 0 && n[1] >= 0 && n[2] > 0 && n[3] > 0 &&
-                n[0] + n[2] <= 1.00001f && n[1] + n[3] <= 1.00001f) {
+                n[0] + n[2] <= 1f && n[1] + n[3] <= 1f) {
                 "区域须处于 0 到 1 之间，并且不超出屏幕"
             }
             return RectF(n[0], n[1], n[0] + n[2], n[1] + n[3])

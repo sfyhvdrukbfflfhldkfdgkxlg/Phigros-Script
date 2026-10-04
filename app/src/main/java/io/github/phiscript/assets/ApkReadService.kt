@@ -3,7 +3,6 @@ package io.github.phiscript.assets
 import android.content.Context
 import android.os.Binder
 import android.os.ParcelFileDescriptor
-import android.os.ServiceSpecificException
 import org.json.JSONArray
 import java.io.OutputStream
 import java.util.concurrent.ArrayBlockingQueue
@@ -29,9 +28,9 @@ class ApkReadService(private val context: Context) : IPhigrosApkReader.Stub() {
     }
     override fun readAsset(entry: String?, maxBytes: Int, versionCode: Long, lastUpdateTime: Long): ParcelFileDescriptor {
         checkCaller()
-        val name = entry ?: throw ServiceSpecificException(1, "缺少资源名称。")
+        val name = entry ?: throw IllegalArgumentException("缺少资源名称。")
         try { ApkFiles.validateRead(name, maxBytes) }
-        catch (e: Exception) { throw ServiceSpecificException(1, e.message ?: "资源参数无效。") }
+        catch (e: Exception) { throw IllegalArgumentException(e.message ?: "资源参数无效。") }
         val snapshot = checkedSnapshot(versionCode, lastUpdateTime)
         return pipe { output ->
             checkUnchanged(snapshot); ApkFiles.copyAsset(snapshot, name, maxBytes, output)
@@ -51,7 +50,7 @@ class ApkReadService(private val context: Context) : IPhigrosApkReader.Stub() {
                 if (it.versionCode != versionCode || it.lastUpdateTime != lastUpdateTime)
                     throw ApkAccessException("Phigros 已更新，请重新扫描。")
             }
-        } catch (e: Exception) { throw ServiceSpecificException(2, e.message ?: "无法查询 Phigros 安装信息。") }
+        } catch (e: Exception) { throw IllegalStateException(e.message ?: "无法查询 Phigros 安装信息。") }
     }
     private fun checkUnchanged(snapshot: PackageSnapshot) {
         if (packageSnapshot(context) != snapshot) throw ApkAccessException("Phigros 已更新，请重新扫描。")
@@ -68,7 +67,7 @@ class ApkReadService(private val context: Context) : IPhigrosApkReader.Stub() {
             }
         } catch (e: Exception) {
             runCatching { ends[0].close() }; runCatching { ends[1].close() }
-            throw ServiceSpecificException(3, "资源读取繁忙，请稍后重试。")
+            throw IllegalStateException("资源读取繁忙，请稍后重试。")
         }
         return ends[0]
     }
