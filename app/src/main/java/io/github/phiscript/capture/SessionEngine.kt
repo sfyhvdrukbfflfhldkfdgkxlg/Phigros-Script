@@ -60,6 +60,7 @@ class SessionEngine(
         var height = 0
         var requestedAt = 0L
         var nextOcr = 0L
+        var nonGameplay = false
         var entered = false
         while (!stop.get() && !entered) {
             if (TouchService.current?.gameForeground != true) {
@@ -72,13 +73,15 @@ class SessionEngine(
             frame.use {
                 val hit = detector.observe(it.bitmap, it.uptimeMs)
                 width = it.screenWidth; height = it.screenHeight
-                if (hit != null) {
+                if (hit != null && !nonGameplay) {
                     RuntimeState.log("检测到演奏画面，双击暂停键")
                     control(hit.pauseX, hit.pauseY, 2, width, height)
                     requestedAt = SystemClock.uptimeMillis()
                     entered = true
                 } else if (SystemClock.uptimeMillis() >= nextOcr) {
                     val observation = recognizer.inspect(it.bitmap, library.songs())
+                    nonGameplay = observation.pauseOrResult
+                    if (observation.resultScreen) detector.reset()
                     nextOcr = SystemClock.uptimeMillis() + 650
                     if (pausedAlready.observe(if (observation.pauseMenu != null) "pause" else null, it.uptimeMs)) {
                         RuntimeState.log("已在暂停菜单，开始读取歌曲信息")

@@ -137,7 +137,6 @@ class MainActivity : ComponentActivity() {
         text("这是实验版。部分开头或演出谱面无法视觉对齐；无障碍触控不能保证全连。")
         logView = text("", 12f).apply { setTextIsSelectable(true) }
         ApkAccess.attach(applicationContext) { RuntimeState.log(it) }
-        handler.post(refresh)
         if (Build.VERSION.SDK_INT >= 33)
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
@@ -282,6 +281,12 @@ class MainActivity : ComponentActivity() {
         if (::accessibilityView.isInitialized)
             accessibilityView.text = AccessibilityStatus.read(this).summary
         nextAccessCheck = 0L
+        handler.removeCallbacks(refresh)
+        handler.post(refresh)
+    }
+    override fun onPause() {
+        handler.removeCallbacks(refresh)
+        super.onPause()
     }
     private fun message(value: String) {
         RuntimeState.log(value)
