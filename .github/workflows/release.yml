@@ -31,6 +31,9 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" > source-artifact.json
           gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$RELEASE_TAG" > existing-tags.json
           gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > existing-releases.json
+          gh api "repos/$GITHUB_REPOSITORY/git/trees/$SOURCE_SHA?recursive=1" > tested-tree.json
+          gh api "repos/$GITHUB_REPOSITORY/git/trees/$GITHUB_SHA?recursive=1" > release-tree.json
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" > current-main.json
           python3 - <<'PY'
           import json, os
           from pathlib import Path
@@ -52,7 +55,15 @@ jobs:
           tag = os.environ["RELEASE_TAG"]
           assert all(x["ref"] != "refs/tags/" + tag for x in read("existing-tags.json")), "Tag already exists"
           assert all(x["tag_name"] != tag for x in read("existing-releases.json")), "Release already exists"
-          print("Verified successful build, exact artifact and unused tag.")
+          tested_tree = read("tested-tree.json")
+          release_tree = read("release-tree.json")
+          assert tested_tree["truncated"] is False and release_tree["truncated"] is False
+          def build_inputs(tree):
+              return {x["path"]: (x["type"], x["mode"], x["sha"]) for x in tree["tree"]
+                      if x["type"] != "tree" and x["path"] != ".github/workflows/release.yml"}
+          assert build_inputs(tested_tree) == build_inputs(release_tree), "Build inputs differ from tested source"
+          assert read("current-main.json")["object"]["sha"] == os.environ["GITHUB_SHA"], "Main advanced; stop publication"
+          print("Verified successful build, exact artifact, unchanged build inputs and unused tag.")
           PY
       - name: Download and verify original APK
         run: |
@@ -94,11 +105,12 @@ jobs:
 
           **92 项单元测试、Android lint 和 APK 构建通过；尚未真机验证，不能保证所有布局的识别率或全连。此 APK 使用调试签名。**
 
-          APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37229161509)，源码提交为 f3253a67a3afdf1855db73a721bac2b255cf605f。SHA256SUMS.txt 可校验下载完整性。
+          APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37229161509)，源码提交为 f3253a67a3afdf1855db73a721bac2b255cf605f。发布标签另含发布工作流更新；工作流会校验其余文件与该构建源码完全一致。SHA256SUMS.txt 可校验下载完整性。
           NOTES
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --target "$SOURCE_SHA" \
+            --target "$GITHUB_SHA" \
             --title "Phigros Script v0.1.1（实验版）" \
             --notes-file release-notes.md \
             --draft --prerelease
@@ -116,7 +128,7 @@ jobs:
           assert len(matches) == 1
           release = matches[0]
           assert release["draft"] and release["prerelease"]
-          assert release["target_commitish"] == os.environ["SOURCE_SHA"]
+          assert release["target_commitish"] == os.environ["GITHUB_SHA"]
           assets = {x["name"]: x for x in release["assets"]}
           expected = {"Phigros-Script-v0.1.1.apk", "SHA256SUMS.txt"}
           assert set(assets) == expected
@@ -135,6 +147,6 @@ jobs:
           from pathlib import Path
           tag = json.loads(Path("published-tag.json").read_text())
           assert tag["object"]["type"] == "commit"
-          assert tag["object"]["sha"] == os.environ["SOURCE_SHA"]
-          print("Published tag points to the tested source commit.")
+          assert tag["object"]["sha"] == os.environ["GITHUB_SHA"]
+          print("Published tag contains the verified build inputs and publication workflow.")
           PY
