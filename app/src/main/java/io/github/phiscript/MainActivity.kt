@@ -113,7 +113,7 @@ class MainActivity : ComponentActivity() {
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(5) })
         }
-        text("Phigros Script", 28f)
+        text("Phigros Script · Alpha", 28f)
         text("从已安装的游戏读取谱面，在手机上识别和演奏。")
         statusView = text("", 16f)
         accessibilityView = text(AccessibilityStatus.read(this).summary, 14f)
@@ -139,7 +139,7 @@ class MainActivity : ComponentActivity() {
         text("运行时保持游戏横屏。通知栏可停止；启用无障碍后，音量减键也可停止。")
         button("校准暂停键、识别区域与延迟") { calibration() }
         button("修正曲名识别") { editAlias() }
-        text("这是实验版。部分开头或演出谱面无法视觉对齐；无障碍触控不能保证全连。")
+        text("这是 Alpha 版本。部分开头或演出谱面无法视觉对齐；无障碍触控不能保证全连。")
         logView = text("", 12f).apply { setTextIsSelectable(true) }
         ApkAccess.attach(applicationContext) { RuntimeState.log(it) }
         if (Build.VERSION.SDK_INT >= 33)
