@@ -1,4 +1,4 @@
-name: Publish v0.1.4 Alpha APK
+name: Publish v0.1.5 Alpha APK
 on:
   push:
     branches: [main]
@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-v0.1.4
+  group: release-v0.1.5
   cancel-in-progress: false
 jobs:
   publish:
@@ -19,12 +19,12 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SOURCE_RUN: '37359320873'
-      SOURCE_SHA: '78b3f65c8a2f4ebc60600303af38d7e6f7ce331b'
-      ARTIFACT_ID: '11365788683'
-      ARCHIVE_SHA256: f85d8ef4e8ae1d1ae9ed9aeb6d1d133c721a902fcdc1f342cc7862ce8905fbdd
-      RELEASE_TAG: v0.1.4
-      TEST_COUNT: '151'
+      SOURCE_RUN: '37364699904'
+      SOURCE_SHA: 'e4342ab3ff98750a68e44eb4ebc15b76474febbc'
+      ARTIFACT_ID: '11368291258'
+      ARCHIVE_SHA256: 0a5f74523e34925929dc56224b818a883a9a52510b15094badac8ac1b0822449
+      RELEASE_TAG: v0.1.5
+      TEST_COUNT: '165'
     steps:
       - name: Verify publication inputs are ready
         run: |
@@ -89,7 +89,7 @@ jobs:
               assert len(files) == 1 and files[0].filename == "app-debug.apk"
               assert 0 < files[0].file_size <= 128 * 1024 * 1024
               apk = archive.read(files[0])
-          target = output / "Phigros-Script-v0.1.4.apk"
+          target = output / "Phigros-Script-v0.1.5.apk"
           target.write_bytes(apk)
           with ZipFile(target) as package:
               assert "AndroidManifest.xml" in package.namelist()
@@ -97,7 +97,7 @@ jobs:
           print("Verified original APK archive.")
           PY
           cd dist
-          sha256sum Phigros-Script-v0.1.4.apk > SHA256SUMS.txt
+          sha256sum Phigros-Script-v0.1.5.apk > SHA256SUMS.txt
       - name: Inspect update signing identity
         run: |
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > signing-releases.json
@@ -129,7 +129,7 @@ jobs:
           subprocess.run(["gh", "release", "download", tag, "--repo", os.environ["GITHUB_REPOSITORY"],
                           "--pattern", old_name, "--dir", "previous"], check=True, timeout=90)
           old = certificate(Path("previous") / old_name)
-          new = certificate("dist/Phigros-Script-v0.1.4.apk")
+          new = certificate("dist/Phigros-Script-v0.1.5.apk")
           # This is a permanent migration boundary, not the next release's version.
           migration_allowed = os.environ["RELEASE_TAG"] == "v0.1.3" and previous_version < (0, 1, 3)
           assert old == new or migration_allowed, "Unexpected signing change; refusing publication"
@@ -145,36 +145,36 @@ jobs:
       - name: Create draft and upload APK
         run: |
           cat > release-notes.md <<'NOTES'
-          ## Phigros Script v0.1.4 Alpha（悬浮窗确认与 APK 导入）
+          ## Phigros Script v0.1.5 Alpha（暂停后中央按钮校准）
 
-          下载 **Phigros-Script-v0.1.4.apk** 安装，无需解压。
+          下载 **Phigros-Script-v0.1.5.apk** 安装，无需解压。
 
-          - 悬浮窗显示识别到的曲名和难度，点击“开始演奏”才继续。确认前不会自动点击游戏。
-          - 确认后隐藏悬浮窗，重新核对当前曲目，双击左上角暂停键；已在暂停菜单则直接确认继续按钮。恢复后丢弃旧时钟，按移动音符重新对齐并演奏。
-          - 演奏中手动暂停后重新显示确认流程，再次确认才恢复校准。“悬浮窗只识别”始终不发送触摸。
-          - 新增“导入 Phigros APK 解析谱面”：通过系统文件选择器选择与游戏一致的 APK，在手机内复制、解析并保存谱库，无需 Shizuku 读取权限，也不上传服务器。
-          - 支持同时选择一个基础 APK 及同版本资源分包。APKS/XAPK 请先解压后选择其中 APK。版本不匹配、缺资源或不支持的资源格式会导致解析/对齐失败。
-          - 导入先校验索引并试解析谱面，成功后替换谱库；保留当前与上一代本机副本，请预留存储空间。
-          - 保留 Shizuku 单次启用无障碍、曲名别名、校准与诊断功能。
+          修正脚本进入暂停菜单后不再开始的问题。旧流程必须再次识别完整曲名、难度和“继续 / Resume”文字；新版保留本次已确认曲目，使用校准坐标执行暂停后的开始操作。
 
-          使用：扫描本机谱库或导入 APK → 允许显示在其他应用上层 → 返回并启动悬浮窗识别 → 同意录屏 → 游戏内确认歌曲和难度 → 点击开始演奏。自动演奏仍需要无障碍连接。演奏时窗口隐藏，可用通知栏“停止”或音量减键停止。
+          - 根据设备反馈，开始按钮默认设为屏幕正中间 **0.5,0.5**。
+          - 可在“校准暂停键、识别区域与延迟”修改开始按钮中心和暂停后等待时间，默认等待 **1000 毫秒**。
+          - 发出暂停操作后等待过渡及连续新截图，再最多点击一次开始按钮。缺少曲名、难度或按钮文字不会单独阻止点击；明确冲突曲目、结算、离开游戏或超时仍会停止。
+          - 点击后重新检测运行画面的左上角暂停图标，再从移动音符重新对齐；不把点击时刻或倒计时当作音乐起点。按钮作用为继续或重新开曲时都重新校准。
+          - 保留悬浮窗确认、演奏时隐藏、APK 本地导入及 Shizuku 单次启用功能。
 
-          151 项单元测试、Android lint、APK 构建及签名校验通过。未在 vivo V2505A / Android 17 真机验证，识别与对齐效果仍需测试；此版本处于 Alpha 阶段，使用调试签名。
+          使用：覆盖安装 → 保持默认中心坐标或按实际按钮调整 → 启动悬浮窗识别并确认演奏。若尚未恢复，运行记录会区分“未点击开始”和“已点击但未确认恢复”，不会反复点击。
 
-          APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37359320873)，源码提交为 78b3f65c8a2f4ebc60600303af38d7e6f7ce331b。发布标签另含发布工作流更新，其余文件已按 Git 对象逐项核对一致。SHA256SUMS.txt 可校验下载完整性。
+          手动暂停的初始入口仍依赖可识别菜单；仅图标菜单的识别仍有限制。此更新未在 vivo V2505A / Android 17 真机验证，不能保证所有游戏布局适配。
 
-          v0.1.2 及更早版本签名不同，需先记录校准和曲名别名，再卸载旧版安装；卸载会清除本应用数据。与 v0.1.3 的覆盖安装兼容性见下方签名核对结果。
+          165 项单元测试、Android lint、APK 构建和签名校验通过；此版本为 Alpha 预发布，使用调试签名。APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37364699904)，源码提交 e4342ab3ff98750a68e44eb4ebc15b76474febbc。发布标签另含发布工作流更新，其余文件已逐项核对一致；SHA256SUMS.txt 可校验下载完整性。
+
+          v0.1.3 及之后版本使用同一签名；v0.1.2 及更早版本需先记录设置后卸载安装，卸载会清除应用数据。签名核对结果如下。
           NOTES
           cat signing-note.md >> release-notes.md
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "Phigros Script v0.1.4 Alpha" \
+            --title "Phigros Script v0.1.5 Alpha" \
             --notes-file release-notes.md \
             --draft --prerelease
           gh release upload "$RELEASE_TAG" \
-            dist/Phigros-Script-v0.1.4.apk dist/SHA256SUMS.txt \
+            dist/Phigros-Script-v0.1.5.apk dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY"
       - name: Verify assets and publish
         run: |
@@ -189,7 +189,7 @@ jobs:
           assert release["draft"] and release["prerelease"]
           assert release["target_commitish"] == os.environ["GITHUB_SHA"]
           assets = {x["name"]: x for x in release["assets"]}
-          expected = {"Phigros-Script-v0.1.4.apk", "SHA256SUMS.txt"}
+          expected = {"Phigros-Script-v0.1.5.apk", "SHA256SUMS.txt"}
           assert set(assets) == expected
           for name in expected:
               asset = assets[name]
