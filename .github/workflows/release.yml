@@ -7,12 +7,12 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-v0.1.5
+  group: release-v0.1.5-ubuntu22
   cancel-in-progress: false
 jobs:
   publish:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     permissions:
       actions: read
