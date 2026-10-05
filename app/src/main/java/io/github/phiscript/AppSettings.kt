@@ -9,7 +9,6 @@ data class SessionSettings(
     val difficultyRoi: RectF,
     val captureLagMs: Int,
     val touchOffsetMs: Int,
-    val pauseBeforeAlign: Boolean = true,
     val pauseRoi: RectF = RectF(0f, 0f, 0.18f, 0.24f),
     val doubleTapIntervalMs: Int = 140
 )
@@ -27,7 +26,6 @@ class AppSettings(context: Context) {
         rect(text("difficulty", "0,0,1,1")),
         text("captureLag", "0").toInt().also { require(it in -500..500) },
         text("touchOffset", "0").toInt().also { require(it in -500..500) },
-        flag("pauseBeforeAlign", true),
         rect(text("pauseRegion", "0,0,0.18,0.24")),
         text("doubleTapInterval", "140").toInt().also { require(it in 80..300) }
     )

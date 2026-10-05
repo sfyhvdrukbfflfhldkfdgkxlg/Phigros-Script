@@ -1,14 +1,23 @@
 # Phigros Script · Alpha
 
-处于 Alpha 阶段的安卓本机谱面读取、画面识别与无障碍自动演奏应用。无需 root；优先直接读取已安装的 Phigros APK，读取受限时可使用 Shizuku 的 ADB 权限。
+处于 Alpha 阶段的安卓本机谱面读取、画面识别与无障碍自动演奏应用。无需 root；优先直接读取已安装的 Phigros APK，读取受限时可使用 Shizuku 的 ADB 权限，也可选择同版本的 APK 文件在本机解析。
 
 ## 下载 APK
 
-打开本仓库 [Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases)，在最新版本的 Assets 中直接下载 **Phigros-Script-v0.1.3.apk** 安装，无需解压。附带的 SHA256SUMS.txt 可校验下载完整性。
+打开本仓库 [Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases)，在最新版本的 Assets 中直接下载 **Phigros-Script-v0.1.4.apk** 安装，无需解压。附带的 SHA256SUMS.txt 可校验下载完整性。
 
 后续开发构建仍可在 **Actions → Build Android APK → 最近一次成功的运行 → Artifacts** 下载 **Phigros-Script-debug**，解压安装。Actions 产物保留 30 天。私有仓库的 Release 和 Actions 下载都需要登录有仓库权限的 GitHub 账号。
 
-这是调试签名的实验版本。v0.1.3 起构建使用显式签名文件并校对已发布证书；缓存丢失或证书不匹配会停止构建，避免静默更换签名。v0.1.2 的旧签名文件当前无法取得，本次升级仍需保存校准/别名后卸载旧版再安装，并重新授权。卸载会清除本应用设置与诊断。
+这是调试签名的实验版本。v0.1.3 起构建使用显式签名文件并校对已发布证书；缓存丢失或证书不匹配会停止构建，避免静默更换签名。v0.1.4 延续 v0.1.3 的证书，发布时会验证签名一致，可从 v0.1.3 覆盖安装。若仍使用 v0.1.2 或更早版本，需先记录校准/别名，卸载旧版再安装并重新授权；卸载会清除本应用设置与诊断。
+
+## v0.1.4 Alpha 的变化
+
+- 改为悬浮窗显示识别状态、歌曲和难度。识别到后等待你确认开始演奏，确认前不自动点击暂停或游戏控件。
+- 确认后隐藏悬浮窗，重新核对游戏画面，再双击左上角暂停键。已处于暂停菜单时直接核对继续按钮。
+- 从暂停恢复后丢弃旧截图和旧时钟，以移动音符重新校准时间，再开始演奏；识别或对齐失败就停止。演奏中手动暂停后会重新显示确认窗口，再次确认才恢复并校准。
+- 新增“导入 Phigros APK 解析谱面”：通过系统文件选择器选择 APK；拆分安装包可同时选择 base.apk 和资源 APK，在手机上复制和解析，不上传服务器，不需要 Shizuku 读取权限。
+- 本机扫描失败会提供导入入口。导入后的谱库可在应用重启后恢复；更换游戏版本后请重新导入同版本安装包。应用会复制安装包并保留当前及上一代副本，请预留存储空间；不会删除所选的原始文件。
+- 需要“显示在其他应用上层”权限。只识别模式也显示悬浮窗，但不会发送触摸。
 
 ## v0.1.3 Alpha 的变化
 
@@ -39,17 +48,17 @@
 ## 手机使用
 
 1. 安装 Phigros 和本应用。
-2. 在本应用点击“扫描本机谱库”。默认读取包名 `com.PigeonGames.Phigros` 的 base APK 和 split APK。
-3. 如果出现读取权限错误，再使用“连接 Shizuku”。Android 11 以上一般可以在手机上通过无线调试启动 Shizuku；重启后通常需要重新启动。无障碍权限本身不提供 APK 文件访问权限。
-4. 先运行“只识别，不点击”，同意系统录屏，进入歌曲测试曲名、难度和时间对齐。
-5. 开启本应用的无障碍服务，返回应用确认显示“无障碍服务已连接”，再使用“开始自动演奏”。若 Android 提示“受限制的设置”，先在系统的本应用详情页允许受限制的设置，再开启无障碍。保持游戏横屏，关闭游戏镜像模式。
-6. 通知栏“停止”结束整个会话。启用无障碍后，音量减键也可停止。
+2. 点击“扫描本机谱库”，默认读取包名 `com.PigeonGames.Phigros` 的 base APK 和 split APK。读取受限时可连接 Shizuku，或直接使用“导入 Phigros APK 解析谱面”选择同版本文件。APKS/XAPK 请先解压，再同时选择其中的 APK。
+3. 先运行“悬浮窗只识别”，按提示允许显示在其他应用上层，再次点击启动并同意系统录屏。进入游戏后在悬浮窗查看结果；曲名不可见时可手动暂停帮助识别。
+4. 自动演奏需要本应用的无障碍服务保持已连接。若系统返回设置时会关闭，可尝试主页的 Shizuku 单次启用入口。无障碍权限本身不提供 APK 文件访问权限。
+5. 点击“启动悬浮窗识别 / 确认演奏”，保持游戏横屏并关闭镜像模式。悬浮窗识别到歌曲、难度后，确认开始；窗口隐藏，应用暂停再恢复，以恢复后的画面重新校准并演奏。
+6. 演奏时悬浮窗隐藏，仍可用通知栏“停止”结束截屏和触控。启用无障碍后，音量减键也可停止。
 
-应用使用打包在 APK 内的 OCR 模型，不从在线谱库下载歌曲谱面。首次匹配某个难度时才解包并缓存对应 JSON；游戏更新后需要重新扫描。
+应用使用打包在 APK 内的 OCR 模型，不从在线谱库下载歌曲谱面。首次匹配某个难度时才解包并缓存对应 JSON；游戏更新后需要重新扫描或重新导入 APK。文件导入只更换谱库来源，不会自动修改游戏；导入版本与游戏不一致可能无法正确对齐。
 
 ## 已实现的流程
 
-- 读取当前安装包与分包的 Unity Addressables catalog。
+- 读取当前安装包、分包或导入 APK 的 Unity Addressables catalog。
 - 将歌曲/难度资源键映射到本机 bundle，解析 UnityFS、SerializedFile 和 TextAsset。
 - 支持未压缩、LZ4/LZ4HC、LZMA 的常见 UnityFS；未知格式明确报错。
 - 用 OCR 识别歌曲和 EZ/HD/IN/AT，连续画面一致后才锁定；多候选不猜测。
@@ -97,10 +106,10 @@ gradle testDebugUnitTest lintDebug assembleDebug
 
 ## 代码结构
 
-- `assets/`：已安装 APK、Shizuku 资源读取/主动诊断/单次启用本服务、Addressables 和 Unity 解析。
+- `assets/`：已安装 / 导入 APK、Shizuku 资源读取/主动诊断/单次启用本服务、Addressables 和 Unity 解析。
 - `engine/`：v3 谱面时间与坐标。
 - `vision/`：OCR 与多帧视觉对齐。
 - `input/`：无障碍多指手势。
-- `capture/`：MediaProjection、前台服务与会话状态机。
+- `capture/`：MediaProjection、悬浮窗、前台服务与确认 / 暂停 / 对齐状态机。
 
 资源格式核对参考：[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource)、[UnityPy](https://github.com/K0lb3/UnityPy)、[AssetStudio](https://github.com/Perfare/AssetStudio)。Shizuku 接口参考 [Shizuku-API](https://github.com/RikkaApps/Shizuku-API)。

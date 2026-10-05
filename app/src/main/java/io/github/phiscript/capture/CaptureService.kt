@@ -37,6 +37,7 @@ class CaptureService : Service() {
     private var captureThread: HandlerThread? = null
     private var captureHandler: Handler? = null
     private var engineThread: Thread? = null
+    @Volatile private var overlay: RecognitionOverlay? = null
     private var projection: MediaProjection? = null
     private var display: VirtualDisplay? = null
     private var reader: ImageReader? = null
@@ -99,8 +100,10 @@ class CaptureService : Service() {
                 catch (e: Exception) { finish("截屏启动失败：" + e.message) }
             }
             val preview = intent.getBooleanExtra(EXTRA_PREVIEW, true)
+            val recognitionOverlay = RecognitionOverlay(this, ::finish)
+            overlay = recognitionOverlay
             engineThread = Thread({
-                try { SessionEngine(frames, library, settings, preview, stop).run() }
+                try { SessionEngine(frames, library, settings, preview, stop, recognitionOverlay).run() }
                 catch (e: InterruptedException) { Thread.currentThread().interrupt() }
                 catch (e: Exception) { RuntimeState.log("会话停止：" + e.message) }
                 finally { Handler(mainLooper).post { finish(null) } }
@@ -146,7 +149,8 @@ class CaptureService : Service() {
                     bytes.flip()
                     val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
                     bitmap.copyPixelsFromBuffer(bytes)
-                    frames.publish(CapturedFrame(bitmap, captured, realWidth, realHeight))
+                    if (overlay?.maskCapture(bitmap, realWidth, realHeight, captured) == false) bitmap.recycle()
+                    else frames.publish(CapturedFrame(bitmap, captured, realWidth, realHeight))
                 } catch (e: Exception) { finish("读取截屏失败：" + e.message) }
             }
         }, captureHandler)
@@ -177,8 +181,8 @@ class CaptureService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val notification = Notification.Builder(this, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_media_play)
-            .setContentTitle("Phigros Script 正在识别")
-            .setContentText("点按停止可结束截屏和触控")
+            .setContentTitle("Phigros Script 识别 / 演奏运行中")
+            .setContentText("悬浮窗隐藏时，仍可点按停止结束截屏和触控")
             .setContentIntent(open).setOngoing(true)
             .addAction(Notification.Action.Builder(null, "停止", halt).build()).build()
         if (Build.VERSION.SDK_INT >= 29)
@@ -189,12 +193,14 @@ class CaptureService : Service() {
     private fun finish(message: String?) {
         RuntimeState.activeTouchStop.get()?.takeIf { it.owner === stop }?.cancel?.set(true)
         if (stop.compareAndSet(false, true) && message != null) RuntimeState.log(message)
+        overlay?.close()
         Handler(mainLooper).post { stopSelf() }
     }
 
     override fun onDestroy() {
         if (!destroyed.compareAndSet(false, true)) return
         stop.set(true)
+        overlay?.close()
         RuntimeState.activeTouchStop.get()?.takeIf { it.owner === stop }?.cancel?.set(true)
         RuntimeState.running.set(false)
         displayManager?.unregisterDisplayListener(displayListener)

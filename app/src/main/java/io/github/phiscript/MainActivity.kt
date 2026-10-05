@@ -7,13 +7,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.media.projection.MediaProjectionConfig
 import android.media.projection.MediaProjectionManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.ViewGroup
-import android.widget.CheckBox
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -21,6 +21,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.viewModels
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -31,16 +32,19 @@ import io.github.phiscript.capture.CaptureService
 import io.github.phiscript.input.TouchService
 import io.github.phiscript.input.AccessibilityStatus
 import io.github.phiscript.input.AccessibilityActivation
-import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
-    private val worker = Executors.newSingleThreadExecutor()
+    private val libraryWork by viewModels<LibraryWork>()
+    private val worker get() = libraryWork.worker
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var logView: TextView
     private lateinit var statusView: TextView
     private lateinit var accessibilityView: TextView
     private var nextAccessCheck = 0L
-    private var scanning = false
+    private var scanning: Boolean
+        get() = libraryWork.scanning
+        set(value) { libraryWork.scanning = value }
+    private var pickerPending = false
     private var preview = true
     private val preferences by lazy { AppSettings(this) }
     private val notificationPermission = registerForActivityResult(
@@ -60,6 +64,12 @@ class MainActivity : ComponentActivity() {
             } catch (e: Exception) { message("启动失败：" + e.message) }
         } else message("未授权录屏，未启动")
     }
+    private val apkPicker = registerForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        pickerPending = false
+        if (uris.isNotEmpty()) importApks(uris.distinct())
+        else restoreImportedLibrary()
+    }
     private val refresh = object : Runnable {
         override fun run() {
             if (!::statusView.isInitialized) return
@@ -68,10 +78,10 @@ class MainActivity : ComponentActivity() {
                 AccessibilityActivation.isRunning -> AccessibilityActivation.status
                 Diagnostics.isCapturing -> "系统诊断采集中 · 约 30 秒后完成"
                 RuntimeState.running.get() -> "识别运行中 · 可在通知栏停止"
-                scanning -> "正在扫描安装包…"
-                library != null -> "谱库就绪 · " + library.snapshot.versionName +
+                scanning -> "正在读取谱库…"
+                library != null -> "谱库就绪 · " + library.sourceLabel + " · " + library.snapshot.versionName +
                     " · " + library.locations.size + " 个难度"
-                else -> "等待扫描 Phigros 安装包"
+                else -> "扫描本机谱库，或选择 Phigros APK 导入"
             }
             val now = android.os.SystemClock.uptimeMillis()
             if (now >= nextAccessCheck) {
@@ -86,6 +96,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         preview = savedInstanceState?.getBoolean("pending_preview", true) ?: true
+        pickerPending = savedInstanceState?.getBoolean("picker_pending", false) ?: false
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(16), dp(22), dp(24))
@@ -114,10 +125,11 @@ class MainActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(5) })
         }
         text("Phigros Script · Alpha", 28f)
-        text("从已安装的游戏读取谱面，在手机上识别和演奏。")
+        text("读取本机或导入 APK 的谱面，悬浮窗识别后确认演奏。")
         statusView = text("", 16f)
         accessibilityView = text(AccessibilityStatus.read(this).summary, 14f)
         button("扫描本机谱库") { scan() }
+        button("导入 Phigros APK 解析谱面") { chooseApks() }
         button("通过系统设置开启无障碍") {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
@@ -128,20 +140,21 @@ class MainActivity : ComponentActivity() {
             try { ApkAccess.requestPermission() }
             catch (e: Exception) { message("Shizuku：" + e.message) }
         }
-        text("自动演奏：进入歌曲 → 双击暂停 → 识别谱面 → 恢复并对齐。只识别模式不会点击暂停或恢复，可手动操作。")
-        button("只识别，不点击") { startSession(true) }
-        button("开始自动演奏") { startSession(false) }
+        text("启动悬浮窗 → 识别曲名和难度 → 窗内确认演奏 → 隐藏悬浮窗 → 暂停、恢复并重新对齐。只识别模式不会发送触摸。")
+        button("悬浮窗只识别") { startSession(true) }
+        button("启动悬浮窗识别 / 确认演奏") { startSession(false) }
         button("停止") {
             if (RuntimeState.running.get())
                 startService(Intent(this, CaptureService::class.java)
                     .setAction(CaptureService.ACTION_STOP))
         }
-        text("运行时保持游戏横屏。通知栏可停止；启用无障碍后，音量减键也可停止。")
+        text("运行时保持游戏横屏。若曲名未出现，可手动暂停帮助识别。演奏时悬浮窗隐藏，通知栏可停止；启用无障碍后，音量减键也可停止。")
         button("校准暂停键、识别区域与延迟") { calibration() }
         button("修正曲名识别") { editAlias() }
         text("这是 Alpha 版本。部分开头或演出谱面无法视觉对齐；无障碍触控不能保证全连。")
         logView = text("", 12f).apply { setTextIsSelectable(true) }
         ApkAccess.attach(applicationContext) { RuntimeState.log(it) }
+        restoreImportedLibrary()
         if (Build.VERSION.SDK_INT >= 33)
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
@@ -158,18 +171,82 @@ class MainActivity : ComponentActivity() {
             }
             runOnUiThread {
                 result.onSuccess { RuntimeState.library = it }
-                if (isDestroyed || isFinishing) return@runOnUiThread
                 scanning = false
+                if (isDestroyed || isFinishing) return@runOnUiThread
                 result.onSuccess {
                     RuntimeState.library = it
                     after?.invoke()
-                }.onFailure { message("扫描失败：" + it.message) }
+                }.onFailure { offerApkImport("扫描失败：" + it.message) }
             }
         }
     }
 
+    private fun taskBusy(): Boolean = scanning || RuntimeState.running.get() ||
+        Diagnostics.isCapturing || AccessibilityActivation.isRunning
+
+    private fun chooseApks() {
+        if (taskBusy()) { message("请先停止当前任务"); return }
+        AlertDialog.Builder(this).setTitle("导入 Phigros APK")
+            .setMessage("选择与你手机游戏版本一致的 Phigros 安装包。拆分安装包请同时选择 base.apk 和资源分包。文件会复制到本应用中并在手机上解析，无需上传到服务器。\n\n不支持直接导入 APKS/XAPK 容器；请先解压，再选择其中的 APK 文件。")
+            .setNegativeButton("取消", null)
+            .setPositiveButton("选择 APK 文件") { _, _ ->
+                if (!taskBusy()) {
+                    try {
+                        pickerPending = true
+                        apkPicker.launch(arrayOf("*/*"))
+                    } catch (e: RuntimeException) {
+                        pickerPending = false
+                        message("无法打开文件选择器：" + e.message)
+                    }
+                }
+            }.show()
+    }
+
+    private fun importApks(uris: List<Uri>) {
+        if (taskBusy()) { message("当前有任务进行中，未导入文件"); return }
+        scanning = true
+        val app = applicationContext
+        worker.execute {
+            val result = runCatching { ChartLibrary.importApks(app, uris, RuntimeState::log) }
+            runOnUiThread {
+                result.onSuccess { RuntimeState.library = it }
+                scanning = false
+                if (isDestroyed || isFinishing) return@runOnUiThread
+                result.onSuccess {
+                    message("APK 谱库已导入，共 " + it.locations.size + " 个难度；现在可启动悬浮窗识别")
+                }.onFailure { message("导入失败，未替换原有谱库：" + it.message) }
+            }
+        }
+    }
+
+    private fun restoreImportedLibrary() {
+        if (pickerPending || RuntimeState.library != null || taskBusy()) return
+        scanning = true
+        val app = applicationContext
+        worker.execute {
+            val result = runCatching { ChartLibrary.scanImported(app, RuntimeState::log) }
+            runOnUiThread {
+                result.onSuccess { library ->
+                    if (library != null && RuntimeState.library == null) RuntimeState.library = library
+                }
+                scanning = false
+                if (isDestroyed || isFinishing) return@runOnUiThread
+                result.onFailure { message("保存的 APK 谱库暂不可用，请重新导入：" + it.message) }
+            }
+        }
+    }
+
+    private fun offerApkImport(reason: String) {
+        message(reason)
+        AlertDialog.Builder(this).setTitle("可改用 APK 文件解析")
+            .setMessage("无法读取本机安装资源时，可选择同版本的 Phigros APK 在本机解析。\n\n" + reason)
+            .setNegativeButton("稍后", null)
+            .setPositiveButton("选择 APK") { _, _ -> chooseApks() }
+            .show()
+    }
+
     private fun startSession(onlyRecognize: Boolean) {
-        if (RuntimeState.running.get() || Diagnostics.isCapturing || AccessibilityActivation.isRunning) { message("请先等待诊断完成或停止当前任务"); return }
+        if (scanning || RuntimeState.running.get() || Diagnostics.isCapturing || AccessibilityActivation.isRunning) { message("请先等待当前任务完成或停止运行"); return }
         try { preferences.snapshot() }
         catch (e: Exception) { message("校准参数错误：" + e.message); return }
         if (!onlyRecognize && !AccessibilityStatus.read(this).ready) {
@@ -177,6 +254,20 @@ class MainActivity : ComponentActivity() {
             return
         }
         if (RuntimeState.library == null) { scan { startSession(onlyRecognize) }; return }
+        if (!Settings.canDrawOverlays(this)) {
+            AlertDialog.Builder(this).setTitle("允许显示悬浮窗")
+                .setMessage("悬浮窗用于显示识别结果和确认开始演奏。请允许本应用显示在其他应用上层，返回后再次点击启动。")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("前往设置") { _, _ ->
+                    try {
+                        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + packageName)))
+                    } catch (e: RuntimeException) {
+                        message("无法打开悬浮窗设置，请在系统应用权限中允许：" + e.message)
+                    }
+                }.show()
+            return
+        }
         preview = onlyRecognize
         val manager = getSystemService(MediaProjectionManager::class.java)
         val intent = if (Build.VERSION.SDK_INT >= 34)
@@ -190,11 +281,9 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(8), dp(20), 0)
         }
-        val pauseFirst = CheckBox(this).apply {
-            text = "进入歌曲后双击暂停，再恢复并对齐"
-            isChecked = preferences.flag("pauseBeforeAlign", true)
-        }
-        layout.addView(pauseFirst)
+        layout.addView(TextView(this).apply {
+            text = "确认演奏后先暂停，再恢复并重新校准时间；已在暂停菜单时直接确认继续按钮。"
+        })
         val fields = linkedMapOf<String, EditText>()
         val definitions = listOf(
             Triple("view", "玩法视口 x,y,宽,高", "0,0,1,1"),
@@ -236,7 +325,6 @@ class MainActivity : ComponentActivity() {
                     require(fields.getValue("doubleTapInterval").text.toString().trim().toInt() in 80..300) {
                         "双击间隔范围为 80 到 300 毫秒"
                     }
-                    preferences.saveFlag("pauseBeforeAlign", pauseFirst.isChecked)
                     fields.forEach { (key, field) -> preferences.save(key, field.text.toString().trim()) }
                     dialog.dismiss()
                     message("已保存，下次启动识别时生效")
@@ -343,11 +431,11 @@ class MainActivity : ComponentActivity() {
     private fun dp(value: Int) = (resources.displayMetrics.density * value).toInt()
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBoolean("pending_preview", preview)
+        outState.putBoolean("picker_pending", pickerPending)
         super.onSaveInstanceState(outState)
     }
     override fun onDestroy() {
         handler.removeCallbacks(refresh)
-        worker.shutdownNow()
         super.onDestroy()
     }
 }

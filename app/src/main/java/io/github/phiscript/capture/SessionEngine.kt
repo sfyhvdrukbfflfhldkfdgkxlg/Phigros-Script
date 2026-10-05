@@ -15,140 +15,193 @@ import io.github.phiscript.vision.VisualSynchronizer
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-class SessionEngine(
+internal class SessionEngine(
     private val frames: FrameStore,
     private val library: ChartLibrary,
     private val settings: SessionSettings,
     private val preview: Boolean,
-    private val stop: AtomicBoolean
+    private val stop: AtomicBoolean,
+    private val overlay: RecognitionOverlay
 ) {
     private var lastFrame = -1L
     private var nextDiagnostic = 0L
+    private data class Selection(val identity: Identity, val width: Int, val height: Int)
     private data class Prepared(val chart: Chart, val identity: Identity, val afterFrame: Long,
                                 val width: Int, val height: Int)
     private data class Aligned(val epoch: Long, val width: Int, val height: Int)
 
     fun run() {
         val recognizer = SongIdentifier(OcrConfig(settings.titleRoi, settings.difficultyRoi))
-        RuntimeState.log(when {
-            preview -> "只识别模式：不会点击暂停或恢复，可手动暂停后检查识别"
-            settings.pauseBeforeAlign -> "等待进入歌曲：检测暂停图标 → 双击暂停 → 读取谱面 → 恢复对齐"
-            else -> "自动演奏待命：直接识别并对齐"
-        })
+        RuntimeState.log(if (preview) "悬浮窗只识别：不会点击暂停、恢复或音符"
+            else "悬浮窗识别待命：识别后由你确认，再暂停、恢复并重新对齐")
         try {
             while (!stop.get()) {
-                val prepared = if (!preview && settings.pauseBeforeAlign) preparePaused(recognizer)
-                    else preparePassive(recognizer)
-                if (prepared == null || stop.get()) return
-                val aligned = align(prepared, recognizer) ?: return
-                RuntimeState.log("已对齐。此前经过的音符不会补打")
-                if (preview) {
-                    RuntimeState.log("识别测试完成，未发送任何触摸")
-                    return
+                val selected = recognizeAndConfirm(recognizer) ?: return
+                val afterHide = overlay.hide()
+                if (stop.get()) return
+                val chart = try { library.load(selected.identity.songId, selected.identity.difficulty) }
+                catch (e: Exception) {
+                    throw IllegalStateException("谱面读取不可用：" + e.message +
+                        "；请返回应用，导入同版本 Phigros APK 解析谱面", e)
                 }
+                if (stop.get()) return
+                val prepared = preparePaused(recognizer, selected, chart, afterHide) ?: return
+                val aligned = align(prepared, recognizer) ?: return
+                RuntimeState.log("已对齐，悬浮窗保持隐藏；通知栏或音量减键可停止。此前经过的音符不会补打")
                 play(prepared.chart, aligned, recognizer)
-                if (!stop.get()) awaitNextSong(recognizer)
+                if (!stop.get()) awaitNextOpportunity(recognizer)
             }
-        } finally { recognizer.close() }
+        } finally {
+            runCatching { overlay.hide() }
+            recognizer.close()
+        }
     }
 
-    /** No title OCR is required before pausing: entry is detected from the actual pause glyph. */
-    private fun preparePaused(recognizer: SongIdentifier): Prepared? {
-        val detector = GameplayDetector(settings.pauseRoi)
-        val pausedAlready = FreshFrameConsensus()
-        var width = 0
-        var height = 0
-        var requestedAt = 0L
-        var nextOcr = 0L
-        var nonGameplay = false
-        var entered = false
-        while (!stop.get() && !entered) {
-            if (TouchService.current?.gameForeground != true) {
-                detector.reset()
+    /** Detection is passive. No control or note gesture can run before a fresh user confirmation. */
+    private fun recognizeAndConfirm(recognizer: SongIdentifier): Selection? {
+        var identities = FreshFrameConsensus()
+        val confirmation = RecognitionConfirmation()
+        var selected: Selection? = null
+        var ignoredUntil = 0L
+        var wasForeground = true
+        overlay.status("等待曲名和难度…\n识别困难时可手动暂停")
+        while (!stop.get()) {
+            if (!preview && TouchService.current?.gameForeground != true) {
+                if (wasForeground) {
+                    confirmation.invalidate()
+                    selected = null
+                    identities = FreshFrameConsensus()
+                    overlay.hide()
+                }
+                wasForeground = false
                 sleep(150)
                 continue
             }
-            val frame = freshFrame()
-            if (frame == null) { sleep(60); continue }
-            frame.use {
-                val hit = detector.observe(it.bitmap, it.uptimeMs)
-                width = it.screenWidth; height = it.screenHeight
-                if (hit != null && !nonGameplay) {
-                    RuntimeState.log("检测到演奏画面，双击暂停键")
-                    control(hit.pauseX, hit.pauseY, 2, width, height)
-                    requestedAt = SystemClock.uptimeMillis()
-                    entered = true
-                } else if (SystemClock.uptimeMillis() >= nextOcr) {
-                    val observation = recognizer.inspect(it.bitmap, library.songs())
-                    nonGameplay = observation.pauseOrResult
-                    if (observation.resultScreen) detector.reset()
-                    nextOcr = SystemClock.uptimeMillis() + 650
-                    if (pausedAlready.observe(if (observation.pauseMenu != null) "pause" else null, it.uptimeMs)) {
-                        RuntimeState.log("已在暂停菜单，开始读取歌曲信息")
-                        requestedAt = it.uptimeMs
-                        entered = true
-                    }
-                    diagnostic("等待暂停图标：" + recognizer.lastDiagnostic +
-                        "；未检测到时可校准暂停图标搜索区域")
+            if (!wasForeground) overlay.status("等待曲名和难度…\n识别困难时可手动暂停")
+            wasForeground = true
+            val now = SystemClock.uptimeMillis()
+            val decision = overlay.consumeChoice()
+            val confirmedSelection = selected
+            if (decision != null && confirmedSelection != null &&
+                confirmation.pending(now)?.token == decision.token) {
+                if (decision.start && !preview && confirmation.accept(decision.token, now)) {
+                    RuntimeState.log("已确认演奏：" + confirmedSelection.identity.title + " " + confirmedSelection.identity.difficulty)
+                    return confirmedSelection
                 }
+                confirmation.invalidate()
+                selected = null
+                identities = FreshFrameConsensus()
+                ignoredUntil = now + 3000
+                overlay.status("继续识别…\n尚未开始自动演奏")
             }
+            val frame = freshFrame()
+            if (frame == null) {
+                if (selected != null && confirmation.pending(now) == null) {
+                    selected = null
+                    identities = FreshFrameConsensus()
+                    overlay.status("识别已过期，正在重新确认…")
+                }
+                sleep(100)
+                continue
+            }
+            frame.use {
+                val observation = recognizer.inspect(it.bitmap, library.songs())
+                val candidate = observation.identity?.takeUnless { observation.resultScreen }
+                    ?.takeIf { item -> library.hasChart(item.songId, item.difficulty) }
+                val pendingSelection = selected
+                val invalid = observation.resultScreen || (pendingSelection != null &&
+                    (it.screenWidth != pendingSelection.width || it.screenHeight != pendingSelection.height))
+                confirmation.observe(observation.identity?.let(::key), it.uptimeMs, invalid)
+                if (selected != null && confirmation.pending(SystemClock.uptimeMillis()) == null) {
+                    selected = null
+                    identities = FreshFrameConsensus()
+                    overlay.status("画面或曲目已变化，正在重新识别…")
+                }
+                if (selected == null && SystemClock.uptimeMillis() >= ignoredUntil &&
+                    identities.observe(candidate?.let(::key), it.uptimeMs) && candidate != null &&
+                    SystemClock.uptimeMillis() - it.uptimeMs < 900) {
+                    selected = Selection(candidate, it.screenWidth, it.screenHeight)
+                    val offer = confirmation.propose(key(candidate), it.uptimeMs)
+                    overlay.offer(offer.token, candidate.title, candidate.difficulty.toString(), preview)
+                    RuntimeState.log("悬浮窗识别：" + candidate.title + " " + candidate.difficulty +
+                        if (preview) "（只识别）" else "；等待确认")
+                }
+                diagnostic(recognizer.lastDiagnostic)
+            }
+            sleep(160)
         }
-        if (stop.get()) return null
-        val menuGate = FreshFrameConsensus(afterFrameMs = requestedAt)
-        val identityGate = FreshFrameConsensus(afterFrameMs = requestedAt)
+        return null
+    }
+
+    /** Hide first, reload fresh identity and gameplay evidence, then pause only the confirmed song. */
+    private fun preparePaused(recognizer: SongIdentifier, selected: Selection, chart: Chart,
+                              afterHide: Long): Prepared? {
+        val detector = GameplayDetector(settings.pauseRoi)
+        val identityGate = FreshFrameConsensus(afterFrameMs = maxOf(afterHide, SystemClock.uptimeMillis()))
+        val pausedAlready = FreshFrameConsensus(afterFrameMs = afterHide)
         val deadline = SystemClock.uptimeMillis() + 20000
-        var confirmedPause = false
-        var identity: Identity? = null
-        while (!stop.get() && SystemClock.uptimeMillis() < deadline && identity == null) {
+        var pausedAt = 0L
+        RuntimeState.log("悬浮窗已隐藏，重新核对当前曲目及暂停图标")
+        while (!stop.get() && SystemClock.uptimeMillis() < deadline && pausedAt == 0L) {
             requireForeground()
             val frame = freshFrame()
             if (frame == null) { sleep(70); continue }
             frame.use {
-                checkDimensions(it, width, height)
+                checkDimensions(it, selected.width, selected.height)
+                if (it.uptimeMs <= afterHide) return@use
                 val observation = recognizer.inspect(it.bitmap, library.songs())
-                check(!observation.resultScreen) { "已到结算画面，请重新进入歌曲" }
-                val menu = observation.pauseMenu != null
-                if (menuGate.observe(if (menu) "pause" else null, it.uptimeMs)) {
-                    if (!confirmedPause) RuntimeState.log("暂停已确认，稳定识别曲名和难度…")
-                    confirmedPause = true
+                check(!observation.resultScreen) { "已到结算画面，未开始演奏" }
+                val identity = observation.identity
+                check(identity == null || key(identity) == key(selected.identity)) {
+                    "曲目或难度已变化，确认已取消；请重新启动识别"
                 }
-                val candidate = observation.identity?.takeIf { menu && confirmedPause &&
-                    library.hasChart(it.songId, it.difficulty) }
-                if (identityGate.observe(candidate?.let(::key), it.uptimeMs)) identity = candidate
-                diagnostic("暂停识别：" + recognizer.lastDiagnostic)
+                val same = identity != null && key(identity) == key(selected.identity)
+                val identityReady = identityGate.observe(if (same) key(selected.identity) else null, it.uptimeMs)
+                val paused = pausedAlready.observe(if (observation.pauseMenu != null) "pause" else null, it.uptimeMs)
+                val hit = if (!observation.pauseOrResult) detector.observe(it.bitmap, it.uptimeMs)
+                    else { detector.reset(); null }
+                if (!identityReady || SystemClock.uptimeMillis() - it.uptimeMs >= 900) return@use
+                if (paused) {
+                    pausedAt = it.uptimeMs
+                    RuntimeState.log("已在暂停菜单，准备恢复后重新校准")
+                } else if (hit != null) {
+                    RuntimeState.log("当前曲目已复核，双击暂停键")
+                    control(hit.pauseX, hit.pauseY, 2, selected.width, selected.height)
+                    pausedAt = SystemClock.uptimeMillis()
+                }
+                diagnostic("开始前复核：" + recognizer.lastDiagnostic)
             }
         }
         if (stop.get()) return null
-        if (!confirmedPause) error("未确认暂停菜单，已停止；请校准暂停图标区域或双击间隔")
-        val selected = identity ?: error("暂停后未能唯一识别曲名/难度，已保持暂停；请校准文字区域或修正曲名")
-        RuntimeState.log("暂停识别成功：" + selected.title + " " + selected.difficulty)
-        val chart = library.load(selected.songId, selected.difficulty)
-        if (stop.get()) return null
-        RuntimeState.log("谱面已加载，重新确认继续按钮")
-        // Loading may take seconds; never click using a stale pre-load menu position.
-        val ready = FreshFrameConsensus(afterFrameMs = SystemClock.uptimeMillis())
-        val resumeDeadline = SystemClock.uptimeMillis() + 12000
+        check(pausedAt > 0L) { "未能复核当前曲目与暂停状态，未开始演奏；可手动暂停后重新启动识别" }
+        val menuGate = FreshFrameConsensus(afterFrameMs = pausedAt)
+        val resumeDeadline = SystemClock.uptimeMillis() + 20000
         var resumedAt = 0L
         while (!stop.get() && resumedAt == 0L && SystemClock.uptimeMillis() < resumeDeadline) {
             requireForeground()
             val frame = freshFrame()
             if (frame == null) { sleep(70); continue }
             frame.use {
-                checkDimensions(it, width, height)
+                checkDimensions(it, selected.width, selected.height)
                 val observation = recognizer.inspect(it.bitmap, library.songs())
-                val sameIdentity = observation.identity == null || key(observation.identity) == key(selected)
-                check(sameIdentity && !observation.resultScreen) { "歌曲信息发生变化，未恢复播放" }
+                val identity = observation.identity
+                check(!observation.resultScreen &&
+                    (identity == null || key(identity) == key(selected.identity))) {
+                    "暂停后曲目信息发生变化，未恢复播放"
+                }
                 val menu = observation.pauseMenu
-                if (ready.observe(if (menu != null) "ready" else null, it.uptimeMs) &&
+                val same = identity != null && key(identity) == key(selected.identity)
+                if (menuGate.observe(if (same && menu != null) "ready" else null, it.uptimeMs) &&
                     menu != null && SystemClock.uptimeMillis() - it.uptimeMs < 900) {
-                    control(menu.resume.x, menu.resume.y, 1, width, height)
+                    control(menu.resume.x, menu.resume.y, 1, selected.width, selected.height)
                     resumedAt = SystemClock.uptimeMillis()
                     RuntimeState.log("已点击继续，等待暂停菜单消失及画面恢复")
                 }
+                diagnostic("暂停校准：" + recognizer.lastDiagnostic)
             }
         }
         if (stop.get()) return null
-        check(resumedAt > 0L) { "无法确认继续按钮，已保持暂停；可手动恢复并使用只识别模式检查" }
+        check(resumedAt > 0L) { "无法确认当前曲目与继续按钮，已保持暂停；请检查识别区域" }
         val running = FreshFrameConsensus(afterFrameMs = resumedAt)
         val runningDeadline = SystemClock.uptimeMillis() + 15000
         while (!stop.get() && SystemClock.uptimeMillis() < runningDeadline) {
@@ -158,45 +211,18 @@ class SessionEngine(
             var accepted = false
             var timestamp = 0L
             frame.use {
-                checkDimensions(it, width, height)
+                checkDimensions(it, selected.width, selected.height)
                 val observation = recognizer.inspect(it.bitmap, library.songs())
                 accepted = running.observe(if (!observation.pauseOrResult) "running" else null, it.uptimeMs)
                 timestamp = it.uptimeMs
             }
             if (accepted) {
-                RuntimeState.log("恢复已确认，丢弃暂停前时钟，从移动音符重新对齐")
-                return Prepared(chart, selected, timestamp, width, height)
+                RuntimeState.log("恢复已确认，丢弃原时钟，从移动音符重新校准")
+                return Prepared(chart, selected.identity, timestamp, selected.width, selected.height)
             }
         }
         if (stop.get()) return null
         error("恢复后菜单未消失，已停止；不会重复点击继续按钮")
-    }
-
-    private fun preparePassive(recognizer: SongIdentifier): Prepared? {
-        val identities = FreshFrameConsensus()
-        while (!stop.get()) {
-            if (!preview && TouchService.current?.gameForeground != true) { sleep(150); continue }
-            val frame = freshFrame()
-            if (frame == null) { sleep(80); continue }
-            var selected: Identity? = null
-            var width = 0
-            var height = 0
-            frame.use {
-                val observation = recognizer.inspect(it.bitmap, library.songs())
-                val candidate = observation.identity?.takeUnless { observation.resultScreen }
-                    ?.takeIf { library.hasChart(it.songId, it.difficulty) }
-                if (identities.observe(candidate?.let(::key), it.uptimeMs)) selected = candidate
-                width = it.screenWidth; height = it.screenHeight
-                diagnostic(recognizer.lastDiagnostic)
-            }
-            if (selected != null) {
-                RuntimeState.log("识别：" + selected!!.title + " " + selected!!.difficulty)
-                return Prepared(library.load(selected!!.songId, selected!!.difficulty),
-                    selected!!, SystemClock.uptimeMillis(), width, height)
-            }
-            sleep(160)
-        }
-        return null
     }
 
     private fun align(prepared: Prepared, recognizer: SongIdentifier): Aligned? {
@@ -269,9 +295,9 @@ class SessionEngine(
         failure.get()?.let { RuntimeState.log("演奏停止：" + it.message) }
     }
 
-    /** Do not double-tap pause again in the same song after a cancelled or completed playback. */
-    private fun awaitNextSong(recognizer: SongIdentifier) {
-        RuntimeState.log("本曲处理结束，等待结算或离开游戏后再次进入")
+    /** A manual pause permits a fresh confirmation; no automatic replay during moving gameplay. */
+    private fun awaitNextOpportunity(recognizer: SongIdentifier) {
+        RuntimeState.log("本次演奏结束，等待暂停菜单、结算或离开游戏；再次演奏需要重新确认")
         val exit = FreshFrameConsensus()
         while (!stop.get()) {
             if (TouchService.current?.gameForeground != true) return
@@ -280,7 +306,12 @@ class SessionEngine(
             var finished = false
             frame.use {
                 val observation = recognizer.inspect(it.bitmap, emptyList())
-                finished = exit.observe(if (observation.resultScreen) "result" else null, it.uptimeMs)
+                val state = when {
+                    observation.resultScreen -> "result"
+                    observation.pauseMenu != null -> "pause"
+                    else -> null
+                }
+                finished = exit.observe(state, it.uptimeMs)
             }
             if (finished) return
             sleep(350)
