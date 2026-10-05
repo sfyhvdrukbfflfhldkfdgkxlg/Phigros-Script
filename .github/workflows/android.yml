@@ -14,10 +14,12 @@ jobs:
     timeout-minutes: 30
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PHISCRIPT_DEBUG_KEYSTORE: ${{ runner.temp }}/phiscript-signing/debug.keystore
-      SIGNING_STATE_DIR: ${{ runner.temp }}/phiscript-signing-state
     steps:
       - uses: actions/checkout@v4
+      - name: Set signing paths
+        run: |
+          printf 'PHISCRIPT_DEBUG_KEYSTORE=%s/phiscript-signing/debug.keystore\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'SIGNING_STATE_DIR=%s/phiscript-signing-state\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

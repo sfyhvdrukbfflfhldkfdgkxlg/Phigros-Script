@@ -281,7 +281,7 @@ class MainActivity : ComponentActivity() {
                 "这是一次性操作，随后会在本页核对连接 10 秒。若系统再次关闭服务，应用会报告结果，不会在后台反复开启。" +
                 "你仍可随时在系统设置中关闭本服务。\n\n" +
                 "此入口用于避开返回无障碍列表时关闭的问题，尚未在你的系统上验证效果。" +
-                "操作期间请勿同时切换其他无障碍服务；若系统设置已变化，本次会停止。")
+                "操作期间请勿同时切换其他无障碍服务；若检测到设置变化，本次会停止。")
             .setNegativeButton("取消", null)
             .setPositiveButton("仅启用本服务一次") { _, _ ->
                 if (!AccessibilityActivation.start(applicationContext))
