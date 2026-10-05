@@ -282,13 +282,15 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(20), dp(8), dp(20), 0)
         }
         layout.addView(TextView(this).apply {
-            text = "确认演奏后先暂停，再恢复并重新校准时间；已在暂停菜单时直接确认继续按钮。"
+            text = "确认演奏后先暂停，再点击已校准的开始按钮并重新对齐。开始按钮默认位于屏幕正中间。"
         })
         val fields = linkedMapOf<String, EditText>()
         val definitions = listOf(
             Triple("view", "玩法视口 x,y,宽,高", "0,0,1,1"),
             Triple("pauseRegion", "暂停图标搜索区域 x,y,宽,高", "0,0,0.18,0.24"),
             Triple("doubleTapInterval", "双击暂停的间隔（毫秒，80–300）", "140"),
+            Triple("restartPoint", "暂停后开始按钮中心 x,y", "0.5,0.5"),
+            Triple("pauseSettle", "暂停后等待（毫秒，900–4000）", "1000"),
             Triple("title", "曲名识别区域 x,y,宽,高", "0,0,1,1"),
             Triple("difficulty", "当前难度区域 x,y,宽,高", "0,0,1,1"),
             Triple("captureLag", "截图延迟补偿（毫秒）", "0"),
@@ -306,7 +308,7 @@ class MainActivity : ComponentActivity() {
         layout.addView(TextView(this).apply {
             text = "区域使用屏幕比例，例如下半屏为 0,0.5,1,0.5。玩法视口不含黑边。" +
                 "暂停图标默认在左上角搜索；右上角可设 0.82,0,0.18,0.24。" +
-                "应用点击实际检测到的图标中心。暂停后从“继续/Resume”文字定位恢复按钮。"
+                "暂停后开始按钮默认点击 0.5,0.5（屏幕正中间），只点击一次，不依赖按钮文字。"
         })
         val dialog = AlertDialog.Builder(this).setTitle("设备校准")
             .setView(ScrollView(this).apply { addView(layout) })
@@ -324,6 +326,10 @@ class MainActivity : ComponentActivity() {
                     }
                     require(fields.getValue("doubleTapInterval").text.toString().trim().toInt() in 80..300) {
                         "双击间隔范围为 80 到 300 毫秒"
+                    }
+                    AppSettings.point(fields.getValue("restartPoint").text.toString())
+                    require(fields.getValue("pauseSettle").text.toString().trim().toInt() in 900..4000) {
+                        "暂停后等待范围为 900 到 4000 毫秒"
                     }
                     fields.forEach { (key, field) -> preferences.save(key, field.text.toString().trim()) }
                     dialog.dismiss()

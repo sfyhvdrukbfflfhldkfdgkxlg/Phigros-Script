@@ -141,6 +141,7 @@ internal class SessionEngine(
         val pausedAlready = FreshFrameConsensus(afterFrameMs = afterHide)
         val deadline = SystemClock.uptimeMillis() + 20000
         var pausedAt = 0L
+        var ownPauseRequest = false
         RuntimeState.log("悬浮窗已隐藏，重新核对当前曲目及暂停图标")
         while (!stop.get() && SystemClock.uptimeMillis() < deadline && pausedAt == 0L) {
             requireForeground()
@@ -160,50 +161,60 @@ internal class SessionEngine(
                 val paused = pausedAlready.observe(if (observation.pauseMenu != null) "pause" else null, it.uptimeMs)
                 val hit = if (!observation.pauseOrResult) detector.observe(it.bitmap, it.uptimeMs)
                     else { detector.reset(); null }
-                if (!identityReady || SystemClock.uptimeMillis() - it.uptimeMs >= 900) return@use
+                if (SystemClock.uptimeMillis() - it.uptimeMs >= 900) return@use
                 if (paused) {
                     pausedAt = it.uptimeMs
                     RuntimeState.log("已在暂停菜单，准备恢复后重新校准")
-                } else if (hit != null) {
+                } else if (identityReady && hit != null) {
                     RuntimeState.log("当前曲目已复核，双击暂停键")
                     control(hit.pauseX, hit.pauseY, 2, selected.width, selected.height)
                     pausedAt = SystemClock.uptimeMillis()
+                    ownPauseRequest = true
                 }
                 diagnostic("开始前复核：" + recognizer.lastDiagnostic)
             }
         }
         if (stop.get()) return null
         check(pausedAt > 0L) { "未能复核当前曲目与暂停状态，未开始演奏；可手动暂停后重新启动识别" }
-        val menuGate = FreshFrameConsensus(afterFrameMs = pausedAt)
-        val resumeDeadline = SystemClock.uptimeMillis() + 20000
+        val menuGate = PauseRestartGate(key(selected.identity), pausedAt, ownPauseRequest,
+            settings.pauseSettleMs.toLong())
+        val stillRunning = GameplayDetector(settings.pauseRoi)
+        val resumeDeadline = pausedAt + 12000
         var resumedAt = 0L
-        while (!stop.get() && resumedAt == 0L && SystemClock.uptimeMillis() < resumeDeadline) {
+        RuntimeState.log("保留已确认曲目；等待暂停过渡和连续新截图，然后点击已校准的开始按钮：" +
+            settings.restartPoint.x + "," + settings.restartPoint.y)
+        while (!stop.get() && resumedAt == 0L && SystemClock.uptimeMillis() <= resumeDeadline) {
             requireForeground()
             val frame = freshFrame()
             if (frame == null) { sleep(70); continue }
             frame.use {
                 checkDimensions(it, selected.width, selected.height)
                 val observation = recognizer.inspect(it.bitmap, library.songs())
-                val identity = observation.identity
-                check(!observation.resultScreen &&
-                    (identity == null || key(identity) == key(selected.identity))) {
-                    "暂停后曲目信息发生变化，未恢复播放"
+                val gameVisible = stillRunning.observe(it.bitmap, it.uptimeMs) != null
+                val outcome = menuGate.observe(it.uptimeMs, SystemClock.uptimeMillis(),
+                    observation.identity?.let(::key), observation.pauseMenu != null,
+                    gameVisible, observation.resultScreen)
+                when (outcome) {
+                    PauseRestartGate.Outcome.READY -> {
+                        control(settings.restartPoint.x, settings.restartPoint.y, 1,
+                            selected.width, selected.height)
+                        resumedAt = SystemClock.uptimeMillis()
+                        RuntimeState.log("已点击开始按钮一次，等待游戏暂停图标重新出现，再重新校准")
+                    }
+                    PauseRestartGate.Outcome.CHANGED -> error("暂停后曲目或难度发生变化，未点击开始")
+                    PauseRestartGate.Outcome.RESULT -> error("已到结算画面，未点击开始")
+                    PauseRestartGate.Outcome.TIMEOUT -> error("暂停后等待超时，未点击开始")
+                    PauseRestartGate.Outcome.WAIT -> diagnostic("暂停后等待：" +
+                        (if (gameVisible && observation.pauseMenu == null) "仍检测到运行画面；" else "") +
+                        recognizer.lastDiagnostic)
                 }
-                val menu = observation.pauseMenu
-                val same = identity != null && key(identity) == key(selected.identity)
-                if (menuGate.observe(if (same && menu != null) "ready" else null, it.uptimeMs) &&
-                    menu != null && SystemClock.uptimeMillis() - it.uptimeMs < 900) {
-                    control(menu.resume.x, menu.resume.y, 1, selected.width, selected.height)
-                    resumedAt = SystemClock.uptimeMillis()
-                    RuntimeState.log("已点击继续，等待暂停菜单消失及画面恢复")
-                }
-                diagnostic("暂停校准：" + recognizer.lastDiagnostic)
             }
         }
         if (stop.get()) return null
-        check(resumedAt > 0L) { "无法确认当前曲目与继续按钮，已保持暂停；请检查识别区域" }
+        check(resumedAt > 0L) { "未确认可执行暂停后的开始操作；请检查暂停状态及校准设置" }
         val running = FreshFrameConsensus(afterFrameMs = resumedAt)
-        val runningDeadline = SystemClock.uptimeMillis() + 15000
+        val resumedGameplay = GameplayDetector(settings.pauseRoi)
+        val runningDeadline = SystemClock.uptimeMillis() + 30000
         while (!stop.get() && SystemClock.uptimeMillis() < runningDeadline) {
             requireForeground()
             val frame = freshFrame()
@@ -213,7 +224,8 @@ internal class SessionEngine(
             frame.use {
                 checkDimensions(it, selected.width, selected.height)
                 val observation = recognizer.inspect(it.bitmap, library.songs())
-                accepted = running.observe(if (!observation.pauseOrResult) "running" else null, it.uptimeMs)
+                val gameVisible = resumedGameplay.observe(it.bitmap, it.uptimeMs) != null
+                accepted = running.observe(if (gameVisible && !observation.pauseOrResult) "running" else null, it.uptimeMs)
                 timestamp = it.uptimeMs
             }
             if (accepted) {
@@ -222,7 +234,7 @@ internal class SessionEngine(
             }
         }
         if (stop.get()) return null
-        error("恢复后菜单未消失，已停止；不会重复点击继续按钮")
+        error("点击开始后未确认恢复到游戏画面，已停止；不会重复点击。请检查开始按钮坐标")
     }
 
     private fun align(prepared: Prepared, recognizer: SongIdentifier): Aligned? {
