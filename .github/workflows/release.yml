@@ -1,4 +1,4 @@
-name: Publish v0.1.3 Alpha APK
+name: Publish v0.1.4 Alpha APK
 on:
   push:
     branches: [main]
@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-v0.1.3
+  group: release-v0.1.4
   cancel-in-progress: false
 jobs:
   publish:
@@ -19,12 +19,22 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SOURCE_RUN: '37270851704'
-      SOURCE_SHA: '6ad86a65a8a43e86b843b1efeaf9668c0fba577f'
-      ARTIFACT_ID: '11327499213'
-      ARCHIVE_SHA256: bad5846946c15c6018069bac16443184bf6b8d78f006016f9d1c6c379177bfb4
-      RELEASE_TAG: v0.1.3
+      SOURCE_RUN: '37359320873'
+      SOURCE_SHA: '78b3f65c8a2f4ebc60600303af38d7e6f7ce331b'
+      ARTIFACT_ID: '11365788683'
+      ARCHIVE_SHA256: f85d8ef4e8ae1d1ae9ed9aeb6d1d133c721a902fcdc1f342cc7862ce8905fbdd
+      RELEASE_TAG: v0.1.4
+      TEST_COUNT: '151'
     steps:
+      - name: Verify publication inputs are ready
+        run: |
+          python3 - <<'PY'
+          import os, re
+          for name in ("SOURCE_RUN", "ARTIFACT_ID", "TEST_COUNT"):
+              assert re.fullmatch(r"[1-9][0-9]*", os.environ[name]), name + " is not ready"
+          assert re.fullmatch(r"[0-9a-f]{40}", os.environ["SOURCE_SHA"]), "SOURCE_SHA is not ready"
+          assert re.fullmatch(r"[0-9a-f]{64}", os.environ["ARCHIVE_SHA256"]), "ARCHIVE_SHA256 is not ready"
+          PY
       - name: Verify tested build and unused release tag
         run: |
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > source-run.json
@@ -79,7 +89,7 @@ jobs:
               assert len(files) == 1 and files[0].filename == "app-debug.apk"
               assert 0 < files[0].file_size <= 128 * 1024 * 1024
               apk = archive.read(files[0])
-          target = output / "Phigros-Script-v0.1.3.apk"
+          target = output / "Phigros-Script-v0.1.4.apk"
           target.write_bytes(apk)
           with ZipFile(target) as package:
               assert "AndroidManifest.xml" in package.namelist()
@@ -87,7 +97,7 @@ jobs:
           print("Verified original APK archive.")
           PY
           cd dist
-          sha256sum Phigros-Script-v0.1.3.apk > SHA256SUMS.txt
+          sha256sum Phigros-Script-v0.1.4.apk > SHA256SUMS.txt
       - name: Inspect update signing identity
         run: |
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > signing-releases.json
@@ -111,6 +121,7 @@ jobs:
                       versions.append((tuple(map(int, match.groups())), release))
           assert versions, "No previous release for signing comparison"
           previous_version, previous = max(versions, key=lambda x: x[0])
+          assert previous_version >= (0, 1, 3), "Stable v0.1.3-or-later signing anchor missing"
           tag = previous["tag_name"]
           old_name = "Phigros-Script-" + tag + ".apk"
           assert len([a for a in previous["assets"] if a["name"] == old_name and a["state"] == "uploaded"]) == 1
@@ -118,7 +129,7 @@ jobs:
           subprocess.run(["gh", "release", "download", tag, "--repo", os.environ["GITHUB_REPOSITORY"],
                           "--pattern", old_name, "--dir", "previous"], check=True, timeout=90)
           old = certificate(Path("previous") / old_name)
-          new = certificate("dist/Phigros-Script-v0.1.3.apk")
+          new = certificate("dist/Phigros-Script-v0.1.4.apk")
           # This is a permanent migration boundary, not the next release's version.
           migration_allowed = os.environ["RELEASE_TAG"] == "v0.1.3" and previous_version < (0, 1, 3)
           assert old == new or migration_allowed, "Unexpected signing change; refusing publication"
@@ -131,73 +142,39 @@ jobs:
           Path("signing-note.md").write_text(note)
           print("New APK signer SHA256: " + ",".join(sorted(new)))
           PY
-      - name: Label previous releases as Alpha
-        run: |
-          python3 - <<'PY'
-          import json, os, subprocess
-          from pathlib import Path
-          repo = os.environ["GITHUB_REPOSITORY"]
-          for tag in ("v0.1.0", "v0.1.1", "v0.1.2"):
-              release = json.loads(subprocess.check_output(
-                  ["gh", "api", "repos/" + repo + "/releases/tags/" + tag], text=True))
-              assert release["tag_name"] == tag and not release["draft"]
-              body = release.get("body") or ""
-              lines = body.splitlines()
-              suffix = "（诊断版）" if tag == "v0.1.2" else ""
-              heading = "## Phigros Script " + tag + " Alpha" + suffix
-              if lines and lines[0].startswith("## Phigros Script " + tag):
-                  lines[0] = heading
-              else:
-                  lines = [heading, ""] + lines
-              notes = Path("alpha-notes-" + tag + ".md")
-              notes.write_text("\n".join(lines) + "\n")
-              original_assets = {a["id"]: (a["name"], a["size"], a["digest"]) for a in release["assets"]}
-              subprocess.run(["gh", "release", "edit", tag, "--repo", repo,
-                              "--title", "Phigros Script " + tag + " Alpha",
-                              "--prerelease", "--notes-file", str(notes)], check=True)
-              updated = json.loads(subprocess.check_output(
-                  ["gh", "api", "repos/" + repo + "/releases/tags/" + tag], text=True))
-              assert updated["name"] == "Phigros Script " + tag + " Alpha"
-              assert updated["prerelease"] and not updated["draft"]
-              assert updated["body"].startswith(heading)
-              assert {a["id"]: (a["name"], a["size"], a["digest"]) for a in updated["assets"]} == original_assets
-              print("Verified Alpha metadata, unchanged assets: " + tag)
-          PY
       - name: Create draft and upload APK
         run: |
           cat > release-notes.md <<'NOTES'
-          ## Phigros Script v0.1.3 Alpha（手动启用入口）
+          ## Phigros Script v0.1.4 Alpha（悬浮窗确认与 APK 导入）
 
-          下载 **Phigros-Script-v0.1.3.apk** 安装，无需解压。
+          下载 **Phigros-Script-v0.1.4.apk** 安装，无需解压。
 
-          针对“开启后返回无障碍列表就关闭”的情况，新增 **通过 Shizuku 启用本服务**：留在应用内提交一次请求，再只读核对连接 10 秒。尚未在 vivo V2505A / Android 17 上验证效果，不能宣称已修复系统撤销授权的根因。
+          - 悬浮窗显示识别到的曲名和难度，点击“开始演奏”才继续。确认前不会自动点击游戏。
+          - 确认后隐藏悬浮窗，重新核对当前曲目，双击左上角暂停键；已在暂停菜单则直接确认继续按钮。恢复后丢弃旧时钟，按移动音符重新对齐并演奏。
+          - 演奏中手动暂停后重新显示确认流程，再次确认才恢复校准。“悬浮窗只识别”始终不发送触摸。
+          - 新增“导入 Phigros APK 解析谱面”：通过系统文件选择器选择与游戏一致的 APK，在手机内复制、解析并保存谱库，无需 Shizuku 读取权限，也不上传服务器。
+          - 支持同时选择一个基础 APK 及同版本资源分包。APKS/XAPK 请先解压后选择其中 APK。版本不匹配、缺资源或不支持的资源格式会导致解析/对齐失败。
+          - 导入先校验索引并试解析谱面，成功后替换谱库；保留当前与上一代本机副本，请预留存储空间。
+          - 保留 Shizuku 单次启用无障碍、曲名别名、校准与诊断功能。
 
-          使用步骤：
-          1. 启动 Shizuku，在应用内点击“连接 Shizuku”并授权。
-          2. 点击“通过 Shizuku 启用本服务”，确认“仅启用本服务一次”。
-          3. 留在应用内等待 10 秒核对；显示已连接后开始演奏。失败时复制诊断。
+          使用：扫描本机谱库或导入 APK → 允许显示在其他应用上层 → 返回并启动悬浮窗识别 → 同意录屏 → 游戏内确认歌曲和难度 → 点击开始演奏。自动演奏仍需要无障碍连接。演奏时窗口隐藏，可用通知栏“停止”或音量减键停止。
 
-          - 将本组件追加到读到的服务列表，保留原有条目；写前重复读取、写后核对，发现变化或拒绝就停止。
-          - 没有自动重试、后台强开或整串回滚；你仍可随时在系统设置关闭本服务。
-          - 操作期间请勿同时切换其他无障碍服务。系统设置没有原子比较并写入接口，仍存在极小的并发修改窗口。
-          - 不修改受限设置、AppOps 或设备管理策略；系统要求的许可仍需用户完成。
-          - 修正授权已撤销但绑定对象尚未清除时显示“已连接”的问题。
-          - 保留左上角双击暂停、识别谱面、恢复后重新对齐与诊断采集功能。
+          151 项单元测试、Android lint、APK 构建及签名校验通过。未在 vivo V2505A / Android 17 真机验证，识别与对齐效果仍需测试；此版本处于 Alpha 阶段，使用调试签名。
 
-          124 项单元测试、Android lint、APK 构建及签名校验通过；未真机验证。此版本处于 Alpha 阶段，使用调试签名。
+          APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37359320873)，源码提交为 78b3f65c8a2f4ebc60600303af38d7e6f7ce331b。发布标签另含发布工作流更新，其余文件已按 Git 对象逐项核对一致。SHA256SUMS.txt 可校验下载完整性。
 
-          APK 来自[已验证构建](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/actions/runs/37270851704)，源码提交为 6ad86a65a8a43e86b843b1efeaf9668c0fba577f。发布标签另含发布工作流更新，其余文件已按 Git 对象逐项核对一致。SHA256SUMS.txt 可校验下载完整性。
+          v0.1.2 及更早版本签名不同，需先记录校准和曲名别名，再卸载旧版安装；卸载会清除本应用数据。与 v0.1.3 的覆盖安装兼容性见下方签名核对结果。
           NOTES
           cat signing-note.md >> release-notes.md
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "Phigros Script v0.1.3 Alpha" \
+            --title "Phigros Script v0.1.4 Alpha" \
             --notes-file release-notes.md \
             --draft --prerelease
           gh release upload "$RELEASE_TAG" \
-            dist/Phigros-Script-v0.1.3.apk dist/SHA256SUMS.txt \
+            dist/Phigros-Script-v0.1.4.apk dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY"
       - name: Verify assets and publish
         run: |
@@ -212,7 +189,7 @@ jobs:
           assert release["draft"] and release["prerelease"]
           assert release["target_commitish"] == os.environ["GITHUB_SHA"]
           assets = {x["name"]: x for x in release["assets"]}
-          expected = {"Phigros-Script-v0.1.3.apk", "SHA256SUMS.txt"}
+          expected = {"Phigros-Script-v0.1.4.apk", "SHA256SUMS.txt"}
           assert set(assets) == expected
           for name in expected:
               asset = assets[name]
