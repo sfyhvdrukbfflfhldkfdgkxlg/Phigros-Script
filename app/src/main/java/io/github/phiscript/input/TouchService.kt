@@ -14,6 +14,7 @@ import android.util.DisplayMetrics
 import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityWindowInfo
 import io.github.phiscript.engine.Chart
 import io.github.phiscript.engine.Point
 import io.github.phiscript.engine.TouchEvent
@@ -51,12 +52,37 @@ class TouchService : AccessibilityService() {
         return super.onUnbind(intent)
     }
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            val name = event.packageName?.toString() ?: return
-            foregroundPackage = name
-            if (playing.get() && name != GAME_PACKAGE) cancelled.set(true)
+        val name = when (event?.eventType) {
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                val reported = event.packageName?.toString() ?: return
+                // Non-focusable overlay windows also emit STATE_CHANGED. Use actual focus for
+                // our own overlay, while a real MainActivity transition must stop touches.
+                if (reported == packageName &&
+                    event.className?.toString() != "io.github.phiscript.MainActivity")
+                    focusedWindowPackage() ?: reported
+                else reported
+            }
+            AccessibilityEvent.TYPE_WINDOWS_CHANGED -> focusedWindowPackage()
+            else -> return
         }
+        foregroundPackage = name
+        if (playing.get() && name != GAME_PACKAGE) cancelled.set(true)
     }
+
+    private fun focusedWindowPackage(): String? = try {
+        val window = windows.firstOrNull { it.isFocused }
+        if (window == null) null else {
+            val root = window.root
+            try {
+                // A focused system window (for example notification shade) is not gameplay.
+                if (window.type != AccessibilityWindowInfo.TYPE_APPLICATION) ""
+                else root?.packageName?.toString()
+            } finally {
+                @Suppress("DEPRECATION")
+                root?.recycle()
+            }
+        }
+    } catch (_: RuntimeException) { null }
     override fun onInterrupt() {
         cancelCurrent()
         Diagnostics.record(this, "无障碍服务收到中断")
