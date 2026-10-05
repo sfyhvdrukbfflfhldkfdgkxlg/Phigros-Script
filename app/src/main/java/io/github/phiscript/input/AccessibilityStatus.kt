@@ -9,8 +9,13 @@ import android.view.accessibility.AccessibilityManager
 object AccessibilityStatus {
     data class Snapshot(val systemEnabled: Boolean?, val serviceEnabled: Boolean?,
                         val managerEnabled: Boolean?, val connected: Boolean) {
+        val ready: Boolean get() = connected && systemEnabled != false &&
+            serviceEnabled != false && managerEnabled != false
         val summary: String get() = when {
-            connected -> "无障碍服务已连接"
+            connected && (systemEnabled == false || serviceEnabled == false) ->
+                "服务正在断开（系统已撤销启用状态）"
+            connected && managerEnabled == false -> "服务已绑定，等待系统确认"
+            ready -> "无障碍服务已连接"
             systemEnabled == false -> "系统无障碍总开关已关闭"
             serviceEnabled == true || managerEnabled == true -> "系统已启用，服务尚未连接"
             serviceEnabled == false && managerEnabled == false -> "系统未启用本应用的无障碍服务"

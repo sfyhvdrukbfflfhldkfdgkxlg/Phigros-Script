@@ -42,7 +42,7 @@ object ApkAccess {
         val app = context.applicationContext
         args = Shizuku.UserServiceArgs(ComponentName(app, ApkReadService::class.java))
             .daemon(false).processNameSuffix("phigros_apk_reader").tag("phigros-apk-reader-v1")
-            .version(2).debuggable(false)
+            .version(3).debuggable(false)
         Shizuku.addBinderDeadListener(died, main)
         Shizuku.addRequestPermissionResultListener(permissionResult, main)
         Shizuku.addBinderReceivedListenerSticky(received, main)
@@ -96,8 +96,14 @@ object ApkAccess {
         return requireRemote().collectAccessibilityDiagnostics()
             ?: throw ApkAccessException("系统诊断没有返回结果。")
     }
+    /** Only from the explicit user action; never invoked by a listener or service reconnect. */
+    internal fun enableSelfAccessibility(): String {
+        check(Looper.myLooper() != Looper.getMainLooper())
+        return requireRemote().enableSelfAccessibility()
+            ?: throw ApkAccessException("启用请求没有返回结果，请查看系统状态。")
+    }
     private fun requireRemote(): IPhigrosApkReader {
-        check(Looper.myLooper() != Looper.getMainLooper()) { "APK reads must run on a background thread." }
+        check(Looper.myLooper() != Looper.getMainLooper()) { "Shizuku operations must run on a background thread." }
         return remote?.takeIf { it.asBinder().isBinderAlive }
             ?: throw ApkAccessException("Shizuku 尚未连接，请授权并等待连接后重试。")
     }
@@ -122,8 +128,8 @@ object ApkAccess {
                 !Shizuku.pingBinder() -> emit("Shizuku 未启动；优先尝试直接读取安装包。")
                 Shizuku.isPreV11() || Shizuku.getVersion() < 13 -> emit("读取备用通道需要 Shizuku 13 或更新版本。")
                 Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED ->
-                    emit("Shizuku 正在运行，点击授权后可启用备用读取通道。")
-                isConnected -> emit("Shizuku 已连接，可读取 Phigros 安装包资源。")
+                    emit("Shizuku 正在运行，点击连接按钮授权后可使用。")
+                isConnected -> emit("Shizuku 已连接，可读取资源或手动启用无障碍。")
                 connection == null -> bind()
             }
         } catch (e: RuntimeException) { emit("Shizuku 连接失败：" + (e.message ?: e.javaClass.simpleName)) }
@@ -137,7 +143,7 @@ object ApkAccess {
                     if (!attached || connection !== self) return@post
                     timeout?.let(main::removeCallbacks); timeout = null
                     remote = IPhigrosApkReader.Stub.asInterface(binder)
-                    emit("Shizuku 已连接，可读取 Phigros 安装包资源。")
+                    emit("Shizuku 已连接，可读取资源或手动启用无障碍。")
                 }
             }
             override fun onServiceDisconnected(name: ComponentName) {

@@ -30,6 +30,7 @@ import io.github.phiscript.assets.ChartLibrary
 import io.github.phiscript.capture.CaptureService
 import io.github.phiscript.input.TouchService
 import io.github.phiscript.input.AccessibilityStatus
+import io.github.phiscript.input.AccessibilityActivation
 import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
@@ -64,6 +65,7 @@ class MainActivity : ComponentActivity() {
             if (!::statusView.isInitialized) return
             val library = RuntimeState.library
             statusView.text = when {
+                AccessibilityActivation.isRunning -> AccessibilityActivation.status
                 Diagnostics.isCapturing -> "系统诊断采集中 · 约 30 秒后完成"
                 RuntimeState.running.get() -> "识别运行中 · 可在通知栏停止"
                 scanning -> "正在扫描安装包…"
@@ -116,12 +118,13 @@ class MainActivity : ComponentActivity() {
         statusView = text("", 16f)
         accessibilityView = text(AccessibilityStatus.read(this).summary, 14f)
         button("扫描本机谱库") { scan() }
-        button("开启无障碍触控") {
+        button("通过系统设置开启无障碍") {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
+        button("通过 Shizuku 启用本服务") { enableAccessibilityWithShizuku() }
         button("无障碍自查 / 复制诊断") { accessibilityHelp() }
         button("记录无障碍关闭原因（Shizuku）") { captureAccessibilityFailure() }
-        button("连接 Shizuku（读取受限时使用）") {
+        button("连接 Shizuku") {
             try { ApkAccess.requestPermission() }
             catch (e: Exception) { message("Shizuku：" + e.message) }
         }
@@ -144,7 +147,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun scan(after: (() -> Unit)? = null) {
-        if (scanning || RuntimeState.running.get() || Diagnostics.isCapturing) {
+        if (scanning || RuntimeState.running.get() || Diagnostics.isCapturing || AccessibilityActivation.isRunning) {
             message("请先停止当前任务")
             return
         }
@@ -166,12 +169,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startSession(onlyRecognize: Boolean) {
-        if (RuntimeState.running.get() || Diagnostics.isCapturing) { message("请先等待诊断完成或停止当前任务"); return }
+        if (RuntimeState.running.get() || Diagnostics.isCapturing || AccessibilityActivation.isRunning) { message("请先等待诊断完成或停止当前任务"); return }
         try { preferences.snapshot() }
         catch (e: Exception) { message("校准参数错误：" + e.message); return }
-        if (!onlyRecognize && TouchService.current == null) {
-            message(AccessibilityStatus.read(this).summary + "；请在设置中确认后返回")
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        if (!onlyRecognize && !AccessibilityStatus.read(this).ready) {
+            message(AccessibilityStatus.read(this).summary + "；请用主页的 Shizuku 按钮或系统设置启用")
             return
         }
         if (RuntimeState.library == null) { scan { startSession(onlyRecognize) }; return }
@@ -264,8 +266,30 @@ class MainActivity : ComponentActivity() {
             }.show()
     }
 
+    private fun enableAccessibilityWithShizuku() {
+        if (RuntimeState.running.get() || scanning || Diagnostics.isCapturing ||
+            AccessibilityActivation.isRunning) {
+            message("请先等待当前任务结束或停止演奏")
+            return
+        }
+        if (!ApkAccess.isConnected) {
+            message("请先连接 Shizuku 并授权，等待显示已连接")
+            return
+        }
+        AlertDialog.Builder(this).setTitle("通过 Shizuku 启用本服务")
+            .setMessage("使用你已授权的 Shizuku，启用 Phigros Script 的无障碍触控，并保留列表中已有的服务。\n\n" +
+                "这是一次性操作，随后会在本页核对连接 10 秒。若系统再次关闭服务，应用会报告结果，不会在后台反复开启。" +
+                "你仍可随时在系统设置中关闭本服务。\n\n" +
+                "此入口用于避开返回无障碍列表时关闭的问题，尚未在你的系统上验证效果。" +
+                "操作期间请勿同时切换其他无障碍服务；若系统设置已变化，本次会停止。")
+            .setNegativeButton("取消", null)
+            .setPositiveButton("仅启用本服务一次") { _, _ ->
+                if (!AccessibilityActivation.start(applicationContext))
+                    message("当前有任务进行中，请稍后再试")
+            }.show()
+    }
     private fun captureAccessibilityFailure() {
-        if (RuntimeState.running.get() || scanning || Diagnostics.isCapturing) {
+        if (RuntimeState.running.get() || scanning || Diagnostics.isCapturing || AccessibilityActivation.isRunning) {
             message("请先等待当前任务完成或停止演奏")
             return
         }

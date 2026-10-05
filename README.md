@@ -4,11 +4,21 @@
 
 ## 下载 APK
 
-打开本仓库 [Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases)，在最新版本的 Assets 中直接下载 **Phigros-Script-v0.1.2.apk** 安装，无需解压。附带的 SHA256SUMS.txt 可校验下载完整性。
+打开本仓库 [Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases)，在最新版本的 Assets 中直接下载 **Phigros-Script-v0.1.3.apk** 安装，无需解压。附带的 SHA256SUMS.txt 可校验下载完整性。
 
 后续开发构建仍可在 **Actions → Build Android APK → 最近一次成功的运行 → Artifacts** 下载 **Phigros-Script-debug**，解压安装。Actions 产物保留 30 天。私有仓库的 Release 和 Actions 下载都需要登录有仓库权限的 GitHub 账号。
 
-这是调试签名的实验版本。云端缓存尽量保留调试签名；缓存被清理后，新包可能需要卸载旧包才能安装。
+这是调试签名的实验版本。v0.1.3 起构建使用显式签名文件并校对已发布证书；缓存丢失或证书不匹配会停止构建，避免静默更换签名。v0.1.2 的旧签名文件当前无法取得，本次升级仍需保存校准/别名后卸载旧版再安装，并重新授权。卸载会清除本应用设置与诊断。
+
+## v0.1.3 的变化
+
+- 新增“通过 Shizuku 启用本服务”：用户在应用内确认后，仅提交一次本应用的无障碍启用请求，然后只读核对连接 10 秒。用于测试绕开“从服务详情返回无障碍列表就关闭”的触发路径，尚未在 vivo V2505A / Android 17 上验证效果。
+- 读取已有服务列表并追加本服务，保留原有条目与顺序；写入前重复读取、写后核对。发现列表变化、拒绝写入或系统撤销即停止，不自动回滚整个列表或反复开启。
+- 系统 Secure 设置没有原子的比较并写入接口，仍存在极小的并发修改窗口；操作期间请勿同时切换其他服务或使用自动管理工具。
+- 不修改 AppOps、受限设置或设备管理策略。你仍可在系统设置中随时关闭本服务。
+- 修正“系统授权已移除，但服务尚未解绑”时仍显示已连接的问题；未连接时不再自动跳转可能触发关闭的系统页面。
+
+操作：连接 Shizuku 并授权 → 通过 Shizuku 启用本服务 → 仅启用本服务一次 → 留在应用内等待 10 秒核对 → 状态保持已连接后开始演奏。失败时复制诊断；此入口不是已确认的根因修复。
 
 ## v0.1.2 的变化
 
@@ -87,7 +97,7 @@ gradle testDebugUnitTest lintDebug assembleDebug
 
 ## 代码结构
 
-- `assets/`：已安装 APK、Shizuku 只读资源服务、Addressables 和 Unity 解析。
+- `assets/`：已安装 APK、Shizuku 资源读取/主动诊断/单次启用本服务、Addressables 和 Unity 解析。
 - `engine/`：v3 谱面时间与坐标。
 - `vision/`：OCR 与多帧视觉对齐。
 - `input/`：无障碍多指手势。
