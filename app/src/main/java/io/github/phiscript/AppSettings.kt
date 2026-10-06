@@ -4,6 +4,11 @@ import android.content.Context
 import android.graphics.RectF
 import io.github.phiscript.vision.NormalizedPoint
 
+enum class PlayMode(val label: String, val gamePackage: String) {
+    VISUAL("Phigros · 纯视觉", "com.PigeonGames.Phigros"),
+    PHIRA("Phira · 导入谱面", "org.flos.phira")
+}
+
 data class SessionSettings(
     val viewport: RectF,
     val titleRoi: RectF,
@@ -13,7 +18,13 @@ data class SessionSettings(
     val pauseRoi: RectF = RectF(0f, 0f, 0.18f, 0.24f),
     val doubleTapIntervalMs: Int = 140,
     val restartPoint: NormalizedPoint = NormalizedPoint(0.5f, 0.5f),
-    val pauseSettleMs: Int = 1000
+    val pauseSettleMs: Int = 1000,
+    val mode: PlayMode = PlayMode.VISUAL,
+    val phiraRestartPoint: NormalizedPoint = NormalizedPoint(0.5f, 0.5f),
+    val phiraRestartDelayMs: Int = 700,
+    val phiraGlobalOffsetMs: Int = 0,
+    val phiraPauseRoi: RectF = RectF(0f, 0f, 0.18f, 0.24f),
+    val phiraAutomaticViewport: Boolean = true
 )
 class AppSettings(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -23,6 +34,7 @@ class AppSettings(context: Context) {
     fun saveFlag(key: String, value: Boolean) { prefs.edit().putBoolean(key, value).apply() }
     fun alias(id: String): String = text("alias:" + id, "")
     fun setAlias(id: String, value: String) = save("alias:" + id, value.trim())
+    fun mode(): PlayMode = runCatching { PlayMode.valueOf(text("mode", "VISUAL")) }.getOrDefault(PlayMode.VISUAL)
     fun snapshot() = SessionSettings(
         rect(text("view", "0,0,1,1")),
         rect(text("title", "0,0,1,1")),
@@ -32,7 +44,13 @@ class AppSettings(context: Context) {
         rect(text("pauseRegion", "0,0,0.18,0.24")),
         text("doubleTapInterval", "140").toInt().also { require(it in 80..300) },
         point(text("restartPoint", "0.5,0.5")),
-        text("pauseSettle", "1000").toInt().also { require(it in 900..4000) }
+        text("pauseSettle", "1000").toInt().also { require(it in 900..4000) },
+        mode(),
+        point(text("phiraRestartPoint", "0.5,0.5")),
+        text("phiraRestartDelay", "700").toInt().also { require(it in 0..5000) },
+        text("phiraGlobalOffset", "0").toInt().also { require(it in -2000..2000) },
+        rect(text("phiraPauseRegion", "0,0,0.18,0.24")),
+        flag("phiraAutomaticViewport", true)
     )
     companion object {
         fun point(value: String): NormalizedPoint {

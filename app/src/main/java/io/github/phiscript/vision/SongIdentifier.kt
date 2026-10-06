@@ -16,6 +16,9 @@ import kotlin.math.roundToInt
 data class OcrConfig(val titleRoi: RectF = RectF(0f, 0f, 1f, 1f), val difficultyRoi: RectF = RectF(0f, 0f, 1f, 1f))
 data class OcrFrame(val identity: Identity?, val pauseOrResult: Boolean, val pauseMenu: PauseMenu? = null,
                     val resultScreen: Boolean = false, val diagnostic: String = "")
+data class OcrLabels(val titleTexts: List<String>, val difficultyTexts: List<String>,
+    val regions: List<TextRegion>, val pauseOrResult: Boolean, val resultScreen: Boolean,
+    val pauseMenu: PauseMenu?)
 class SongIdentifier(config: OcrConfig = OcrConfig()) : Closeable {
     private val titleRoi = validatedRoi(config.titleRoi)
     private val difficultyRoi = validatedRoi(config.difficultyRoi)
@@ -47,6 +50,14 @@ class SongIdentifier(config: OcrConfig = OcrConfig()) : Closeable {
             else -> "未唯一匹配曲名和难度；" + preview
         }
         return OcrFrame(identity, paused, menu, result, lastDiagnostic)
+    }
+    fun readLabels(bitmap: Bitmap): OcrLabels {
+        val observation = read(bitmap)
+        val regions = observation.flatMap { listOf(it.region) + it.elements }
+        val texts = regions.map { it.text }
+        return OcrLabels(textsWithin(observation, titleRoi), textsWithin(observation, difficultyRoi),
+            regions, SongMatcher.isPauseOrResult(texts), SongMatcher.isResult(texts),
+            SongMatcher.pauseMenu(regions))
     }
     fun detectPaused(bitmap: Bitmap): Boolean {
         val texts = read(bitmap).flatMap { listOf(it.region.text) + it.elements.map { e -> e.text } }

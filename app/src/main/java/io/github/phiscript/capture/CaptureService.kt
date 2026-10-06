@@ -25,6 +25,8 @@ import android.view.WindowManager
 import io.github.phiscript.AppSettings
 import io.github.phiscript.MainActivity
 import io.github.phiscript.RuntimeState
+import io.github.phiscript.PlayMode
+import io.github.phiscript.input.TouchService
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
@@ -44,6 +46,8 @@ class CaptureService : Service() {
     private var sourceWidth = 0
     private var sourceHeight = 0
     private var lastGrab = 0L
+    private var frameInterval = 90L
+    private var maxCaptureSide = 1920.0
     private var displayManager: DisplayManager? = null
     private val projectionCallback = object : MediaProjection.Callback() {
         override fun onStop() { finish("录屏已结束") }
@@ -85,7 +89,11 @@ class CaptureService : Service() {
             }
             require(result == Activity.RESULT_OK && data != null) { "缺少录屏授权" }
             val settings = AppSettings(this).snapshot()
-            val library = RuntimeState.library ?: error("请先扫描谱库")
+            frameInterval = if (settings.mode == PlayMode.VISUAL) 30L else 90L
+            maxCaptureSide = if (settings.mode == PlayMode.VISUAL) 1280.0 else 1920.0
+            val phiraLibrary = if (settings.mode == PlayMode.PHIRA)
+                RuntimeState.phiraLibrary ?: error("请先导入 Phira 谱面") else null
+            TouchService.current?.selectGame(settings.mode.gamePackage)
             RuntimeState.running.set(true)
             captureThread = HandlerThread("phi-capture").also { it.start() }
             captureHandler = Handler(captureThread!!.looper)
@@ -103,7 +111,13 @@ class CaptureService : Service() {
             val recognitionOverlay = RecognitionOverlay(this, ::finish)
             overlay = recognitionOverlay
             engineThread = Thread({
-                try { SessionEngine(frames, library, settings, preview, stop, recognitionOverlay).run() }
+                try {
+                    when (settings.mode) {
+                        PlayMode.VISUAL -> SessionEngine(frames, settings, preview, stop, recognitionOverlay).run()
+                        PlayMode.PHIRA -> PhiraSessionEngine(frames, requireNotNull(phiraLibrary),
+                            settings, preview, stop, recognitionOverlay).run()
+                    }
+                }
                 catch (e: InterruptedException) { Thread.currentThread().interrupt() }
                 catch (e: Exception) { RuntimeState.log("会话停止：" + e.message) }
                 finally { Handler(mainLooper).post { finish(null) } }
@@ -121,7 +135,7 @@ class CaptureService : Service() {
         if (stop.get() || projection == null || realWidth <= 0 || realHeight <= 0) return
         if (realWidth == sourceWidth && realHeight == sourceHeight && reader != null) return
         val activeProjection = projection ?: return
-        val factor = minOf(1.0, 1920.0 / max(realWidth, realHeight))
+        val factor = minOf(1.0, maxCaptureSide / max(realWidth, realHeight))
         val w = max(2, (realWidth * factor).roundToInt())
         val h = max(2, (realHeight * factor).roundToInt())
         val next = ImageReader.newInstance(w, h, PixelFormat.RGBA_8888, 2)
@@ -131,7 +145,7 @@ class CaptureService : Service() {
                 ?: return@setOnImageAvailableListener
             image.use {
                 val captured = SystemClock.uptimeMillis()
-                if (stop.get() || captured - lastGrab < 90) return@use
+                if (stop.get() || captured - lastGrab < frameInterval) return@use
                 lastGrab = captured
                 try {
                     val plane = it.planes[0]

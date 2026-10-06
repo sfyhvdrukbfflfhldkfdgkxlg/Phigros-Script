@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <queries>
         <package android:name="com.PigeonGames.Phigros" />
+        <package android:name="org.flos.phira" />
         <package android:name="moe.shizuku.privileged.api" />
     </queries>
     <application android:name=".PhigrosApplication" android:label="Phigros Script"
@@ -20,7 +21,7 @@
         <service android:name=".capture.CaptureService"
             android:exported="false" android:foregroundServiceType="mediaProjection" />
         <service android:name=".input.TouchService"
-            android:label="Phigros 多指触控"
+            android:label="Phigros / Phira 多指触控"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>

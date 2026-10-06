@@ -36,7 +36,7 @@ data class Note internal constructor(
     val lineIndex: Int
 )
 
-/** Format 3. All times are chart-local; a visual epoch already incorporates audio offset. */
+/** Format 3. Times are chart-local; the caller establishes the playback epoch and offset. */
 class Chart private constructor(
     val notes: List<Note>,
     val offsetSeconds: Double,

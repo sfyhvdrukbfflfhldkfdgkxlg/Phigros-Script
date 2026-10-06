@@ -29,7 +29,14 @@ import kotlin.math.min
 class TouchService : AccessibilityService() {
     @Volatile var foregroundPackage: String? = null
         private set
-    val gameForeground: Boolean get() = foregroundPackage == GAME_PACKAGE
+    @Volatile var targetPackage: String = GAME_PACKAGE
+        private set
+    val gameForeground: Boolean get() = foregroundPackage == targetPackage
+    fun selectGame(packageName: String) {
+        require(packageName in setOf(GAME_PACKAGE, PHIRA_PACKAGE))
+        check(!playing.get()) { "请先停止演奏" }
+        targetPackage = packageName
+    }
     private val playing = AtomicBoolean(false)
     private val cancelled = AtomicBoolean(false)
 
@@ -66,7 +73,7 @@ class TouchService : AccessibilityService() {
             else -> return
         }
         foregroundPackage = name
-        if (playing.get() && name != GAME_PACKAGE) cancelled.set(true)
+        if (playing.get() && name != targetPackage) cancelled.set(true)
     }
 
     private fun focusedWindowPackage(): String? = try {
@@ -108,12 +115,13 @@ class TouchService : AccessibilityService() {
 
     /** Menu controls share the same single gesture owner as note playback. */
     fun tapNormalized(x: Float, y: Float, count: Int, intervalMs: Int,
-                      screenWidth: Int, screenHeight: Int, stop: AtomicBoolean) {
+                      screenWidth: Int, screenHeight: Int, stop: AtomicBoolean): Long {
         check(android.os.Looper.myLooper() != android.os.Looper.getMainLooper())
         require(x.isFinite() && y.isFinite() && x > 0f && x < 1f && y > 0f && y < 1f)
         require(count in 1..2 && intervalMs in 80..300)
         check(playing.compareAndSet(false, true)) { "已有触控在运行" }
         cancelled.set(false)
+        var firstDown = 0L
         try {
             repeat(count) {
                 check(!stop.get() && !cancelled.get() && gameForeground) { "菜单操作已停止" }
@@ -125,6 +133,7 @@ class TouchService : AccessibilityService() {
                 val done = CountDownLatch(1)
                 val completed = AtomicBoolean(false)
                 val began = SystemClock.uptimeMillis()
+                if (it == 0) firstDown = began
                 check(dispatchGesture(gesture, object : GestureResultCallback() {
                     override fun onCompleted(gestureDescription: GestureDescription) {
                         completed.set(true); done.countDown()
@@ -144,6 +153,19 @@ class TouchService : AccessibilityService() {
                     }
                 }
             }
+            return firstDown
+        } finally { playing.set(false) }
+    }
+
+    fun playVisual(snapshot: () -> VisualTouchFrame?, stop: AtomicBoolean, onStatus: (String) -> Unit) {
+        check(android.os.Looper.myLooper() != android.os.Looper.getMainLooper())
+        check(playing.compareAndSet(false, true)) { "已有触控在运行" }
+        cancelled.set(false)
+        try {
+            check(gameForeground) { "目标游戏尚未处于前台" }
+            val screen = screenDimensions()
+            VisualTouchPlayer.play(this, screen.first, screen.second, snapshot, stop,
+                { !cancelled.get() && gameForeground && screenDimensions() == screen }, onStatus)
         } finally { playing.set(false) }
     }
 
@@ -159,7 +181,7 @@ class TouchService : AccessibilityService() {
         var active: List<ActiveStroke> = emptyList()
         var uncertain: List<ActiveStroke>? = null
         try {
-            check(gameForeground) { "Phigros 尚未处于前台" }
+            check(gameForeground) { "目标游戏尚未处于前台" }
             val screen = screenDimensions()
             require(viewport.left >= 0 && viewport.top >= 0 &&
                 viewport.right <= screen.first + 1 && viewport.bottom <= screen.second + 1) {
@@ -168,7 +190,7 @@ class TouchService : AccessibilityService() {
             val initialTime = SystemClock.uptimeMillis() - epochUptimeMs
             val all = TouchEvent.forChart(chart)
             val events = all.filter { (it.note.timeSeconds * 1000) >= initialTime + 25 }
-            if (events.isEmpty()) { onStatus("对齐过晚，已无后续音符"); return }
+            if (events.isEmpty()) { onStatus("当前已无后续音符"); return }
             val skipped = all.size - events.size
             onStatus(if (skipped > 0) "开始演奏；跳过已错过的 $skipped 个音符" else "开始演奏")
             var cursor = 0
@@ -286,6 +308,7 @@ class TouchService : AccessibilityService() {
         val stroke: GestureDescription.StrokeDescription?, val lastPoint: Point?)
     companion object {
         const val GAME_PACKAGE = "com.PigeonGames.Phigros"
+        const val PHIRA_PACKAGE = "org.flos.phira"
         private const val CHUNK_MS = 32L
         private const val MAX_LATENESS_MS = 70L
         @Volatile var current: TouchService? = null
