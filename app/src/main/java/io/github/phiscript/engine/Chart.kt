@@ -41,7 +41,8 @@ class Chart private constructor(
     val notes: List<Note>,
     val offsetSeconds: Double,
     private val lines: List<JudgeLine>,
-    private val nativePosition: ((Note, Double, Viewport) -> Point?)? = null
+    private val nativePosition: ((Note, Double, Viewport) -> Point?)? = null,
+    private val nativeNormal: ((Note, Double, Viewport) -> Point)? = null
 ) {
     val durationSeconds: Double = notes.maxOf { it.endSeconds }
     val firstNoteSeconds: Double = notes.minOf { it.timeSeconds }
@@ -63,9 +64,17 @@ class Chart private constructor(
         }
         return Point(x.toFloat(), y.toFloat())
     }
+    fun judgeNormal(note: Note, seconds: Double, viewport: Viewport): Point {
+        require(seconds.isFinite())
+        nativeNormal?.let { return it(note, seconds, viewport) }
+        val line = lines[note.lineIndex]
+        val angle = -line.rotation.value(seconds / line.secondsPerTick, 0.0) * Math.PI / 180.0
+        return Point((-sin(angle)).toFloat(), cos(angle).toFloat())
+    }
     companion object {
         internal fun fromNative(notes: List<Note>, offset: Double,
-            position: (Note, Double, Viewport) -> Point?): Chart = Chart(notes, offset, emptyList(), position)
+            position: (Note, Double, Viewport) -> Point?, normal: (Note, Double, Viewport) -> Point): Chart =
+            Chart(notes, offset, emptyList(), position, normal)
         fun parse(json: String): Chart {
             val root = JSONObject(json)
             if (root.has("phiscriptFormat")) return PhiraNativeChart.parse(root)

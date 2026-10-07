@@ -97,7 +97,7 @@ class VisualNoteTracker(private val maximumFrameAgeMs: Long = 180,
             val twoFrameCrossing = track.seen == 2 && track.approaching == 1 &&
                 track.note.confidence >= 0.8 && track.seenAt - track.previousAt in 10..100 &&
                 track.previousDistance > max(6.0, track.line.thickness * 2.0) &&
-                track.headDistance <= max(2.0, track.line.thickness * 0.7) &&
+                predicted <= max(2.0, track.line.thickness * 0.7) &&
                 track.velocity < -height * 0.15
             val established = track.seen >= 3 && track.approaching >= 2
             if (!track.fired && observed && track.startedAway && (established || twoFrameCrossing) && track.velocity < -height * 0.05 &&

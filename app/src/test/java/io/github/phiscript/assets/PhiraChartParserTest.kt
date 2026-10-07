@@ -124,6 +124,14 @@ class PhiraChartParserTest {
         val r = rpe(); line(r).put("notes", JSONArray().put(note(1, 4, 0)).put(note(3, 5, 0)).put(note(4, 6, 0)))
         assertEquals(listOf(2.0, 2.5, 3.0), PhiraChartParser.parse(r.toString()).notes.map { it.timeSeconds })
     }
+    @Test fun futureBezierTrackExtrapolatesLikePhira() {
+        val r = rpe(); line(r).put("notes", JSONArray().put(note(1, 2)))
+        line(r).getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents",
+            JSONArray().put(event(4, 12, 0.0, 270.0).put("bezier", 1)
+                .put("bezierPoints", JSONArray().put(0.25).put(0.1).put(0.25).put(1.0))))
+        val c = PhiraChartParser.parse(r.toString())
+        assertEquals(832.5f, c.position(c.notes.single(), 1.0, Viewport(0f, 0f, 1600f, 900f))!!.x, 0.01f)
+    }
     @Test fun bezierMotionUsesCubicXInversion() {
         val r = rpe(); line(r).getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents",
             JSONArray().put(event(0, 8, 0.0, 270.0).put("bezier", 1)
@@ -177,5 +185,11 @@ class PhiraChartParserTest {
         val c = PhiraChartParser.parse(r.toString()); val v = Viewport(0f, 0f, 1600f, 900f)
         assertEquals(880f, c.position(c.notes.single(), 1.0, v)!!.x, 0.01f)
         assertEquals(1120f, c.position(c.notes.single(), 2.0, v)!!.x, 0.01f)
+    }
+    @Test fun firstEmptyRpeTrackSuppressesLaterLayers() {
+        val r = rpe(); line(r).put("eventLayers", JSONArray().put(JSONObject().put("moveXEvents", JSONArray()))
+            .put(JSONObject().put("moveXEvents", JSONArray().put(event(0, 8, 135.0, 135.0)))))
+        val c = PhiraChartParser.parse(r.toString())
+        assertEquals(800f, c.position(c.notes.single(), 2.0, Viewport(0f, 0f, 1600f, 900f))!!.x, 0.01f)
     }
 }

@@ -133,11 +133,13 @@ class VisualPixelDetector {
             val ranked = associations.sortedBy { it.score }
             val chosen = ranked.firstOrNull() ?: continue
             if (ranked.size > 1 && ranked[1].score - chosen.score < 8.0) continue
-            val line = lines[chosen.index]; val p = chosen.projection
+            val line = lines[chosen.index]
+            // Growth joins pieces; only original colored pixels define contact geometry.
+            val p = project(blob, line, width, true) ?: chosen.projection
             val x = line.dx * p.alongCenter - line.dy * p.acrossCenter
             val y = line.dy * p.alongCenter + line.dx * p.acrossCenter
             val half = if (chosen.hold) (p.acrossMax - p.acrossMin) * 0.5 else 0.0
-            val confidence = (0.74 + 0.20 * blob.strong / blob.count.toDouble()).coerceAtMost(0.95)
+            val confidence = (0.80 + 0.15 * blob.strong / blob.count.toDouble()).coerceAtMost(0.95)
             notes.add(VisualNoteBlob(if (chosen.hold) 3 else blob.color, x, y, chosen.index,
                 -line.dy * half, line.dx * half, confidence))
             if (notes.size > 128) return VisualScene(width, height, lines, emptyList(), false)

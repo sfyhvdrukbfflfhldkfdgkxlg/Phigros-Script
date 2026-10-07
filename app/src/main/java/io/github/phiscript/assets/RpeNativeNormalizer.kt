@@ -19,13 +19,17 @@ internal object RpeNativeNormalizer {
             val obj = JSONObject()
             for ((field, key, factor) in listOf(Triple("x", "moveXEvents", 2.0 / 1350.0),
                 Triple("y", "moveYEvents", 2.0 / 900.0), Triple("rotation", "rotateEvents", -1.0))) {
-                val tracks = JSONArray()
+                val tracks = JSONArray(); var firstPresent = true; var ignoreTrack = false
                 for (i in 0 until layers.length()) {
                     if (layers.isNull(i)) continue
                     val events = layers.getJSONObject(i).optJSONArray(key) ?: continue
                     eventsTotal += events.length()
                     require(eventsTotal <= MAX_EVENTS) { "RPE 判定线事件总数过多" }
-                    if (events.length() == 0) continue
+                    if (firstPresent) { ignoreTrack = events.length() == 0; firstPresent = false }
+                    if (events.length() == 0) {
+                        require(ignoreTrack) { "RPE 动画包含非首空层，Phira 无法播放" }
+                        continue
+                    }
                     val ordered = (0 until events.length()).map { events.getJSONObject(it) }
                         .sortedBy { clock.seconds(it.getJSONArray("startTime")) }
                     val frames = JSONArray(); var previousEnd = Double.NEGATIVE_INFINITY
@@ -37,7 +41,7 @@ internal object RpeNativeNormalizer {
                         frames.put(keyframe(start, number(event, "start") * factor, tween(event)))
                         frames.put(keyframe(end, number(event, "end") * factor, JSONObject().put("id", 0)))
                     }
-                    tracks.put(frames)
+                    if (!ignoreTrack) tracks.put(frames)
                 }
                 obj.put(field, tracks)
             }

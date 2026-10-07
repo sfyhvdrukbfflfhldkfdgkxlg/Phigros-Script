@@ -23,6 +23,17 @@ class VisualNoteAppearanceTest {
         val s = VisualPixelDetector().detect(p, width, height)
         assertTrue(s.reliable); assertEquals(1, s.notes.single().kind)
     }
+    @Test fun whiteCenterTapCanUseTwoFrameCrossingEvidence() {
+        val detector = VisualPixelDetector(); val tracker = VisualNoteTracker()
+        fun picture(y: Int): VisualScene {
+            val p = pixels(); line(p); rect(p, 100, y, 126, y + 6, white)
+            outline(p, 100, y, 126, y + 6, blue)
+            return detector.detect(p, width, height)
+        }
+        assertTrue(tracker.observe(picture(70), 1000, 1000).isEmpty())
+        assertEquals(io.github.phiscript.input.VisualTouchKind.TAP,
+            tracker.observe(picture(112), 1033, 1033).single().kind)
+    }
     @Test fun blueOutlineWithWhiteCenterIsOneTap() {
         val p = pixels(); line(p); rect(p, 100, 40, 126, 46, white); outline(p, 100, 40, 126, 46, blue)
         val n = VisualPixelDetector().detect(p, width, height).notes.single()
@@ -49,6 +60,11 @@ class VisualNoteAppearanceTest {
         val p = pixels(); line(p); rect(p, 100, 45, 107, 52, red); rect(p, 109, 45, 116, 52, red)
         val ns = VisualPixelDetector().detect(p, width, height).notes
         assertEquals(1, ns.size); assertEquals(4, ns.single().kind)
+    }
+    @Test fun solidHoldEndpointsIgnorePixelsAddedForJoining() {
+        val p = pixels(); line(p); rect(p, 100, 25, 108, 70, blue)
+        val n = VisualPixelDetector().detect(p, width, height).notes.single()
+        assertEquals(3, n.kind); assertEquals(22.0, abs(n.extentY), 0.1)
     }
     @Test fun disconnectedHollowHoldRailsArePaired() {
         val p = pixels(); line(p); rect(p, 100, 20, 113, 80, white)

@@ -85,7 +85,11 @@ class ChartTest {
         val event = TouchEvent.forChart(flick)[0]
         val from = flick.touchPosition(event, event.startMs, viewport)
         val to = flick.touchPosition(event, event.endMs, viewport)
-        assertEquals(60f, to.x - from.x, 0.001f); assertTrue(from.x < 500f); assertTrue(to.x > 500f)
+        assertEquals(60f, to.y - from.y, 0.001f)
+        assertEquals(500f, from.x, 0.001f); assertEquals(500f, to.x, 0.001f)
+        assertTrue(from.y < 300f); assertTrue(to.y > 300f)
+        assertEquals(96L, event.endMs - event.startMs)
+        assertEquals(to, flick.touchPosition(event, event.startMs + 60L, viewport))
         val drag = chart(note = """{"type":2,"time":64,"positionX":0,"holdTime":0,"speed":1,"floorPosition":1}""")
         assertEquals(970L, TouchEvent.forChart(drag)[0].startMs)
     }

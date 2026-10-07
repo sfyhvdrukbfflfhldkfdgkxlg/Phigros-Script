@@ -54,6 +54,12 @@ internal class PhiraNativeChart private constructor(
         val shift = 0.0.coerceIn(lower, upper)
         return Point((x + nx * shift).toFloat(), (y + ny * shift).toFloat())
     }
+    @Synchronized fun normal(note: Note, seconds: Double, viewport: Viewport): Point {
+        position(note, seconds, viewport)
+        val angle = rotation[note.lineIndex]
+        require(angle.isFinite()) { "Phira 判定线旋转无效" }
+        return Point((-sin(angle)).toFloat(), (-cos(angle)).toFloat())
+    }
     companion object {
         fun parse(root: JSONObject): Chart {
             require(root.getInt("phiscriptFormat") == 1) { "未知 Phira 内部谱面版本" }
@@ -100,7 +106,7 @@ internal class PhiraNativeChart private constructor(
             }
             val runtime = PhiraNativeChart(lines, noteX, order)
             return Chart.fromNative(notes.sortedWith(compareBy<Note> { it.timeSeconds }.thenBy { it.id }),
-                offset, runtime::position)
+                offset, runtime::position, runtime::normal)
         }
     }
 }
@@ -128,11 +134,15 @@ private class NativeAnim(private val layers: List<List<NativeKeyframe>>) {
         fun read(array: JSONArray?, budget: NativeBudget): NativeAnim {
             if (array == null) return NativeAnim(emptyList())
             require(array.length() <= 64) { "Phira 动画层数量过多" }
+            val ignoreLayers = array.length() > 0 && array.getJSONArray(0).length() == 0
             val layers = ArrayList<List<NativeKeyframe>>()
             for (i in 0 until array.length()) {
                 val source = array.getJSONArray(i); budget.frames += source.length()
                 require(budget.frames <= 400_000) { "Phira 动画关键帧总数过多" }
-                if (source.length() == 0) continue
+                if (source.length() == 0) {
+                    require(i == 0 || ignoreLayers) { "Phira 动画包含非首空层，无法可靠播放" }
+                    continue
+                }
                 // Keep incoming and outgoing endpoints at instantaneous jumps.
                 val frames = ArrayList<NativeKeyframe>()
                 for (j in 0 until source.length()) {
@@ -140,7 +150,7 @@ private class NativeAnim(private val layers: List<List<NativeKeyframe>>) {
                     require(abs(time) <= 1_000_000_000.0) { "Phira 动画时间超出范围" }
                     frames.add(NativeKeyframe(time, f.nativeNumber("value"), NativeTween.read(f.optJSONObject("tween"))))
                 }
-                layers.add(frames.sortedBy { it.time })
+                if (!ignoreLayers) layers.add(frames.sortedBy { it.time })
             }
             return NativeAnim(layers)
         }
@@ -148,16 +158,38 @@ private class NativeAnim(private val layers: List<List<NativeKeyframe>>) {
 }
 private class NativeTween(private val id: Int, private val left: Double,
     private val right: Double, private val bezier: DoubleArray?) {
-    fun value(x: Double): Double {
-        bezier?.let { points ->
-            if (x == 0.0 || x == 1.0) return x
-            var low = 0.0; var high = 1.0
-            repeat(40) {
-                val t = (low + high) / 2.0
-                if (sample(points[0], points[2], t) < x) low = t else high = t
-            }
-            return sample(points[1], points[3], (low + high) / 2.0)
+    private val bezierSamples = bezier?.let { p -> DoubleArray(21) { i -> sample(p[0], p[2], i / 20.0) } }
+    private fun bezierTime(x: Double, p: DoubleArray): Double {
+        if (x == 0.0 || x == 1.0) return x
+        val table = requireNotNull(bezierSamples); val step = 0.05
+        val index = (x / step).toInt().coerceIn(0, 19)
+        var t = step * (index + (x - table[index]) / (table[index + 1] - table[index]))
+        fun slope(at: Double): Double {
+            val a = (p[0] - p[2]) * 3.0 + 1.0
+            val b = p[2] * 3.0 - p[0] * 6.0; val c = p[0] * 3.0
+            return (a * 3.0 * at + b * 2.0) * at + c
         }
+        val initialSlope = slope(t)
+        if (initialSlope <= 1e-7) return t
+        if (initialSlope >= 1e-3) {
+            repeat(4) {
+                val d = slope(t); if (d <= 1e-7) return t
+                t -= (sample(p[0], p[2], t) - x) / d
+            }
+            return t
+        }
+        var low = step * index; var high = step * (index + 1)
+        t = (low + high) / 2.0
+        repeat(10) {
+            val difference = sample(p[0], p[2], t) - x
+            if (abs(difference) <= 1e-7) return t
+            if (difference > 0.0) high = t else low = t
+            t = (low + high) / 2.0
+        }
+        return t
+    }
+    fun value(x: Double): Double {
+        bezier?.let { points -> return sample(points[1], points[3], bezierTime(x, points)) }
         if (left == 0.0 && right == 1.0) return static(id, x)
         val a = static(id, left); val b = static(id, right); val range = b - a
         require(abs(range) > 1e-12) { "Phira 缓动区间输出范围为零" }

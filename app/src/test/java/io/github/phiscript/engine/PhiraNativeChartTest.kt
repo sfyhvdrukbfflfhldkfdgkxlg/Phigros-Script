@@ -93,4 +93,42 @@ class PhiraNativeChartTest {
         val event = TouchEvent.forChart(c).single(); val p = c.touchPosition(event, 1020L, viewport)
         assertEquals(881.6f, p.x, 0.01f); assertTrue(p.x != c.position(c.notes.single(), 1.0, viewport)!!.x)
     }
+    @Test fun firstEmptyAnimationSuppressesAdditiveLayersLikePhira() {
+        val l = line(); l.getJSONObject("object").put("x", JSONArray().put(JSONArray()).put(JSONArray().put(frame(0.0, 0.2))))
+        val c = Chart.parse(root(l).toString()); assertEquals(800f, c.position(c.notes.single(), 1.0, viewport)!!.x, 0.01f)
+    }
+    @Test fun nonFirstEmptyAnimationIsRejected() {
+        val l = line(); l.getJSONObject("object").put("x", JSONArray().put(JSONArray().put(frame(0.0, 0.2))).put(JSONArray()))
+        assertTrue(runCatching { Chart.parse(root(l).toString()) }.isFailure)
+    }
+    @Test fun rotatedFlickPreservesJudgeXAndRetainsContact() {
+        val l = line(); l.getJSONObject("object").put("rotation", fixed(33.0))
+        l.put("notes", JSONArray().put(note(4))); val c = Chart.parse(root(l).toString())
+        val e = TouchEvent.forChart(c).single(); val angle = Math.toRadians(33.0)
+        for (elapsed in listOf(0L, 15L, 30L, 45L, 60L, 80L, 96L)) {
+            val p = c.touchPosition(e, e.startMs + elapsed, viewport); assertTrue(viewport.contains(p))
+            val localX = (p.x - 800.0) * kotlin.math.cos(angle) - (p.y - 450.0) * kotlin.math.sin(angle)
+            assertEquals(0.0, localX, 0.001)
+        }
+        assertEquals(96L, e.endMs - e.startMs)
+        assertEquals(c.touchPosition(e, e.startMs + 60L, viewport), c.touchPosition(e, e.endMs, viewport))
+    }
+    @Test fun offScreenFlickUsesVisibleNormalChord() {
+        val l = line(); l.getJSONObject("object").put("y", fixed(2.0)); l.put("notes", JSONArray().put(note(4)))
+        val c = Chart.parse(root(l).toString()); val e = TouchEvent.forChart(c).single()
+        for (elapsed in listOf(0L, 15L, 30L, 45L, 60L, 96L)) {
+            val p = c.touchPosition(e, e.startMs + elapsed, viewport)
+            assertTrue(viewport.contains(p)); assertEquals(800f, p.x, 0.01f)
+        }
+    }
+    @Test fun degenerateBezierControlsRemainFinite() {
+        for ((x1, x2) in listOf(0.0 to 0.0, 1.0 to 1.0, 1.0 to 0.0)) {
+            val l = line(); val t = JSONObject().put("id", 2).put("bezier", JSONArray().put(x1).put(0.0).put(x2).put(1.0))
+            l.getJSONObject("object").put("x", JSONArray().put(JSONArray().put(frame(0.0, 0.0).put("tween", t)).put(frame(4.0, 0.2))))
+            val c = Chart.parse(root(l).toString())
+            for (time in listOf(-1.0, 0.0, 0.004, 0.04, 0.4, 1.0, 2.0, 3.6, 3.96, 3.996, 4.0, 5.0)) {
+                val p = c.position(c.notes.single(), time, viewport)!!; assertTrue(p.x.isFinite()); assertTrue(p.y.isFinite())
+            }
+        }
+    }
 }

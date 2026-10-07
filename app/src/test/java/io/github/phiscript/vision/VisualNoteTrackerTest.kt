@@ -115,6 +115,11 @@ class VisualNoteTrackerTest {
         t.observe(scene(70.0), 1000, 1000); t.observe(scene(80.0), 1033, 1033)
         assertTrue(t.observe(scene(90.0), 1066, 1400, 120).isEmpty())
     }
+    @Test fun processingDelayCanCompleteTwoFrameCrossing() {
+        val t = VisualNoteTracker()
+        t.observe(scene(70.0), 1000, 1000)
+        assertEquals(1, t.observe(scene(90.0), 1033, 1061).size)
+    }
     @Test fun fastTapCrossingInTwoFramesFiresOnce() {
         val t = VisualNoteTracker()
         assertTrue(t.observe(scene(62.0), 1000, 1000).isEmpty())
