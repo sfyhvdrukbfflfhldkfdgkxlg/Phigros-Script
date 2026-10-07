@@ -115,4 +115,34 @@ class VisualNoteTrackerTest {
         t.observe(scene(70.0), 1000, 1000); t.observe(scene(80.0), 1033, 1033)
         assertTrue(t.observe(scene(90.0), 1066, 1400, 120).isEmpty())
     }
+    @Test fun fastTapCrossingInTwoFramesFiresOnce() {
+        val t = VisualNoteTracker()
+        assertTrue(t.observe(scene(62.0), 1000, 1000).isEmpty())
+        val hit = t.observe(scene(112.0), 1033, 1033).single()
+        assertEquals(VisualTouchKind.TAP, hit.kind)
+        assertEquals(hit.id, t.observe(scene(124.0), 1066, 1066).single().id)
+    }
+    @Test fun fastFlickCrossingInTwoFramesFires() {
+        val t = VisualNoteTracker()
+        t.observe(scene(65.0, 4), 1000, 1000)
+        assertEquals(VisualTouchKind.FLICK, t.observe(scene(116.0, 4), 1033, 1033).single().kind)
+    }
+    @Test fun lineDirectionFlipKeepsTheApproachingTrack() {
+        val t = VisualNoteTracker()
+        t.observe(scene(70.0), 1000, 1000)
+        val flipped = line.copy(dx = -1.0, dy = 0.0)
+        t.observe(VisualScene(320, 200, listOf(flipped), listOf(VisualNoteBlob(1, 100.0, 80.0, 0))), 1033, 1033)
+        t.observe(scene(90.0), 1066, 1066)
+        assertEquals(1, t.observe(scene(100.0), 1099, 1099).size)
+    }
+    @Test fun twoFrameRecedingNoteIsNotClicked() {
+        val t = VisualNoteTracker()
+        t.observe(scene(112.0), 1000, 1000)
+        assertTrue(t.observe(scene(136.0), 1033, 1033).isEmpty())
+    }
+    @Test fun frameGapCannotBecomeAFalseFastCrossing() {
+        val t = VisualNoteTracker()
+        t.observe(scene(65.0), 1000, 1000)
+        assertTrue(t.observe(scene(105.0), 1160, 1160).isEmpty())
+    }
 }

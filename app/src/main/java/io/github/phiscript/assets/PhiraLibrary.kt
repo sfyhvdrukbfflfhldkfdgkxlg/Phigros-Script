@@ -31,7 +31,7 @@ class PhiraLibrary private constructor(private val context: Context, private val
     val entries: List<PhiraEntry> get() = records.map { record ->
         val alias = settings.alias(record.id)
         PhiraEntry(record.id, record.title, record.level, if (alias.isBlank()) emptyList() else listOf(alias),
-            forceAspectRatio = record.forceAspectRatio)
+            aspectRatio = record.aspectRatio, forceAspectRatio = record.forceAspectRatio)
     }
     fun hasChart(id: String, level: String) = records.any { it.id == id && it.level == level }
     fun load(id: String, level: String): Chart {
@@ -47,7 +47,7 @@ class PhiraLibrary private constructor(private val context: Context, private val
         return Chart.parse(bytes.toString(Charsets.UTF_8))
     }
     private data class Record(val id: String, val title: String, val level: String, val sha256: String,
-        val bytes: Int, val forceAspectRatio: Boolean = false)
+        val bytes: Int, val forceAspectRatio: Boolean = false, val aspectRatio: Double = 16.0 / 9.0)
     companion object {
         private const val MAX_INDEX_BYTES = 256 * 1024
         private const val MAX_LIBRARY_BYTES = 128L * 1024L * 1024L
@@ -66,8 +66,8 @@ class PhiraLibrary private constructor(private val context: Context, private val
                     ?: error("无法打开所选 Phira 文档")
                 val bytes = data.normalizedJson.toByteArray(Charsets.UTF_8); val digest = sha256(bytes)
                 val id = sha256((data.title + "\u0000" + data.level + "\u0000" + digest +
-                    "\u0000" + data.forceAspectRatio).toByteArray(Charsets.UTF_8))
-                imported.add(Record(id, data.title, data.level, digest, bytes.size, data.forceAspectRatio) to bytes)
+                    "\u0000" + data.forceAspectRatio + "\u0000" + data.aspectRatio).toByteArray(Charsets.UTF_8))
+                imported.add(Record(id, data.title, data.level, digest, bytes.size, data.forceAspectRatio, data.aspectRatio) to bytes)
             }
             val merged = mergePhiraImports(old, imported.map { it.first }, { it.title to it.level }, { it.id })
             require(merged.size <= 64) { "Phira 谱库最多 64 个谱面" }
@@ -91,7 +91,8 @@ class PhiraLibrary private constructor(private val context: Context, private val
                 }
                 val json = JSONObject().put("version", 1).put("entries", JSONArray().apply {
                     merged.forEach { r -> put(JSONObject().put("id", r.id).put("title", r.title).put("level", r.level)
-                        .put("sha256", r.sha256).put("bytes", r.bytes).put("forceAspectRatio", r.forceAspectRatio)) }
+                        .put("sha256", r.sha256).put("bytes", r.bytes).put("forceAspectRatio", r.forceAspectRatio)
+                        .put("aspectRatio", r.aspectRatio)) }
                 }).toString().toByteArray(Charsets.UTF_8)
                 require(json.size <= MAX_INDEX_BYTES)
                 val index = indexFile(app); val stream = index.startWrite()
@@ -113,9 +114,11 @@ class PhiraLibrary private constructor(private val context: Context, private val
             val records = (0 until array.length()).map { i ->
                 val item = array.getJSONObject(i)
                 val r = Record(item.getString("id"), item.getString("title"), item.getString("level"),
-                    item.getString("sha256"), item.getInt("bytes"), item.optBoolean("forceAspectRatio", false))
+                    item.getString("sha256"), item.getInt("bytes"), item.optBoolean("forceAspectRatio", false),
+                    item.optDouble("aspectRatio", 16.0 / 9.0))
                 require(HEX.matches(r.id) && HEX.matches(r.sha256) && r.title.isNotBlank() && r.title.length <= 200 &&
-                    r.level.isNotBlank() && r.level.length <= 80 && r.bytes in 1..PhiraChartParser.MAX_JSON_BYTES) {
+                    r.level.isNotBlank() && r.level.length <= 80 && r.bytes in 1..PhiraChartParser.MAX_JSON_BYTES &&
+                    r.aspectRatio.isFinite() && r.aspectRatio in 0.25..8.0) {
                     "Phira 谱库元数据无效"
                 }; r
             }

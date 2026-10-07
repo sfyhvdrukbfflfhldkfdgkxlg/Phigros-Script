@@ -24,7 +24,8 @@ class VisualNoteTracker(private val maximumFrameAgeMs: Long = 180,
         var vx: Double = 0.0, var vy: Double = 0.0,
         var lineVx: Double = 0.0, var lineVy: Double = 0.0,
         var fired: Boolean = false, var activeUntil: Long = 0, var firedAt: Long = 0,
-        var finished: Boolean = false
+        var finished: Boolean = false, var previousDistance: Double = 0.0,
+        var previousAt: Long = 0
     )
     private data class Endpoint(val x: Double, val y: Double, val near: Double, val far: Double)
     private val tracks = ArrayList<Track>()
@@ -64,8 +65,9 @@ class VisualNoteTracker(private val maximumFrameAgeMs: Long = 180,
                 if (dt <= 0.0) return@mapNotNull null
                 val error = hypot(note.x - track.note.x - track.vx * dt,
                     note.y - track.note.y - track.vy * dt)
-                val allowed = max(24.0, height * 0.16 + hypot(track.vx, track.vy) * dt * 0.4)
-                val endpoint = endpoints(note, line, track.side)
+                val allowed = max(24.0, height * (if (track.seen == 1) 0.40 else 0.16) +
+                    hypot(track.vx, track.vy) * dt * 0.4)
+                val endpoint = endpoints(note, oriented(line, track.line), track.side)
                 if (error > allowed || (track.fired && track.kind != 3 &&
                     endpoint.near > track.headDistance + max(12.0, height * 0.03))) null
                 else track to error
@@ -90,9 +92,15 @@ class VisualNoteTracker(private val maximumFrameAgeMs: Long = 180,
             val ageSeconds = (nowMs - track.seenAt) / 1000.0
             val predictionSeconds = (nowMs - track.seenAt + predictionLeadMs.coerceIn(-80, 120)) / 1000.0
             val predicted = track.headDistance + track.velocity * predictionSeconds
-            val lateAllowance = max(4.0, abs(track.velocity) * 0.045)
-            if (!track.fired && observed && track.startedAway && track.seen >= 3 &&
-                track.approaching >= 2 && track.velocity < -height * 0.05 &&
+            val lateAllowance = max(4.0, abs(track.velocity) * 0.080)
+            // A fast note may appear in only two frames before crossing the line.
+            val twoFrameCrossing = track.seen == 2 && track.approaching == 1 &&
+                track.note.confidence >= 0.8 && track.seenAt - track.previousAt in 10..100 &&
+                track.previousDistance > max(6.0, track.line.thickness * 2.0) &&
+                track.headDistance <= max(2.0, track.line.thickness * 0.7) &&
+                track.velocity < -height * 0.15
+            val established = track.seen >= 3 && track.approaching >= 2
+            if (!track.fired && observed && track.startedAway && (established || twoFrameCrossing) && track.velocity < -height * 0.05 &&
                 abs(track.velocity) <= height * 12.0 &&
                 predicted <= max(2.0, track.line.thickness * 0.7) && predicted >= -lateAllowance) {
                 track.fired = true; track.firedAt = nowMs; track.activeUntil = nowMs + 100
@@ -127,7 +135,8 @@ class VisualNoteTracker(private val maximumFrameAgeMs: Long = 180,
         return output
     }
 
-    private fun update(track: Track, note: VisualNoteBlob, line: VisualJudgeLine, at: Long) {
+    private fun update(track: Track, note: VisualNoteBlob, incoming: VisualJudgeLine, at: Long) {
+        val line = oriented(incoming, track.line)
         val dt = (at - track.seenAt) / 1000.0
         val endpoint = endpoints(note, line, track.side)
         val velocity = (endpoint.near - track.headDistance) / dt
@@ -138,6 +147,7 @@ class VisualNoteTracker(private val maximumFrameAgeMs: Long = 180,
             else 0.65 * velocity + 0.35 * track.velocity
         track.vx = (note.x - track.note.x) / dt; track.vy = (note.y - track.note.y) / dt
         track.lineVx = (line.x - track.line.x) / dt; track.lineVy = (line.y - track.line.y) / dt
+        track.previousDistance = track.headDistance; track.previousAt = track.seenAt
         track.note = note; track.line = line; track.seenAt = at
         track.headDistance = endpoint.near; track.tailDistance = endpoint.far; track.seen++
     }
@@ -150,8 +160,11 @@ class VisualNoteTracker(private val maximumFrameAgeMs: Long = 180,
     private fun signedDistance(x: Double, y: Double, line: VisualJudgeLine) =
         (x - line.x) * -line.dy + (y - line.y) * line.dx
     private fun compatible(a: VisualJudgeLine, b: VisualJudgeLine) =
-        a.dx * b.dx + a.dy * b.dy > 0.96 &&
+        abs(a.dx * b.dx + a.dy * b.dy) > 0.96 &&
             hypot(a.x - b.x, a.y - b.y) <= max(15.0, width * 0.15)
+    private fun oriented(line: VisualJudgeLine, previous: VisualJudgeLine): VisualJudgeLine =
+        if (line.dx * previous.dx + line.dy * previous.dy < 0.0)
+            line.copy(dx = -line.dx, dy = -line.dy) else line
     private fun valid(scene: VisualScene) =
         scene.reliable && scene.width in 32..1920 && scene.height in 16..1920 &&
             scene.width > scene.height && scene.lines.size in 1..12 && scene.notes.size <= 128 &&
