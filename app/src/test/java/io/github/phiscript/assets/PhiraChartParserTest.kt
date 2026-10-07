@@ -84,21 +84,28 @@ class PhiraChartParserTest {
         assertEquals(800f, c.position(c.notes.single(), 1.999, v)!!.x, 0.01f)
         assertEquals(1120f, c.position(c.notes.single(), 2.0, v)!!.x, 0.01f)
     }
-    @Test fun nonlinearEventsRejected() {
+    @Test fun nonlinearEventsUseSineOut() {
         val r = rpe(); line(r).getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents",
-            JSONArray().put(event(0, 8, 0.0, 270.0).put("easingType", 2))); rejects(r, "非线性")
+            JSONArray().put(event(0, 8, 0.0, 270.0).put("easingType", 2)))
+        val c = PhiraChartParser.parse(r.toString())
+        assertEquals(1026.2742f, c.position(c.notes.single(), 2.0, Viewport(0f, 0f, 1600f, 900f))!!.x, 0.01f)
     }
-    @Test fun parentLinesRejected() { val r = rpe(); line(r).put("father", 0); rejects(r, "父子") }
-    @Test fun yOffsetRejected() {
-        val r = rpe(); line(r).getJSONArray("notes").getJSONObject(0).put("yOffset", 1); rejects(r, "yOffset")
+    @Test fun parentCyclesRejected() { val r = rpe(); line(r).put("father", 0); rejects(r, "循环") }
+    @Test fun yOffsetDoesNotChangeJudgeCoordinates() {
+        val r = rpe(); line(r).getJSONArray("notes").getJSONObject(0).put("yOffset", 1000)
+        val c = PhiraChartParser.parse(r.toString()); val p = c.position(c.notes.single(), 2.0, Viewport(0f, 0f, 1600f, 900f))!!
+        assertEquals(800f, p.x, 0.01f); assertEquals(450f, p.y, 0.01f)
     }
     @Test fun editorIdentityDefaultsAccepted() {
         val r = rpe(); line(r).put("posControl", JSONArray().put(JSONObject().put("pos", 1).put("x", 0)))
             .put("extended", JSONObject().put("scaleXEvents", JSONArray().put(event(0, 8, 1.0, 1.0))))
         assertEquals(1, PhiraChartParser.parse(r.toString()).notes.size)
     }
-    @Test fun alteredControlsRejected() {
-        val r = rpe(); line(r).put("posControl", JSONArray().put(JSONObject().put("pos", 2))); rejects(r, "非默认")
+    @Test fun renderControlsDoNotChangeJudgeCoordinates() {
+        val r = rpe(); line(r).put("posControl", JSONArray().put(JSONObject().put("pos", 2)))
+            .put("attachUI", "score").put("extended", JSONObject().put("scaleXEvents", JSONArray().put(event(0, 8, 2.0, 3.0))))
+        val c = PhiraChartParser.parse(r.toString())
+        assertEquals(800f, c.position(c.notes.single(), 2.0, Viewport(0f, 0f, 1600f, 900f))!!.x, 0.01f)
     }
     @Test fun duplicateBpmRejected() {
         val r = rpe(); r.getJSONArray("BPMList").put(JSONObject().put("bpm", 100).put("startTime", triple(0)))
@@ -108,7 +115,7 @@ class PhiraChartParserTest {
         val r = rpe(); line(r).getJSONArray("notes").getJSONObject(0)
             .put("startTime", JSONArray().put(1).put(1).put(0)); rejects(r, "分母")
     }
-    @Test fun noiseAreaRejected() { rejects(pgr().put("blockAreaList", JSONArray().put(JSONObject())), "噪域") }
+    @Test fun unknownRenderingFieldIsIgnored() { assertEquals(1, PhiraChartParser.parse(pgr().put("blockAreaList", JSONArray().put(JSONObject())).toString()).notes.size) }
     @Test fun nestingRejectedBeforeParsing() {
         val text = "{\"nested\":" + "[".repeat(65) + "0" + "]".repeat(65) + "}"
         assertTrue(runCatching { PhiraChartParser.parse(text) }.exceptionOrNull()?.message.orEmpty().contains("嵌套"))
@@ -116,5 +123,59 @@ class PhiraChartParserTest {
     @Test fun nonHoldIgnoresPlaceholderEndTime() {
         val r = rpe(); line(r).put("notes", JSONArray().put(note(1, 4, 0)).put(note(3, 5, 0)).put(note(4, 6, 0)))
         assertEquals(listOf(2.0, 2.5, 3.0), PhiraChartParser.parse(r.toString()).notes.map { it.timeSeconds })
+    }
+    @Test fun bezierMotionUsesCubicXInversion() {
+        val r = rpe(); line(r).getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents",
+            JSONArray().put(event(0, 8, 0.0, 270.0).put("bezier", 1)
+                .put("bezierPoints", JSONArray().put(0.25).put(0.1).put(0.25).put(1.0))))
+        val c = PhiraChartParser.parse(r.toString())
+        assertEquals(1056.769f, c.position(c.notes.single(), 2.0, Viewport(0f, 0f, 1600f, 900f))!!.x, 0.01f)
+    }
+    @Test fun croppedEasingRenormalizesTheOutputRange() {
+        val r = rpe(); line(r).getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents",
+            JSONArray().put(event(0, 8, 0.0, 270.0).put("easingType", 5).put("easingLeft", 0.25).put("easingRight", 0.75)))
+        val c = PhiraChartParser.parse(r.toString())
+        assertEquals(920f, c.position(c.notes.single(), 2.0, Viewport(0f, 0f, 1600f, 900f))!!.x, 0.01f)
+    }
+    @Test fun allRpeEasingTypesHaveFiniteMotion() {
+        for (easing in 1..29) {
+            val r = rpe(); line(r).getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents",
+                JSONArray().put(event(0, 8, 0.0, 135.0).put("easingType", easing)))
+            val c = PhiraChartParser.parse(r.toString())
+            val p = c.position(c.notes.single(), 1.0, Viewport(0f, 0f, 1600f, 900f))!!
+            assertTrue(p.x.isFinite()); assertTrue(p.y.isFinite())
+        }
+    }
+    @Test fun parentPositionRotatesEvenWithoutRotationInheritance() {
+        val r = rpe(); val parent = line(r)
+        val child = JSONObject(parent.toString()).put("father", 0).put("rotateWithFather", false)
+        parent.put("notes", JSONArray())
+        parent.getJSONArray("eventLayers").getJSONObject(0)
+            .put("moveXEvents", JSONArray().put(event(0, 8, 135.0, 135.0)))
+            .put("moveYEvents", JSONArray().put(event(0, 8, 90.0, 90.0)))
+            .put("rotateEvents", JSONArray().put(event(0, 8, -90.0, -90.0)))
+        child.getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents", JSONArray().put(event(0, 8, 135.0, 135.0)))
+        child.put("notes", JSONArray().put(note(1, 4, x = 135.0)))
+        r.getJSONArray("judgeLineList").put(child)
+        val v = Viewport(0f, 0f, 1600f, 900f); var c = PhiraChartParser.parse(r.toString())
+        var p = c.position(c.notes.single(), 2.0, v)!!
+        assertEquals(1120f, p.x, 0.01f); assertEquals(200f, p.y, 0.01f)
+        child.put("rotateWithFather", true); c = PhiraChartParser.parse(r.toString()); p = c.position(c.notes.single(), 2.0, v)!!
+        assertEquals(960f, p.x, 0.01f); assertEquals(40f, p.y, 0.01f)
+    }
+    @Test fun rpeWithoutMetaUsesZeroOffset() {
+        val r = rpe(); r.remove("META"); assertEquals(0.0, PhiraChartParser.parse(r.toString()).offsetSeconds, 1e-9)
+    }
+    @Test fun nativeNormalizationRoundTripsWithOneInfoOffset() {
+        val json = PhiraChartParser.normalizeJson(rpe().toString(), 0.125)
+        assertTrue(JSONObject(json).has("phiscriptFormat")); val c = PhiraChartParser.parse(json)
+        assertEquals(0.275, c.offsetSeconds, 1e-9); assertEquals(2.0, c.notes.single().timeSeconds, 1e-9)
+    }
+    @Test fun eventJumpPreservesThePrecedingRamp() {
+        val r = rpe(); line(r).getJSONArray("eventLayers").getJSONObject(0).put("moveXEvents",
+            JSONArray().put(event(0, 4, 0.0, 135.0)).put(event(4, 8, 270.0, 270.0)))
+        val c = PhiraChartParser.parse(r.toString()); val v = Viewport(0f, 0f, 1600f, 900f)
+        assertEquals(880f, c.position(c.notes.single(), 1.0, v)!!.x, 0.01f)
+        assertEquals(1120f, c.position(c.notes.single(), 2.0, v)!!.x, 0.01f)
     }
 }

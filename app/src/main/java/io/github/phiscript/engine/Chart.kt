@@ -40,12 +40,14 @@ data class Note internal constructor(
 class Chart private constructor(
     val notes: List<Note>,
     val offsetSeconds: Double,
-    private val lines: List<JudgeLine>
+    private val lines: List<JudgeLine>,
+    private val nativePosition: ((Note, Double, Viewport) -> Point?)? = null
 ) {
     val durationSeconds: Double = notes.maxOf { it.endSeconds }
     val firstNoteSeconds: Double = notes.minOf { it.timeSeconds }
     fun position(note: Note, seconds: Double, viewport: Viewport, visual: Boolean = false): Point? {
         require(seconds.isFinite())
+        nativePosition?.let { return it(note, seconds, viewport) }
         val line = lines[note.lineIndex]
         val ticks = seconds / line.secondsPerTick
         if (visual && line.opacity.value(ticks, 1.0) < 0.15) return null
@@ -62,8 +64,11 @@ class Chart private constructor(
         return Point(x.toFloat(), y.toFloat())
     }
     companion object {
+        internal fun fromNative(notes: List<Note>, offset: Double,
+            position: (Note, Double, Viewport) -> Point?): Chart = Chart(notes, offset, emptyList(), position)
         fun parse(json: String): Chart {
             val root = JSONObject(json)
+            if (root.has("phiscriptFormat")) return PhiraNativeChart.parse(root)
             require(root.optInt("formatVersion", -1) == 3) { "仅支持官方 formatVersion 3 JSON 谱面" }
             val offset = root.finite("offset", 0.0)
             val allNotes = ArrayList<Note>()

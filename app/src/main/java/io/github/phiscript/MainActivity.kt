@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
                     RuntimeState.phiraLibrary!!.entries.size + " 个谱面"
                 library != null -> "Phigros 谱库就绪 · " + library.sourceLabel + " · " + library.snapshot.versionName +
                     " · " + library.locations.size + " 个难度"
-                else -> "请导入 Phira 谱面包（PEZ / ZIP / JSON）"
+                else -> "请导入 Phira 谱面包（PEZ / ZIP / JSON / PEC / PBC）"
             }
             val now = android.os.SystemClock.uptimeMillis()
             if (now >= nextAccessCheck) {
@@ -140,6 +140,7 @@ class MainActivity : ComponentActivity() {
         text("纯视觉演奏 / Phira 谱面演奏 · 在悬浮窗确认后开始。")
         button("选择演奏模式") { chooseMode() }
         button("导入 Phira 谱面包") { choosePhira() }
+        button("Phira 曲名识别 / 手动选谱") { choosePhiraChart() }
         statusView = text("", 16f)
         accessibilityView = text(AccessibilityStatus.read(this).summary, 14f)
         button("扫描 Phigros APK 谱库（工具）") { scan() }
@@ -265,10 +266,29 @@ class MainActivity : ComponentActivity() {
             }.setNegativeButton("取消", null).show()
     }
 
+    private fun choosePhiraChart() {
+        if (taskBusy()) { message("请先停止当前任务"); return }
+        val entries = RuntimeState.phiraLibrary?.entries.orEmpty().sortedWith(
+            compareBy({ it.title }, { it.level }))
+        if (entries.isEmpty()) { message("请先导入 Phira 谱面"); return }
+        val selectedId = preferences.text("phiraChartId", "")
+        val checked = entries.indexOfFirst { it.id == selectedId }.let { if (it < 0) 0 else it + 1 }
+        val labels = listOf("自动识别曲名与难度") + entries.map { it.title + " · " + it.level }
+        AlertDialog.Builder(this).setTitle("Phira 演奏谱面")
+            .setSingleChoiceItems(labels.toTypedArray(), checked) { dialog, index ->
+                val entry = entries.getOrNull(index - 1)
+                preferences.save("phiraChartId", entry?.id.orEmpty())
+                preferences.save("mode", PlayMode.PHIRA.name)
+                message(if (entry == null) "Phira：自动识别曲名与难度"
+                    else "已手选：" + entry.title + " · " + entry.level + "；请在 Phira 打开同一谱面")
+                dialog.dismiss()
+            }.setNegativeButton("取消", null).show()
+    }
+
     private fun choosePhira() {
         if (taskBusy()) { message("请先停止当前任务"); return }
         AlertDialog.Builder(this).setTitle("导入 Phira 谱面")
-            .setMessage("选择从 Phira 导出的 PEZ / ZIP 谱面包，或 PGR / 支持的 RPE JSON。文件只在手机上解析。谱面包需要曲名和难度信息；PEC、PBC 及无法可靠解释的特效暂不支持。")
+            .setMessage("选择从 Phira 导出的 PEZ / ZIP 谱面包，或 PGR / RPE JSON、PEC、PBC。文件只在手机上解析。支持非线性事件和父子线；缺少曲名或难度时可按文件名导入，再手动选谱。")
             .setNegativeButton("取消", null)
             .setPositiveButton("选择文件") { _, _ ->
                 if (!taskBusy()) {
@@ -313,8 +333,14 @@ class MainActivity : ComponentActivity() {
             message(AccessibilityStatus.read(this).summary + "；请用主页的 Shizuku 按钮或系统设置启用")
             return
         }
-        if (preferences.mode() == PlayMode.PHIRA && RuntimeState.phiraLibrary == null) {
-            message("请先导入 Phira 谱面包"); return
+        if (preferences.mode() == PlayMode.PHIRA) {
+            val library = RuntimeState.phiraLibrary
+            if (library == null) { message("请先导入 Phira 谱面包"); return }
+            val selectedId = preferences.text("phiraChartId", "").trim()
+            if (selectedId.isNotEmpty() && library.entries.none { it.id == selectedId }) {
+                message("手选谱面已被重新导入替换，请点“Phira 曲名识别 / 手动选谱”重新选择")
+                return
+            }
         }
         if (!Settings.canDrawOverlays(this)) {
             AlertDialog.Builder(this).setTitle("允许显示悬浮窗")
@@ -347,7 +373,7 @@ class MainActivity : ComponentActivity() {
             text = "纯视觉直接从当前画面演奏，不进行音符对齐。Phira 使用暂停菜单的中央重试键建立起始时钟；请使用 1 倍速、关闭镜像，并保持游戏全局偏移一致。"
         })
         val autoViewport = CheckBox(this).apply {
-            text = "Phira 自动使用居中 16:9 玩法视口（默认开启）"
+            text = "Phira 按谱面比例自动计算居中玩法视口（默认开启）"
             isChecked = preferences.flag("phiraAutomaticViewport", true)
         }
         layout.addView(autoViewport)
@@ -377,7 +403,7 @@ class MainActivity : ComponentActivity() {
         }
         layout.addView(TextView(this).apply {
             text = "区域使用屏幕比例，例如下半屏为 0,0.5,1,0.5。玩法视口不含黑边。" +
-                "Phira 若修改了游戏画面比例，请关闭自动视口并填写实际玩法视口。" +
+                "Phira 自动读取谱面包 aspectRatio；若游戏另改了画面比例，请关闭自动视口并填写实际玩法视口。" +
                 "暂停图标默认在左上角搜索；右上角可设 0.82,0,0.18,0.24。" +
                 "Phira 默认重试起始延迟来自游戏的 700 毫秒开场动画，可按设备调整；谱面包自带偏移会自动计入。" +
                 "纯视觉截图补偿使用 0–120 毫秒，触摸偏移使用 -80–80 毫秒，超出部分按边界处理。"

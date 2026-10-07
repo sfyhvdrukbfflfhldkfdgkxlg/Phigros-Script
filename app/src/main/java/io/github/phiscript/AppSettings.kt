@@ -24,7 +24,8 @@ data class SessionSettings(
     val phiraRestartDelayMs: Int = 700,
     val phiraGlobalOffsetMs: Int = 0,
     val phiraPauseRoi: RectF = RectF(0f, 0f, 0.18f, 0.24f),
-    val phiraAutomaticViewport: Boolean = true
+    val phiraAutomaticViewport: Boolean = true,
+    val phiraChartId: String = ""
 )
 class AppSettings(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -50,7 +51,12 @@ class AppSettings(context: Context) {
         text("phiraRestartDelay", "700").toInt().also { require(it in 0..5000) },
         text("phiraGlobalOffset", "0").toInt().also { require(it in -2000..2000) },
         rect(text("phiraPauseRegion", "0,0,0.18,0.24")),
-        flag("phiraAutomaticViewport", true)
+        flag("phiraAutomaticViewport", true),
+        text("phiraChartId", "").trim().also {
+            require(it.isEmpty() || Regex("^[0-9a-f]{64}$").matches(it)) {
+                "手选 Phira 谱面 ID 无效，请重新选择"
+            }
+        }
     )
     companion object {
         fun point(value: String): NormalizedPoint {

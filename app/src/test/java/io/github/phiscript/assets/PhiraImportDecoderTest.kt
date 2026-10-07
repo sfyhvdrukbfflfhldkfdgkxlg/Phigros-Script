@@ -31,7 +31,7 @@ class PhiraImportDecoderTest {
     }
     @Test fun bareRpeMetadata() {
         val d = decode(chart().toByteArray()); assertEquals("Real Song", d.title); assertEquals("SP Lv.12", d.level)
-        assertEquals(3, JSONObject(d.normalizedJson).getInt("formatVersion"))
+        assertEquals(1, JSONObject(d.normalizedJson).getInt("phiscriptFormat"))
     }
     @Test fun yamlOverridesStaleMetaAndAddsOffset() {
         val d = decode(zip("info.yml" to "name: \"YAML Song\"\nlevel: 'IN Lv.15'\nchart: chart.json\noffset: 0.025\n",
@@ -47,8 +47,8 @@ class PhiraImportDecoderTest {
         val d = decode(zip("info.txt" to "#\nName: Legacy Song\nLevel: EXPERT 15\nChart: chart.json\n", "chart.json" to chart()))
         assertEquals("Legacy Song", d.title); assertEquals("EXPERT 15", d.level)
     }
-    @Test fun missingLevelRejected() { rejects(chart(level = "").toByteArray(), "缺少难度") }
-    @Test fun missingNameRejected() { rejects(chart(title = "").toByteArray(), "缺少有效名称") }
+    @Test fun missingLevelUsesManualFallback() { assertEquals("未知难度", decode(chart(level = "").toByteArray()).level) }
+    @Test fun missingNameUsesFilename() { assertEquals("test", decode(chart(title = "").toByteArray()).title) }
     @Test fun archiveTraversalRejected() { rejects(zip("../chart.json" to chart()), "不安全路径") }
     @Test fun referenceTraversalRejected() {
         rejects(zip("folder/info.yml" to "name: Song\nlevel: IN15\nchart: ../chart.json", "chart.json" to chart()), "不安全路径")
@@ -58,8 +58,9 @@ class PhiraImportDecoderTest {
         assertEquals("Song", decode(zip("info.yml" to "name: Song\nlevel: IN15\nchart: two.json",
             "one.json" to chart(), "two.json" to chart("Second"))).title)
     }
-    @Test fun pecClearlyRejected() {
-        rejects(zip("info.yml" to "name: Song\nlevel: IN15\nchart: chart.pec", "chart.pec" to "0\nbp 0 120"), "PEC/PBC")
+    @Test fun pecArchiveImports() {
+        val d = decode(zip("info.yml" to "name: Song\nlevel: IN15\nchart: chart.pec", "chart.pec" to PhiraCodecFixtures.PEC))
+        assertEquals(4, PhiraChartParser.parse(d.normalizedJson).notes.size)
     }
     @Test fun metadataQuotingAndComments() {
         val m = PhiraImportDecoder.readMetadata("name: \"A \\\"Quoted\\\" Song\" # comment\nlevel: 'IN''15'\nchart: chart.json # note\n")
@@ -68,8 +69,8 @@ class PhiraImportDecoderTest {
     @Test fun duplicateMetadataRejected() {
         assertTrue(runCatching { PhiraImportDecoder.readMetadata("name: A\nname: B") }.exceptionOrNull()?.message.orEmpty().contains("重复字段"))
     }
-    @Test fun unsupportedAspectRejected() {
-        rejects(zip("info.yml" to "name: Song\nlevel: IN15\nchart: chart.json\naspectRatio: 1.0", "chart.json" to chart()), "aspectRatio")
+    @Test fun customAspectPreserved() {
+        assertEquals(1.0, decode(zip("info.yml" to "name: Song\nlevel: IN15\nchart: chart.json\naspectRatio: 1.0", "chart.json" to chart())).aspectRatio, 1e-9)
     }
     @Test fun boundedReadDoesNotAcceptPrefix() {
         assertTrue(runCatching { PhiraImportDecoder.readBounded(ByteArrayInputStream(ByteArray(11)), 10) }

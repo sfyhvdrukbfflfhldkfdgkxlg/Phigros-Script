@@ -1,7 +1,7 @@
 package io.github.phiscript.engine
 import kotlin.math.roundToLong
 
-/** Absolute times in milliseconds from the visually acquired chart epoch. */
+/** Absolute times in milliseconds from the selected playback epoch. */
 data class TouchEvent(val note: Note, val startMs: Long, val endMs: Long) {
     companion object {
         fun forChart(chart: Chart): List<TouchEvent> = chart.notes.map { note ->
@@ -17,8 +17,7 @@ data class TouchEvent(val note: Note, val startMs: Long, val endMs: Long) {
     }
 }
 fun Chart.touchPosition(event: TouchEvent, timeMs: Long, viewport: Viewport): Point {
-    val seconds = if (event.note.type == 1) event.note.timeSeconds
-        else timeMs.coerceIn(event.startMs, event.endMs) / 1000.0
+    val seconds = timeMs.coerceIn(event.startMs, event.endMs) / 1000.0
     val point = requireNotNull(position(event.note, seconds, viewport))
     if (event.note.type != 4) return point
     val distance = viewport.height * 0.10f

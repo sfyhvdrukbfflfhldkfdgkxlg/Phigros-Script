@@ -13,6 +13,7 @@ import io.github.phiscript.vision.OcrConfig
 import io.github.phiscript.vision.OcrLabels
 import io.github.phiscript.vision.PhiraCandidate
 import io.github.phiscript.vision.PhiraMatcher
+import io.github.phiscript.vision.PhiraSelectionPolicy
 import io.github.phiscript.vision.PhiraPauseDetector
 import io.github.phiscript.vision.SongIdentifier
 import java.util.concurrent.atomic.AtomicBoolean
@@ -23,6 +24,11 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
     private val settings: SessionSettings, private val preview: Boolean,
     private val stop: AtomicBoolean, private val overlay: RecognitionOverlay) {
     private val candidates = library.entries.map { PhiraCandidate(it.id, it.title, it.level, it.aliases) }
+    private val selectionPolicy = PhiraSelectionPolicy(settings.phiraChartId, candidates)
+    private var manualGameDetector: GameplayDetector? = null
+    private var manualPauseMenu: PhiraPauseDetector? = null
+    private var manualMenuEvidence = FreshFrameConsensus(requiredFrames = 3, minimumSpanMs = 240)
+    private var manualDimensions: Pair<Int, Int>? = null
     private lateinit var pauseMenu: PhiraPauseDetector
     private var lastFrame = -1L
     private var nextDiagnostic = 0L
@@ -52,20 +58,26 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
 
     private fun recognizeAndConfirm(recognizer: SongIdentifier): Selection? {
         var consensus = FreshFrameConsensus()
-        val confirmation = RecognitionConfirmation()
+        val confirmation = RecognitionConfirmation(if (selectionPolicy.manual == null) 4000 else 600)
         var selection: Selection? = null
         var ignoredUntil = 0L
         var foreground = true
-        overlay.status("Phira：等待曲名和自定义难度…\n请导入与游戏一致的谱面")
+        overlay.status(selectionPolicy.manual?.let {
+            "Phira 手选：" + it.title + " · " + it.level + "\n请打开相同谱面，等待游戏画面或暂停菜单…"
+        } ?: "Phira：等待曲名和自定义难度…\n请导入与游戏一致的谱面")
         while (!stop.get()) {
             if (!preview && !isForeground()) {
                 if (foreground) {
                     confirmation.invalidate(); selection = null
-                    consensus = FreshFrameConsensus(); overlay.hide()
+                    consensus = FreshFrameConsensus()
+                    manualGameDetector?.reset()
+                    manualMenuEvidence = FreshFrameConsensus(requiredFrames = 3, minimumSpanMs = 240)
+                    overlay.hide()
                 }
                 foreground = false; sleep(150); continue
             }
-            if (!foreground) overlay.status("Phira：重新识别曲名和难度…")
+            if (!foreground) overlay.status(if (selectionPolicy.manual != null)
+                "Phira：等待游戏画面，核对手选谱面…" else "Phira：重新识别曲名和难度…")
             foreground = true
             val now = SystemClock.uptimeMillis()
             val choice = overlay.consumeChoice(); val selected = selection
@@ -86,9 +98,10 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
             }
             frame.use {
                 val labels = recognizer.readLabels(it.bitmap)
-                val candidate = match(labels).takeUnless { labels.resultScreen }
+                val candidate = selectCandidate(labels, it)
                 val old = selection
-                val invalid = labels.resultScreen || (old != null &&
+                val invalid = labels.resultScreen ||
+                    (selectionPolicy.manual != null && candidate == null) || (old != null &&
                     (it.screenWidth != old.width || it.screenHeight != old.height))
                 confirmation.observe(candidate?.let(::key), it.uptimeMs, invalid)
                 if (selection != null && confirmation.pending(SystemClock.uptimeMillis()) == null) {
@@ -100,9 +113,11 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
                     SystemClock.uptimeMillis() - it.uptimeMs < 900) {
                     selection = Selection(candidate, it.screenWidth, it.screenHeight)
                     val offer = confirmation.propose(key(candidate), it.uptimeMs)
-                    overlay.offer(offer.token, candidate.title, candidate.level, preview)
-                    RuntimeState.log("Phira 已识别：" + candidate.title + " · " + candidate.level +
-                        if (preview) "（只识别）" else "；等待确认")
+                    overlay.offer(offer.token, candidate.title, candidate.level +
+                        if (selectionPolicy.manual != null) "（手选，请核对）" else "", preview)
+                    RuntimeState.log((if (selectionPolicy.manual != null) "Phira 手选：" else "Phira 已识别：") +
+                        candidate.title + " · " + candidate.level +
+                        if (preview) "（只识别）" else "；请确认与当前游戏谱面一致")
                 }
                 diagnostic(if (candidate == null) "Phira 尚未唯一匹配；文字：" +
                     (labels.titleTexts + labels.difficultyTexts).distinct().take(4).joinToString(" / ").take(140)
@@ -114,11 +129,10 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
     private fun prepareRetry(recognizer: SongIdentifier, selection: Selection,
                              chart: Chart, afterHide: Long): Prepared? {
         val viewport = viewportFor(selection)
-        pauseMenu = PhiraPauseDetector(RectF(viewport.left / selection.width, viewport.top / selection.height,
-            viewport.right / selection.width, viewport.bottom / selection.height), settings.phiraRestartPoint)
+        pauseMenu = pauseMenuFor(selection)
         val currentIdentity = FreshFrameConsensus(afterFrameMs = afterHide)
         val alreadyPaused = FreshFrameConsensus(requiredFrames = 3, minimumSpanMs = 240, afterFrameMs = afterHide)
-        val gameplay = GameplayDetector(settings.phiraPauseRoi)
+        val gameplay = GameplayDetector(pauseRoiFor(selection))
         val deadline = SystemClock.uptimeMillis() + 20_000
         var pausedAt = 0L
         RuntimeState.log("悬浮窗已隐藏，复核 Phira 曲目与暂停控件")
@@ -135,8 +149,10 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
                 val hit = if (!paused) gameplay.observe(it.bitmap, it.uptimeMs) else { gameplay.reset(); null }
                 if (SystemClock.uptimeMillis() - it.uptimeMs >= 900) return@use
                 if (menuReady) { pausedAt = it.uptimeMs; RuntimeState.log("已确认 Phira 三按钮暂停菜单") }
-                else if (identityReady && hit != null) {
-                    RuntimeState.log("Phira 曲目已复核，双击暂停键")
+                else if (hit != null && (identityReady || selectionPolicy.manual != null)) {
+                    RuntimeState.log(if (selectionPolicy.manual != null)
+                        "Phira 游戏控件已复核，按已确认手选谱面双击暂停键"
+                        else "Phira 曲目已复核，双击暂停键")
                     control(hit.pauseX, hit.pauseY, 2, selection); pausedAt = SystemClock.uptimeMillis()
                 }
             }; sleep(60)
@@ -164,7 +180,7 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
         check(retryTouchDown >= 0) { "未确认三按钮暂停菜单，未点击重试；请检查玩法视口和重试坐标" }
         val epoch = PhiraRestartClock.epoch(retryTouchDown, settings.phiraRestartDelayMs,
             chart.offsetSeconds, settings.phiraGlobalOffsetMs, settings.touchOffsetMs)
-        val resumed = GameplayDetector(settings.phiraPauseRoi)
+        val resumed = GameplayDetector(pauseRoiFor(selection))
         val runningDeadline = retryTouchDown + maxOf(8000L, settings.phiraRestartDelayMs + 5000L)
         var nextRead = 0L
         while (!stop.get() && SystemClock.uptimeMillis() < runningDeadline) {
@@ -254,6 +270,38 @@ internal class PhiraSessionEngine(private val frames: FrameStore, private val li
         val rect = settings.viewport
         return Viewport(rect.left * selection.width, rect.top * selection.height,
             rect.width() * selection.width, rect.height() * selection.height)
+    }
+    private fun selectCandidate(labels: OcrLabels, frame: CapturedFrame): PhiraCandidate? {
+        val automatic = match(labels).takeUnless { labels.resultScreen }
+        val manual = selectionPolicy.manual ?: return automatic
+        if (labels.resultScreen) return null
+        val dimensions = frame.screenWidth to frame.screenHeight
+        if (manualDimensions != dimensions) {
+            val selection = Selection(manual, frame.screenWidth, frame.screenHeight)
+            manualPauseMenu = pauseMenuFor(selection)
+            manualGameDetector = GameplayDetector(pauseRoiFor(selection))
+            manualMenuEvidence = FreshFrameConsensus(requiredFrames = 3, minimumSpanMs = 240)
+            manualDimensions = dimensions
+        }
+        val paused = manualPauseMenu?.visible(frame.bitmap) == true
+        val menuReady = manualMenuEvidence.observe(if (paused) "phira-pause" else null, frame.uptimeMs)
+        val gameplayReady = if (paused) { manualGameDetector?.reset(); false }
+            else manualGameDetector?.observe(frame.bitmap, frame.uptimeMs) != null
+        return selectionPolicy.choose(automatic, menuReady || gameplayReady)
+    }
+    private fun pauseRoiFor(selection: Selection): RectF {
+        val roi = settings.phiraPauseRoi
+        if (!settings.phiraAutomaticViewport || roi.left != 0f || roi.top != 0f ||
+            roi.right != 0.18f || roi.bottom != 0.24f) return RectF(roi)
+        val viewport = viewportFor(selection)
+        return RectF(viewport.left / selection.width, viewport.top / selection.height,
+            (viewport.left + viewport.width * 0.18f) / selection.width,
+            (viewport.top + viewport.height * 0.24f) / selection.height)
+    }
+    private fun pauseMenuFor(selection: Selection): PhiraPauseDetector {
+        val viewport = viewportFor(selection)
+        return PhiraPauseDetector(RectF(viewport.left / selection.width, viewport.top / selection.height,
+            viewport.right / selection.width, viewport.bottom / selection.height), settings.phiraRestartPoint)
     }
     private fun match(labels: OcrLabels) = PhiraMatcher.match(labels.titleTexts, labels.difficultyTexts, candidates)
     private fun verifyIdentity(labels: OcrLabels, selection: Selection) {

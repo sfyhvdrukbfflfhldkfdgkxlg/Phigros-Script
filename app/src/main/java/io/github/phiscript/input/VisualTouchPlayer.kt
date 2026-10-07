@@ -77,10 +77,9 @@ internal object VisualTouchPlayer {
                 demand.shots.forEach { touch ->
                     val from = pixel(touch)
                     val flick = touch.kind == VisualTouchKind.FLICK
-                    val to = if (flick) Pixel(
-                        ((touch.x + touch.flickDx) * screenWidth).coerceIn(0f, (screenWidth - 1).toFloat()),
-                        ((touch.y + touch.flickDy) * screenHeight).coerceIn(0f, (screenHeight - 1).toFloat()))
-                    else from
+                    val to = if (flick) FlickGeometry.endpoint(from.x, from.y,
+                        touch.flickDx * screenWidth, touch.flickDy * screenHeight,
+                        screenWidth, screenHeight).let { Pixel(it.x, it.y) } else from
                     builder.addStroke(GestureDescription.StrokeDescription(
                         path(from, to), 0, if (flick) CHUNK_MS else TAP_MS, false))
                 }
