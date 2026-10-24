@@ -1,0 +1,1 @@
+PASS 43 checks on both user-provided Phigros JPEGs: actual thin retry ring, back/play row, measured pause/retry, scaled captures mapped to physical screen, observed pillarbox and missing-button rejection. Static screenshot tests; no device input/timing verification.

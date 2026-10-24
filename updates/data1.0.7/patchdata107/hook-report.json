@@ -1,0 +1,7 @@
+{
+  "version": "data1.0.7",
+  "baseline": "data1.0.5",
+  "changed_dex": [],
+  "replaced_helper_dex": "classes8.dex",
+  "native_hooks": "Every data1.0.5 native DEX entry is retained byte-for-byte."
+}

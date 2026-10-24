@@ -1,0 +1,4 @@
+PARSED chart 1: logical=3909, physical=3789, holds=505, duration=371.25
+PARSED chart 2: logical=1930, physical=1815, holds=234, duration=238.44155844155844
+PARSED chart 3: logical=1883, physical=1883, holds=216, duration=221.0593220338983
+PASS all 3 full reference charts; host input simulation, not a device run

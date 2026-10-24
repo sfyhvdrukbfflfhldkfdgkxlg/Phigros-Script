@@ -1,0 +1,34 @@
+name: Publish verified data1.0.7
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-data107.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data107
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Publish verified data1.0.7 release')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Download pinned public base APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download data1.0.6 --repo sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script --pattern PhigrosScript_data1.0.6.apk --dir base
+      - name: Restore exact signed assets and verify checksums
+        run: python3 .github/scripts/data107/restore_apk.py base/PhigrosScript_data1.0.6.apk updates/data1.0.7/release-data release
+      - name: Publish after remote asset digest verification
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/data107/publish_release.py release updates/data1.0.7/release-data/manifest.json updates/data1.0.7/RELEASE_NOTES.md
+
+# Draft recovery uses authenticated release IDs and the creation response; source bytes remain pinned.

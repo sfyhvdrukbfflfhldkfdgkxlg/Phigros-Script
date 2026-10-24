@@ -1,0 +1,1 @@
+package io.github.phiscript.input;import android.content.Context;public class TouchService extends Context {public static final Companion Companion=new Companion();public static TouchService current=new TouchService();public static int missing;public static class Companion {public TouchService getCurrent(){return missing-->0?null:current;}}}

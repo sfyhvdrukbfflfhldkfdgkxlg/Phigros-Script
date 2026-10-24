@@ -1,0 +1,1 @@
+PASS 47 actual PGR visual-projection clock checks: variable HUD-to-music delays, physical pillarbox scaling, chart offset not double-applied, static/duplicate/stale/unreliable rejection. Synthetic moving scenes; no real audio/device timing test.

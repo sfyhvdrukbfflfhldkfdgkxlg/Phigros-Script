@@ -1,0 +1,1 @@
+package android.view;public interface WindowManager {void removeViewImmediate(View v);public class LayoutParams {public static final int TYPE_APPLICATION_OVERLAY=2038,TYPE_ACCESSIBILITY_OVERLAY=2032;}}

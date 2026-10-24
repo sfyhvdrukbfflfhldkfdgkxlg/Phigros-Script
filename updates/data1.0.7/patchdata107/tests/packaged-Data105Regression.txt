@@ -1,0 +1,1 @@
+PASS 37 data1.0.5 checks: trusted release/version parsing, sustained alternating red paths, blue/red and blue/yellow DOWN reuse, preserved fresh blue heads and independent lanes, both chart backends and visual composition. Host models only.

@@ -1,0 +1,13 @@
+PASS ZIP CRC, all DEX checksums, 9468 unique app classes
+PASS all helper fields/methods and added cross-DEX hooks resolve against packaged classes and Android SDK
+PASS unified native home, all reflected Activity actions and retained live status/log fields resolve against actual APK
+PASS actual shared Phira three-button detector and GameplayDetector; original detector DEX retained byte-for-byte
+PASS actual native overlay reflection fields and persistent failure/notification helper links
+PASS 487 data1.0.6 entries retained byte-for-byte; only manifest and helper DEX 8 changed
+PASS actual capture-to-auto-engine route, manual fallback, original Phira/recording entry points and non-exported recording components
+PASS no microphone/broad storage permission added
+PASS actual service-owned overlay and focus hooks, reconnect route, Root Phira import route and pre-clock gesture planning
+SHA256 5bb2237308ce02ba3077781caa8990f9e74edabece1fd459f081345e5df3bedf
+APK bytes 48094719
+PASS independent Phigros controls, native import cancellation bridge and English display bridges
+PASS incremental Root import commit entry and shared progressive playback clock are packaged

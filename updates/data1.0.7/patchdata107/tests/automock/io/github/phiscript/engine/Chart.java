@@ -1,0 +1,1 @@
+package io.github.phiscript.engine;public final class Chart {public double getFirstNoteSeconds(){return 0;}public double getOffsetSeconds(){return io.github.phiscript.capture.AutoEngineRegression.scenario.startsWith("notesync")?.175:0;}}
