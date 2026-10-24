@@ -1,0 +1,1 @@
+PASS reference chart 1: 3789/3789 root heads; each physical task DOWN once; peak 6 fingers; no invalid input or leftovers

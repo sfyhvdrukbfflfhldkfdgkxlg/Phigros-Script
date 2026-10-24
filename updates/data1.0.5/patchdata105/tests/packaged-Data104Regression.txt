@@ -1,0 +1,1 @@
+PASS 1157 data1.0.4 checks: sustained yellow contacts on both backends, hold reuse, visual tracker IDs, inward red motion/edges, language/catalog/dynamic status/original titles, pending Root pipe cancellation, timeout and native task reuse. Host models; no device run.

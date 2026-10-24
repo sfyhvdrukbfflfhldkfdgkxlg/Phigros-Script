@@ -1,12 +1,14 @@
 # Phigros Script
 
-最新补丁版本：**data1.0.4**。
+最新补丁版本：**data1.0.5**。
 
-[完整补丁源码包](updates/data1.0.4/PhigrosScript_data1.0.4_Source.zip) · [当前源码与说明](updates/data1.0.4/patchdata104/README.md) · [校验值](updates/data1.0.4/SHA256SUMS.txt)
+[安装包与完整源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.5) · [当前补丁源码与说明](updates/data1.0.5/patchdata105/README.md) · [校验值](updates/data1.0.5/SHA256SUMS.txt)
 
-包含 Phigros 暂停/重试菜单适配、英文界面、Phira 导入取消、持续黄键及向内红键；已取消估算独立触点数过多时的启动拦截。安装包通过当前对话提供，GitHub 发布配套补丁源码及测试。
+根据两张 Phigros 实图修复暂停键、中央返回／重试／继续识别，以及暂停后背景模糊导致的曲名识别阻塞。加入检查更新、连续黄键滑接、连续红键来回滑动、蓝键后接红／黄键的点按加滑动，支持 Root 与无障碍，保留多长键、导入取消、悬浮窗和录屏。沿用 data 系列签名，可覆盖 data1.0.4。
 
-根目录保留原 Alpha Gradle 工程；其构建不包含 data 系列 APK 补丁。最新补丁的基线要求、构建步骤与主机测试边界见版本目录。尚无安卓真机验证。
+发布流程逐项核对 APK、源码与校验文件后才公开 Release。截图及主机／打包后 DEX 回归已通过，尚无 Android 真机输入和音乐同步验证。测试材料只在源码 ZIP 中包含已公开的参考谱面 JSON；两张用户实图和原始谱包不随公开源码分发。
+
+根目录保留原 Alpha Gradle 工程，其构建不包含 data 系列 APK 补丁。基线与复现步骤见版本目录，完整源码包在 Releases。
 
 <details>
 <summary>原 Alpha 版本说明</summary>
@@ -142,3 +144,4 @@ gradle testDebugUnitTest lintDebug assembleDebug
 
 
 </details>
+

@@ -1,0 +1,1 @@
+PASS 172 Root Phira scan/pipe/package checks including 75 real native-decoder imports, nested paths, archives/raw charts, no audio copies, symlink/path bounds, truncation, size guards and Android user paths.

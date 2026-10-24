@@ -1,0 +1,1 @@
+PASS 1643 edge-safety checks: hidden/mandatory insets, old Android margins, inward corner flicks, all Root/accessibility chart and visual path samples, continuation nudges and release (host input models).

@@ -1,0 +1,111 @@
+{
+  "base_sha256": "ca04cdcd7c72d6f07b7ae6dfa523e53c7e8aab1323c576f4c8adf91c5215fba3",
+  "assets": {
+    "PhigrosScript_data1.0.5.apk": {
+      "size": 48061951,
+      "sha256": "4116e1486ed523e9be74a14b02b2940e8ddb799f894b3fa31214d640c619631b"
+    },
+    "PhigrosScript_data1.0.5_Source.zip": {
+      "size": 707349,
+      "sha256": "1922f26f50561b234b1841958b176688b9026b6c690101895c3ebb98de0d1acc"
+    },
+    "SHA256SUMS.txt": {
+      "size": 195,
+      "sha256": "6d30adbbc3d9070bd11860ee0c493630eee6521a8963301e17c3508e7d7b2b78"
+    }
+  },
+  "parts": {
+    "apk-patch": {
+      "size": 5147471,
+      "sha256": "f5e233c100a47a98fdf2f908e61d1b3315a742d8d8e8364ad93f52acdaa997f7",
+      "parts": [
+        {
+          "name": "apk-patch.part000",
+          "size": 393216,
+          "sha256": "65b06706ba8db98b8371ed3f1758d29f22b58a38f2b4f2f626f3379d3315e6ca"
+        },
+        {
+          "name": "apk-patch.part001",
+          "size": 393216,
+          "sha256": "864df8c5a1eb4f7870f839f9468d4d5c627e2524d9f77d4be3896393303cf44f"
+        },
+        {
+          "name": "apk-patch.part002",
+          "size": 393216,
+          "sha256": "638113beff585edf67ede2b713c1181da0c8d590b291cada4f980764354ae34d"
+        },
+        {
+          "name": "apk-patch.part003",
+          "size": 393216,
+          "sha256": "d073a19f3d33d41eed2b81354b41744088a8fc84412d5f543b26e59d32e54b33"
+        },
+        {
+          "name": "apk-patch.part004",
+          "size": 393216,
+          "sha256": "a2fe065e110dc08c53697b7ce2fe026cc7d06a80e15a3d32b03c404d4428a115"
+        },
+        {
+          "name": "apk-patch.part005",
+          "size": 393216,
+          "sha256": "59aa4c782ed0daa5d34ab2e0764683a356ef809061688577d77bc02cdab66b3a"
+        },
+        {
+          "name": "apk-patch.part006",
+          "size": 393216,
+          "sha256": "d9da31368c8a7157fb91e1a97b0b9f00287196bdfd645f31839c9e2e7476e74f"
+        },
+        {
+          "name": "apk-patch.part007",
+          "size": 393216,
+          "sha256": "9d641d3ea147626714c0b85f7a23baaa94632c090515eb73233f0e4155928171"
+        },
+        {
+          "name": "apk-patch.part008",
+          "size": 393216,
+          "sha256": "cb9ed67e45c8d3a810baf05710a99507b19e6235c43229738431b907a248df84"
+        },
+        {
+          "name": "apk-patch.part009",
+          "size": 393216,
+          "sha256": "d886817bc17eb5e39aad6e4edefdd2514757ce92d33ab96cf802c79863cf6031"
+        },
+        {
+          "name": "apk-patch.part010",
+          "size": 393216,
+          "sha256": "43ec64a9c32a7db536beca9d56469e17b5af33e9e01b52a9a24c60a062ec1c45"
+        },
+        {
+          "name": "apk-patch.part011",
+          "size": 393216,
+          "sha256": "eae6a75b451d1f4c15de9c3772b8ba6bf63796feedcd83dee255793f82a0d573"
+        },
+        {
+          "name": "apk-patch.part012",
+          "size": 393216,
+          "sha256": "6dbce02e9b711df9994233f015f81091a2fb3e9c59c2d7462dc2fafdb0a84d34"
+        },
+        {
+          "name": "apk-patch.part013",
+          "size": 35663,
+          "sha256": "648d6ef50ac2cdebe3d7d2e690d61618515fd076593c215900468829484ce2ad"
+        }
+      ]
+    },
+    "source": {
+      "size": 707349,
+      "sha256": "1922f26f50561b234b1841958b176688b9026b6c690101895c3ebb98de0d1acc",
+      "parts": [
+        {
+          "name": "source.part000",
+          "size": 393216,
+          "sha256": "f5b0d7de48dc366e24b1244906d060f5f90f3b67a57e4d5ee0642574c7189074"
+        },
+        {
+          "name": "source.part001",
+          "size": 314133,
+          "sha256": "09d6b051bd7b0a7c40b4ee21428e44184d03f71e59ce46e146aee10455ca0af0"
+        }
+      ]
+    }
+  }
+}

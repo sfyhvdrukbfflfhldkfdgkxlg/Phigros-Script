@@ -1,0 +1,32 @@
+name: Publish verified data1.0.5
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-data105.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data105
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Publish verified data1.0.5 release')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Download pinned public base APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download v0.1.7 --repo sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script --pattern Phigros-Script-v0.1.7.apk --dir base
+      - name: Restore exact signed assets and verify checksums
+        run: python3 .github/scripts/data105/restore_apk.py base/Phigros-Script-v0.1.7.apk updates/data1.0.5/release-data release
+      - name: Publish after remote asset digest verification
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/data105/publish_release.py release updates/data1.0.5/release-data/manifest.json updates/data1.0.5/RELEASE_NOTES.md

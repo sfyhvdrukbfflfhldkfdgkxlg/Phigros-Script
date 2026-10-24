@@ -1,0 +1,1 @@
+PASS actual packaged PhiraImportDecoder cancellation after first input block, session release and executor reuse.

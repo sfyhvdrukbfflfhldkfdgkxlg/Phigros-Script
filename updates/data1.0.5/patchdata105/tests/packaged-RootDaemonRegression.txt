@@ -1,0 +1,3 @@
+PASS real RootDaemon.main binary handshake, four acknowledged frames and reflected MotionEvent conversion (mock Android manager)
+PASS uid != 0 rejected before input startup; EOF/close releases all active pointers with CANCEL
+Host protocol test only; does not execute su or Android Binder injection.

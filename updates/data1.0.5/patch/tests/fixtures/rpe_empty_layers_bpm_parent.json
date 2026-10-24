@@ -1,0 +1,280 @@
+{
+  "META": {
+    "RPEVersion": 140,
+    "offset": 0
+  },
+  "BPMList": [
+    {
+      "startTime": [
+        0,
+        0,
+        1
+      ],
+      "bpm": 120
+    },
+    {
+      "startTime": [
+        4,
+        0,
+        1
+      ],
+      "bpm": 180
+    }
+  ],
+  "judgeLineList": [
+    {
+      "Name": "Test",
+      "Texture": "line.png",
+      "isCover": 1,
+      "notes": [
+        {
+          "type": 2,
+          "startTime": [
+            1,
+            0,
+            1
+          ],
+          "endTime": [
+            7,
+            0,
+            1
+          ],
+          "positionX": -200,
+          "above": 1,
+          "isFake": 0,
+          "speed": 1,
+          "size": 1,
+          "alpha": 255,
+          "yOffset": 0
+        },
+        {
+          "type": 2,
+          "startTime": [
+            1,
+            0,
+            1
+          ],
+          "endTime": [
+            7,
+            0,
+            1
+          ],
+          "positionX": 200,
+          "above": 1,
+          "isFake": 0,
+          "speed": 1,
+          "size": 1,
+          "alpha": 255,
+          "yOffset": 0
+        },
+        {
+          "type": 1,
+          "startTime": [
+            3,
+            0,
+            1
+          ],
+          "endTime": [
+            3,
+            0,
+            1
+          ],
+          "positionX": 0,
+          "above": 1,
+          "isFake": 0,
+          "speed": 1,
+          "size": 1,
+          "alpha": 255,
+          "yOffset": 0
+        },
+        {
+          "type": 3,
+          "startTime": [
+            5,
+            0,
+            1
+          ],
+          "endTime": [
+            5,
+            0,
+            1
+          ],
+          "positionX": 0,
+          "above": 1,
+          "isFake": 0,
+          "speed": 1,
+          "size": 1,
+          "alpha": 255,
+          "yOffset": 0
+        },
+        {
+          "type": 4,
+          "startTime": [
+            6,
+            0,
+            1
+          ],
+          "endTime": [
+            6,
+            0,
+            1
+          ],
+          "positionX": 0,
+          "above": 1,
+          "isFake": 0,
+          "speed": 1,
+          "size": 1,
+          "alpha": 255,
+          "yOffset": 0
+        },
+        {
+          "type": 1,
+          "startTime": [
+            2,
+            0,
+            1
+          ],
+          "endTime": [
+            2,
+            0,
+            1
+          ],
+          "positionX": 0,
+          "above": 1,
+          "isFake": 1,
+          "speed": 1,
+          "size": 1,
+          "alpha": 255,
+          "yOffset": 0
+        }
+      ],
+      "eventLayers": [
+        {
+          "moveXEvents": [],
+          "moveYEvents": [],
+          "rotateEvents": [],
+          "alphaEvents": [],
+          "speedEvents": []
+        },
+        {
+          "moveXEvents": [
+            {
+              "startTime": [
+                0,
+                0,
+                1
+              ],
+              "endTime": [
+                8,
+                0,
+                1
+              ],
+              "start": 120,
+              "end": 240,
+              "easingType": 1,
+              "easingLeft": 0,
+              "easingRight": 1,
+              "bezier": 0
+            }
+          ],
+          "moveYEvents": [],
+          "rotateEvents": [],
+          "alphaEvents": [],
+          "speedEvents": []
+        },
+        {
+          "moveXEvents": [],
+          "moveYEvents": [],
+          "rotateEvents": [],
+          "alphaEvents": [],
+          "speedEvents": []
+        },
+        {
+          "moveXEvents": [
+            {
+              "startTime": [
+                0,
+                0,
+                1
+              ],
+              "endTime": [
+                8,
+                0,
+                1
+              ],
+              "start": 60,
+              "end": 60,
+              "easingType": 1,
+              "easingLeft": 0,
+              "easingRight": 1,
+              "bezier": 0
+            }
+          ],
+          "moveYEvents": [],
+          "rotateEvents": [],
+          "alphaEvents": [],
+          "speedEvents": []
+        }
+      ],
+      "father": -1,
+      "rotateWithFather": true
+    },
+    {
+      "Name": "Test",
+      "Texture": "line.png",
+      "isCover": 1,
+      "notes": [
+        {
+          "type": 2,
+          "startTime": [
+            2,
+            0,
+            1
+          ],
+          "endTime": [
+            6,
+            0,
+            1
+          ],
+          "positionX": 0,
+          "above": 1,
+          "isFake": 0,
+          "speed": 1,
+          "size": 1,
+          "alpha": 255,
+          "yOffset": 0
+        }
+      ],
+      "eventLayers": [
+        {
+          "moveXEvents": [],
+          "moveYEvents": [
+            {
+              "startTime": [
+                0,
+                0,
+                1
+              ],
+              "endTime": [
+                8,
+                0,
+                1
+              ],
+              "start": 80,
+              "end": 80,
+              "easingType": 1,
+              "easingLeft": 0,
+              "easingRight": 1,
+              "bezier": 0
+            }
+          ],
+          "rotateEvents": [],
+          "alphaEvents": [],
+          "speedEvents": []
+        }
+      ],
+      "father": 0,
+      "rotateWithFather": true
+    }
+  ]
+}

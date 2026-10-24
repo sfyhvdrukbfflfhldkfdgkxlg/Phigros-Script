@@ -1,0 +1,4 @@
+PASS stationary hold then continue after UP: 2 notes; 14 gestures
+PASS hold plus later note then continue after UP: 3 notes; 14 gestures
+PASS same-position overlapping holds: sustain plus every head retrigger
+PASS 16 stacked flicks at 4 positions: every flick scheduled; peak=4
