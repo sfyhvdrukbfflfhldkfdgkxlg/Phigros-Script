@@ -1,0 +1,4 @@
+PASS 2 continuous holds + 1000 three-finger chords: 3002 DOWN, 3002 UP; no hold restart
+PASS 100 ten-to-ten handoffs: unique IDs and valid UP/DOWN indices
+PASS duplicate IDs, non-finite/offscreen coordinates and >10 fingers rejected atomically
+ALL 110123 ROOT STATE CHECKS PASSED (host only; no su/device execution)

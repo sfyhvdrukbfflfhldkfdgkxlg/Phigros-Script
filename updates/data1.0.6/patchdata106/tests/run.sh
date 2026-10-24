@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/../.."
+mkdir -p patchdata106/testclasses patchdata106/rootsimclasses patchdata106/autotestclasses patchdata106/hosttestclasses
+find patchdata106/tests -maxdepth 1 -type f -name '*.txt' -not -name 'signature.txt' -delete
+java -jar tools/ecj.jar -8 -nowarn -encoding UTF-8 -cp 'analysis/data105-api.jar:tools/kotlin-stdlib.jar' -d patchdata106/testclasses $(rg --files patch/tests/mocksrc patch/tests/aospsrc -g '*.java' | rg -v '(input/TouchService|android/content/Context|android/util/DisplayMetrics|android/view/WindowMetrics)\.java$') $(rg --files patchdata106/testsupport -g '*.java')
+phi_tests='patchdata106/testclasses:patchdata106/classes:analysis/data105-api.jar:tools/kotlin-stdlib.jar:tools/json.jar'
+java -jar tools/ecj.jar -8 -nowarn -encoding UTF-8 -cp "$phi_tests" -d patchdata106/testclasses patch/tests/Regression.java patch/tests/ProtocolRegression.java patch/tests/SystemInputRegression.java patch/tests/RealChartsRegression.java patch/tests/ImportPackagesRegression.java patch/tests/LargeChartRegression.java patch/tests/RootStateRegression.java patch/tests/RpeCompatibilityRegression.java patchdata106/tests/AutoStateRegression.java patchdata106/tests/GesturePlanRegression.java patchdata106/tests/PhiraRootPipeRegression.java patchdata106/tests/StopPolicyRegression.java patchdata106/tests/NativeParserCancelRegression.java
+for check in io.github.phiscript.input.Regression io.github.phiscript.input.ProtocolRegression io.github.phiscript.input.SystemInputRegression io.github.phiscript.input.RealChartsRegression io.github.phiscript.input.ImportPackagesRegression io.github.phiscript.assets.LargeChartRegression io.github.phiscript.root.RootStateRegression io.github.phiscript.assets.RpeCompatibilityRegression io.github.phiscript.capture.AutoStateRegression io.github.phiscript.input.GesturePlanRegression io.github.phiscript.root.PhiraRootPipeRegression io.github.phiscript.capture.StopPolicyRegression; do
+ java -Xverify:none -Xmx1024m -cp "$phi_tests" "$check" > "patchdata106/tests/${check##*.}.txt"
+done
+java -jar tools/ecj.jar -8 -nowarn -encoding UTF-8 -cp "$phi_tests" -d patchdata106/rootsimclasses $(rg --files patchdata106/tests/rootsimsrc -g '*.java') patch/tests/RootPlayerRegression.java patch/tests/RootDaemonRegression.java patchdata106/tests/RootWarmupRegression.java patchdata106/tests/ConnectedPlaybackRegression.java patchdata106/tests/TouchSafetyRegression.java patchdata106/tests/Data104Regression.java patchdata106/tests/Data105Regression.java patchdata106/tests/Data106Regression.java patchdata106/tests/PhigrosClockRegression.java
+for check in io.github.phiscript.input.RootPlayerRegression io.github.phiscript.root.RootDaemonRegression io.github.phiscript.root.RootWarmupRegression io.github.phiscript.input.ConnectedPlaybackRegression io.github.phiscript.input.TouchSafetyRegression io.github.phiscript.input.Data104Regression io.github.phiscript.input.Data105Regression io.github.phiscript.input.Data106Regression io.github.phiscript.capture.PhigrosClockRegression; do
+ java -Xverify:none -cp "patchdata106/rootsimclasses:$phi_tests" "$check" > "patchdata106/tests/${check##*.}.txt"
+done
+java -jar tools/ecj.jar -8 -nowarn -encoding UTF-8 -cp 'analysis/data105-api.jar:tools/kotlin-stdlib.jar' -d patchdata106/autotestclasses $(rg --files patchdata106/tests/automock -g '*.java') patchdata106/src/io/github/phiscript/capture/AutoEvidence.java patchdata106/src/io/github/phiscript/capture/PhigrosStartGate.java patchdata106/src/io/github/phiscript/capture/PhigrosAutoEngine.java patchdata106/src/io/github/phiscript/root/InputBackend.java patchdata106/tests/AutoEngineRegression.java
+timeout 70s java -Xverify:none -cp 'patchdata106/autotestclasses:analysis/data105-api.jar:tools/kotlin-stdlib.jar' io.github.phiscript.capture.AutoEngineRegression > patchdata106/tests/AutoEngineRegression.txt
+java -jar tools/ecj.jar -8 -nowarn -encoding UTF-8 -cp tools/android/android.jar -d patchdata106/hosttestclasses $(rg --files patchdata106/tests/hostmock -g '*.java') patchdata106/src/io/github/phiscript/input/ForegroundEvents.java patchdata106/src/io/github/phiscript/capture/OverlayHost.java patchdata106/tests/ForegroundHostRegression.java
+java -cp patchdata106/hosttestclasses io.github.phiscript.capture.ForegroundHostRegression > patchdata106/tests/ForegroundHostRegression.txt
+bash patchdata106/tests/controls.sh
+bash patchdata106/tests/overlay.sh
+bash patchdata106/tests/router.sh
+printf 'Host chart/input, connected gestures, edge safety, Root import, auto flow and overlay regressions passed.\n'

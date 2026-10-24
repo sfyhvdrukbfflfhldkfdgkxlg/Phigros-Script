@@ -1,0 +1,1 @@
+PASS 11 capture-stop classification checks: unexpected projection loss and real failures visible, explicit stop/teardown quiet.

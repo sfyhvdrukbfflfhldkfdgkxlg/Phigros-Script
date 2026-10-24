@@ -1,14 +1,14 @@
 # Phigros Script
 
-最新补丁版本：**data1.0.5**。
+最新补丁版本：**data1.0.6**。
 
-[安装包与完整源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.5) · [当前补丁源码与说明](updates/data1.0.5/patchdata105/README.md) · [校验值](updates/data1.0.5/SHA256SUMS.txt)
+[安装包与完整补丁源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.6) · [当前补丁源码与说明](updates/data1.0.6/patchdata106/README.md) · [校验值](updates/data1.0.6/SHA256SUMS.txt)
 
-根据两张 Phigros 实图修复暂停键、中央返回／重试／继续识别，以及暂停后背景模糊导致的曲名识别阻塞。加入检查更新、连续黄键滑接、连续红键来回滑动、蓝键后接红／黄键的点按加滑动，支持 Root 与无障碍，保留多长键、导入取消、悬浮窗和录屏。沿用 data 系列签名，可覆盖 data1.0.4。
+修正 Phigros 宽屏玩法坐标，并根据实际移动音符校准谱面起点。黄键、往返红键、蓝黄／蓝红衔接及混合多押统一规划；蓝键与长按头保留新按下，同时音符按真实多触点处理。新点击轮换空闲编号，已有长按保持编号；菜单双击继续使用同一编号。保留暂停／重试识别、检查更新、英文、Phira Root／文件导入与取消、悬浮窗及录屏。沿用 data 系列签名，可覆盖安装 data1.0.5。
 
-发布流程逐项核对 APK、源码与校验文件后才公开 Release。截图及主机／打包后 DEX 回归已通过，尚无 Android 真机输入和音乐同步验证。测试材料只在源码 ZIP 中包含已公开的参考谱面 JSON；两张用户实图和原始谱包不随公开源码分发。
+主机、原谱、截图、Root／AOSP 模型及打包后 DEX 回归通过，尚无 Android 真机判定、音乐同步和录屏性能验证。无障碍编号复用取决于系统，受限时建议使用 Root；不能保证任意谱面全连。三个参考谱面的 JSON 随源码 ZIP 提供，用户实图和原谱包不公开分发。
 
-根目录保留原 Alpha Gradle 工程，其构建不包含 data 系列 APK 补丁。基线与复现步骤见版本目录，完整源码包在 Releases。
+根目录保留原 Alpha Gradle 工程，其构建不包含 data 系列 APK 补丁。基线与复现步骤见版本目录，完整补丁源码包在 Releases。发布流程校验 APK、源码与校验文件后才公开 Release。
 
 <details>
 <summary>原 Alpha 版本说明</summary>
