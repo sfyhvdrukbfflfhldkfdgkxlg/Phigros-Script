@@ -31,4 +31,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 .github/scripts/data106/publish_release.py release updates/data1.0.6/release-data/manifest.json updates/data1.0.6/RELEASE_NOTES.md
 
-# Draft recovery uses authenticated release IDs; source bytes remain pinned.
+# Draft recovery uses authenticated release IDs and the creation response; source bytes remain pinned.

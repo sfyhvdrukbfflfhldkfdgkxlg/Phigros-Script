@@ -3,8 +3,8 @@ import json,os,subprocess,sys
 from pathlib import Path
 
 REPO='sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script';TAG='data1.0.6'
-def gh(*args,check=True):
-    r=subprocess.run(['gh',*args],text=True,capture_output=True)
+def gh(*args,check=True,input=None):
+    r=subprocess.run(['gh',*args],text=True,capture_output=True,input=input)
     if check and r.returncode:raise RuntimeError('GitHub operation failed: '+r.stderr[:700])
     return r
 def api(path):return json.loads(gh('api','repos/'+REPO+'/'+path).stdout)
@@ -25,9 +25,11 @@ def publish(assets_dir,manifest_path,notes_path):
         if p.stat().st_size!=item['size'] or hashlib.sha256(p.read_bytes()).hexdigest()!=item['sha256']:raise RuntimeError('Local asset mismatch')
     release=find_release()
     if release is None:
-        gh('release','create',TAG,'--repo',REPO,'--target',commit,'--title','Phigros Script '+TAG,'--notes-file',notes_path,'--draft','--prerelease')
-        release=find_release()
-    if release is None:raise RuntimeError('Created draft is not visible')
+        # Use the creation response directly: collection reads can lag a new draft.
+        payload={'tag_name':TAG,'target_commitish':commit,'name':'Phigros Script '+TAG,
+                 'body':Path(notes_path).read_text(),'draft':True,'prerelease':True}
+        release=json.loads(gh('api','--method','POST','repos/'+REPO+'/releases',
+                              '--input','-',input=json.dumps(payload)).stdout)
     if release['tag_name']!=TAG or release['target_commitish']!=commit:raise RuntimeError('Existing release points to different source')
     present={a['name']:a for a in release['assets']}
     if set(present)-set(expected):raise RuntimeError('Unexpected pre-existing assets; refusing to alter release')
