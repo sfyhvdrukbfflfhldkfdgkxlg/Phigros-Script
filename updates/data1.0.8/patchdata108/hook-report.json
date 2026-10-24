@@ -1,0 +1,18 @@
+{
+  "version": "data1.0.8",
+  "baseline": "data1.0.7",
+  "inherited_hooks": {
+    "version": "data1.0.8",
+    "baseline": "data1.0.5",
+    "changed_dex": [],
+    "replaced_helper_dex": "classes8.dex",
+    "native_hooks": "Every data1.0.5 native DEX entry is retained byte-for-byte."
+  },
+  "added_hooks": [
+    "ChartLibrary.Companion.scanSource -> ChartTimingIndex.importLibrary",
+    "Chart.Companion.parse -> OfficialChartCompatibility.upgrade",
+    "ChartKt.readEvents skips finite endTime < startTime events"
+  ],
+  "bundled_first_note_rows": 1057,
+  "independently_verified_note_count": 677156
+}

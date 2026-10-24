@@ -1,0 +1,4 @@
+IMPORTED Submerged City.zip: title=Submerged City, level=AT  Lv.18, notes=3909, normalizedBytes=2550519
+IMPORTED 千本桜.zip: title=千本桜, level=AT Lv.17, notes=1930, normalizedBytes=372123
+IMPORTED 璀璨星空.zip: title=璀璨星空, level=Star., notes=1883, normalizedBytes=322955
+PASS all 3 original ZIP import pipelines

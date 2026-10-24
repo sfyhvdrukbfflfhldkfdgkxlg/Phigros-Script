@@ -1,0 +1,240 @@
+0	\nMatched (preview only; no touches)
+1	\nStart automatic playback?
+2	\nOpen the same chart and wait for gameplay or the pause menu…
+3	 ms; global offset 
+4	 ms; missed opening notes are skipped
+5	 · Current frame is unreliable
+6	 · Notes 
+7	 Phira charts
+8	 Phira charts; switched to Phira mode
+9	 difficulties
+10	 difficulties; floating detection can now start
+11	 APK library imported; total 
+12	 Phigros Script diagnostics 
+13	 Phigros Script detection / playback running
+14	 Phigros Script diagnostics
+15	 Phigros library ready · 
+16	 Phigros chart playback (automatic input from charts)
+17	 Phira · Import charts
+18	 Phira centre retry button x,y
+19	 Phira global offset must be from -2000 to 2000 ms
+20	 Phira matched: 
+21	 Phira preview: matches song names and custom difficulties without touching the game
+22	 Phira is not uniquely matched; text: 
+23	 Phira matched: 
+24	 Phira manual selection: 
+25	 Automatically centre the Phira viewport using the chart aspect ratio (recommended)
+26	 Phira pause region x,y,width,height
+27	 Phira pause settling time (ms, 900–4000)
+28	 Phira song matching / manual chart selection
+29	 Phira chart rechecked; double-tapping pause
+30	 Phira song or difficulty changed; confirmation cancelled. Restart detection
+31	 This Phira run ended; waiting for pause, results or exit. A new confirmation is required next time
+32	 Phira game global offset (ms, -2000–2000)
+33	 Phira controls rechecked; double-tapping pause for the confirmed manual chart
+34	 Phira playback stopped: 
+35	 Phira playback chart
+36	 Phira library ready · 
+37	 Phira chart mode: pause and tap centre retry after confirmation. Use normal mode, 1x speed, no mirror or flip
+38	 Phira start offset is outside the supported range
+39	 Phira retry delay must be from 0 to 5000 ms
+40	 Phira retry start delay (ms, 0–5000)
+41	 Phira: waiting for the song and custom difficulty…\nImport the same chart as the game
+42	 Phira: waiting for gameplay to verify the manual chart…
+43	 Phira: detection continues; playback has not started
+44	 Phira: match song and difficulty automatically
+45	 Phira: identifying the song and difficulty again…
+46	 Root was denied or the read failed
+47	 Import with Root
+48	 Root import scans downloaded Phira charts and imports their chart data (Root authorization required).\nSelect files to import PEZ / ZIP packages, PGR / RPE JSON, PEC or PBC manually.
+49	 Root import failed: 
+50	 The previous collection was interrupted or the process restarted; collect again.
+51	 Unsupported screen pixel format
+52	 Enable this service once
+53	 Uses the retry clock without note alignment; configure device latency in settings
+54	 Session stopped: 
+55	 Session stopped or Phira left the foreground
+56	 Use your authorized Shizuku connection to enable this app's accessibility service while retaining other enabled services.\n\nThis is a one-time request followed by a 10-second connection check. If Android disables it again, the result is reported without repeatedly changing settings. You can turn the service off at any time.\n\nThis workaround has not been verified on your device. Do not change other accessibility settings during the request; concurrent changes cancel it.
+57	 Saved APK library is unavailable: 
+58	 Saved Phira library is unavailable; reimport it: 
+59	 Allow floating overlay
+60	 Could not switch: 
+61	 Open settings
+62	 Regions use screen ratios; for example, the lower half is 0,0.5,1,0.5. Exclude black borders. Phira reads chart aspectRatio automatically; turn off automatic viewport if the game uses a different ratio. The pause icon defaults to the upper-left region; upper-right can use 0.82,0,0.18,0.24. Phira retry delay defaults to its 700 ms opening animation; chart offsets are applied automatically. Visual capture compensation is limited to 0–120 ms and touch offset to -80–80 ms.
+63	 Use x,y,width,height for a region
+64	 Region values must be from 0 to 1 and remain inside the screen
+65	 Invalid parameters
+66	 Double-pause interval (ms, 80–300)
+67	 Double-tap interval must be from 80 to 300 ms
+68	 Preview only
+69	 APK file import is also available
+70	 Startup failed: 
+71	 Start floating detection / confirm playback
+72	 Copy diagnostics
+73	 If Android shows the service enabled but disconnected, turn it off and on again. Allow restricted settings in app details if prompted by Android. If the service switches itself off, copy diagnostics; the home screen's Shizuku collection can gather additional system clues.\n\n
+74	 Installation source: 
+75	 Live visual tracking; no chart library required
+76	 Import Phigros APK
+77	 Read charts from Phigros APK
+78	 Import Phira charts
+79	 Import Phira chart package
+80	 Import failed; the existing Phira library remains usable: 
+81	 Import failed; the existing library was not replaced: 
+82	 Import completed but refresh failed: 
+83	 Not collected yet
+84	 Screen size changed; restart the session
+85	 Imported with Root: 
+86	 Stopped from the floating window
+87	 Recognition name saved
+88	 Saved; changes apply the next time detection starts
+89	 Stopped
+90	 Result screen reached; Phira playback did not start
+91	 Imported 
+92	 Selected manually: 
+93	 Gameplay and judge line detected; 
+94	 Tapped Phira centre retry once; Continue rewinds three seconds and is not a chart start point
+95	 Phira three-button pause menu confirmed
+96	 Phira confirmed: 
+97	 Visual playback confirmed; playing directly from the current frame
+98	 Retry returned to gameplay; start delay 
+99	 Selected 
+100	 App UID=
+101	 App initialization complete
+102	 App process started; PID=
+103	 Delay must be from -500 to 500 ms
+104	 Start and open settings
+105	 Start playback
+106	 Current session: 
+107	 Another task is active; files were not imported
+108	 Another task is active; try again later
+109	 Difficulty region x,y,width,height
+110	 Overlay unavailable: 
+111	 Floating recognition preview
+112	 Overlay hidden; rechecking the Phira chart and pause controls
+113	 Overlay permission was revoked
+114	 The floating window shows recognition results and playback controls. Allow this app to display over other apps, then return and start again.
+115	 Capture delay compensation (ms)
+116	 No fresh capture for 1.5 seconds; Phira playback stopped
+117	 Capture startup failed: 
+118	 Invalid manual Phira chart ID; select the chart again
+119	 The selected chart was replaced by a new import; select it again under Phira chart matching
+120	 Scan Phigros APK library (tool)
+121	 Scan failed: 
+122	 Use x,y for a button position; both values must be greater than 0 and less than 1
+123	 Android accessibility settings will open. Re-enable this app's service, exit settings and return here.\n\nShizuku performs a read-only collection for about 30 seconds: accessibility/permission logs mentioning this app or UID, plus two app-specific AppOps queries. Matching logs may mention other apps; review them before copying. Results stay on this device and the next collection replaces them. They are not uploaded automatically.\n\nWhen collection finishes, open accessibility diagnostics to view the result. Android may not report the source of revocation, so the cause may remain unknown.
+124	 Cannot start system diagnostics
+125	 Cannot start collection: 
+126	 Cannot open overlay settings; allow the permission in Android app settings: 
+127	 Cannot open the file picker: 
+128	 Cannot open settings; open them manually: 
+129	 Gameplay or a visible judge line could not be confirmed continuously; this run stopped
+130	 Cannot remove the overlay; playback did not start
+131	 Cannot observe accessibility settings
+132	 If installed resources cannot be read, select APK files from the same Phigros version for local parsing.\n\n
+133	 Cannot read: 
+134	 Cannot select files: 
+135	 Accessibility service disconnected
+136	 Accessibility check
+137	 Accessibility check / copy diagnostics
+138	 Initial accessibility settings snapshot 
+139	 Accessibility settings changed (the modifying app is not identified) 
+140	 Accessibility: 
+141	 Not now
+142	 Pause icon search region x,y,width,height
+143	 Pause settling time must be from 900 to 4000 ms
+144	 Song title region x,y,width,height
+145	 Latest user-requested system diagnostics: 
+146	 Latest crash (no record does not rule out Android killing the process): 
+147	 Service and settings events: 
+148	 Capture was not authorized; session did not start
+149	 Not supplied
+150	 Phira song or pause menu was not confirmed; pause manually and restart detection
+151	 Three-button pause menu not confirmed; retry was not tapped. Check the viewport and retry coordinates
+152	 Not recorded
+153	 Calibration error: 
+154	 Phira pause or size change detected; playback stopped
+155	 Menu, results or song change detected; this run stopped
+156	 Reading library…
+157	 No importable charts found in Phira (Root permission required)
+158	 Song title shown in the game
+159	 Game left the foreground
+160	 Keep landscape orientation. Visual playback can start from the current notes after confirmation. Phira requires 1x speed, no mirror and matching game offset. Volume Down and the notification stop playback.
+161	 Retry did not return to confirmed gameplay; stopped without repeated taps
+162	 Gameplay viewport x,y,width,height
+163	 User started system diagnostics 
+164	 Frame changed\nWaiting for gameplay and judge line
+165	 Frame expired\nWaiting for a fresh game capture
+166	 Frame or song changed; recognizing again…
+167	 Screen adjustment failed: 
+168	 Later
+169	 Waiting for the Phira pause menu; check the viewport and retry coordinates
+170	 Waiting for floating-window confirmation
+171	 Android supplied no record
+172	 Android version 
+173	 Android settings
+174	 System diagnostics are already running
+175	 Collecting system diagnostics · About 30 seconds
+176	 System diagnostics started at 
+177	 Collecting system diagnostics: re-enable accessibility, exit settings and return; about 30 seconds
+178	 System diagnostics collection failed
+179	 System diagnostics failed; check Shizuku and view diagnostics.
+180	 System diagnostics finished 
+181	 System diagnostics finished; open Accessibility check / copy diagnostics to view the result.
+182	 Android process exit records: 
+183	 Visual playback ready\nEnter a song and wait for the judge line and pause icon
+184	 Visual mode · No library needed · Detects visible judge lines and notes
+185	 Visual mode directly detects judge lines and four note types; no chart reading or note alignment
+186	 Visual / Phira chart playback · Confirm in the floating window to start
+187	 Visual playback stopped: 
+188	 Visual playback started; pauses, leaving the game or stale frames stop touch input
+189	 Visual mode plays from the current frame without note alignment. Phira uses centre retry to establish chart time. Use 1x speed, no mirror and matching global offset.
+190	 Visual mode: detect gameplay and judge line, confirm, then play from live images without song names or charts. Phira: match an imported song and difficulty, confirm, pause and tap centre retry for chart playback. Preview sends no touches.
+191	 Detection continues\nPlayback has not started
+192	 Continue detection
+193	 Capture permission is missing
+194	 Match song and difficulty automatically
+195	 Visual detection: judge line 
+196	 Touch thread did not exit in time
+197	 Touch thread did not exit in time; ending the session
+198	 Touch offset (positive means later, ms)
+199	 Record why accessibility closes
+200	 Record why accessibility closes (Shizuku)
+201	 Device 
+202	 Device calibration
+203	 Recognition regions, Phira retry and latency
+204	 Detection / playback running; automatic recording saves silent video. Tap Stop to finish
+205	 Recognition expired; rechecking song and difficulty…
+206	 Detection running · Stop from the notification
+207	 Detection status
+208	 Diagnostics copied
+209	 Allow the floating overlay before starting detection
+210	 Import a Phira ZIP/PEZ chart package first
+211	 Import Phira charts first
+212	 Import a Phira chart package first
+213	 Import or scan a library first
+214	 Connect and authorize Shizuku before collecting diagnostics
+215	 Wait for the current task or stop playback first
+216	 Wait for the current task or stop the session first
+217	 Wait for the current task to finish or stop playback
+218	 Connect and authorize Shizuku, then wait until it shows connected
+219	 Import Phira charts (PEZ / ZIP / JSON / PEC / PBC)
+220	 Read failed 
+221	 Could not read capture: 
+222	 Run logs appear here.
+223	 Alpha version. Visual tracking is affected by capture latency, occlusion, skins and hidden or fast judge lines. Phira supports reliably parsed charts only. Accessibility input cannot guarantee full combos.
+224	 Select APK
+225	 Select APK files
+226	 Select APKs matching the installed game version. For split installs, select base.apk and all resource APKs. Files are copied into this app and parsed locally, without server upload.\n\nAPKS/XAPK containers are not supported directly; extract them and select the APK files inside.
+227	 Select files
+228	 Choose playback mode
+229	 Select chart
+230	 Enable this service with Shizuku
+231	 Enable accessibility in Android settings
+232	 Collection failed 
+233	 Collection complete 
+234	 Overlay hide timed out; playback did not start
+235	 Difficulty: 
+236	 (manual selection; verify it)
+237	 ; open this same chart in Phira
+238	 ; enable it with the home screen's Shizuku button or Android settings
+239	 ; verify it matches the current game chart

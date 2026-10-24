@@ -1,0 +1,1 @@
+PASS 284321 progressive clock checks: immediate original data, immutable in-flight batches, one-shot bounded monotonic calibration, converged timing, worker isolation, both Root/AOSP backends with two continuing holds and 20 fresh blue heads. Host models only.

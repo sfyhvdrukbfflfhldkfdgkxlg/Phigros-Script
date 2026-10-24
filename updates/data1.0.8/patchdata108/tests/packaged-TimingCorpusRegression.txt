@@ -1,0 +1,1 @@
+PASS 683499 checks on 1057 pinned public charts and 677156 note heads/tails: independent Decimal conversion vs actual native parser, built-in first-note references, atomic table restore and checksums. Elapsed 63 seconds. Snapshot 4.0.1.2; no Android device/music-start validation.

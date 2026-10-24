@@ -1,0 +1,1 @@
+package io.github.phiscript.capture;import io.github.phiscript.SessionSettings;import java.util.concurrent.atomic.AtomicBoolean;public class SessionEngine {public static int calls;public SessionEngine(FrameStore f,SessionSettings s,boolean p,AtomicBoolean stop,RecognitionOverlay o){}public void run(){calls++;}}

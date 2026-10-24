@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=Phigros Script MultiHold Patch
+Signer #1 certificate SHA-256 digest: 80daf77af95563783906fa85c0ea679da03ed7724d2eec64ad2d32de0d383b76
+Signer #1 certificate SHA-1 digest: 0b2df6f080063b541252772cbb00da6317d67e94
+Signer #1 certificate MD5 digest: bfc7eced4441056fe8ae49512758d63a
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 2062887de5bfbc1ef9912d7d32dd77ee2d6e86ed53640b5c72ba3375c86d235b
+Signer #1 public key SHA-1 digest: 80440d020399531047fa0208356e4a2509e50cd9
+Signer #1 public key MD5 digest: 5952d525d96bb8a00327d7a1f94e28a8

@@ -1,0 +1,5 @@
+PASS null and non-first empty layers preserve playable notes
+PASS overlapping and zero-duration transform events produce finite positions
+PASS clipped easing and cubic Bezier (including Y overshoot)
+PASS duplicate BPM; unsafe gameplay UI-binding and cyclic parents fail explicitly
+ALL 44 RPE COMPATIBILITY CHECKS PASSED (host parser; not every RPE chart)

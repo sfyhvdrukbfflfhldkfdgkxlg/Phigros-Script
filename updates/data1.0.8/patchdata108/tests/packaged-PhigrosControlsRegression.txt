@@ -1,0 +1,1 @@
+PASS 35 Phigros pixel checks: physical wide-screen pause ROI, fresh frames, adaptive menu size/spacing/position/polarity, measured retry and incomplete/swapped/blank rejection. Synthetic pixels; no device run.
