@@ -1,0 +1,1 @@
+PASS 20 actual foreground/overlay-host checks: stable service context/token/type, game-open and own-overlay events, inaccessible Unity roots, actual app switch, Root/system focus and safe OEM fallback (host windows).

@@ -1,0 +1,3 @@
+PASS two sustained holds plus 105 repeated chord taps: 107 note heads; 141 physical DOWNs including safe hold resumptions; 345 valid AOSP events
+PASS hold UP and fresh DOWN at same chart timestamp: 3 note heads; 3 physical DOWNs including safe hold resumptions; 11 valid AOSP events
+PASS visual holds with repeated chord taps: 520 valid AOSP events

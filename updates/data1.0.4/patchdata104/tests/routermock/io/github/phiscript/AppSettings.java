@@ -1,0 +1,1 @@
+package io.github.phiscript;import android.content.Context;public class AppSettings {public static boolean auto=true;public AppSettings(Context c){}public boolean flag(String s,boolean fallback){return auto;}}

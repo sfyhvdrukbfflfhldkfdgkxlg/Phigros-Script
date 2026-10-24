@@ -1,0 +1,13 @@
+{
+  "changed_dex": [
+    "classes4.dex",
+    "classes5.dex",
+    "classes6.dex",
+    "classes7.dex",
+    "classes9.dex"
+  ],
+  "counts": {
+    "display_bridges": 62,
+    "parser_checks": 136
+  }
+}

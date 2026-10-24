@@ -1,0 +1,3 @@
+PASS 35 actual automatic-engine workflow checks: authorize -> verified gameplay -> double pause -> icon-only menu -> unique chart -> detected retry -> fresh HUD -> Root/accessibility input and recording.
+Includes missing pre-pause OCR, grant focus/cancellation, stale frames, changed/missing/ambiguous identity, text decoys, user pause, preview and missing restart receipt.
+Host frame/OCR/input substitutions; real game rendering and music timing are not verified.

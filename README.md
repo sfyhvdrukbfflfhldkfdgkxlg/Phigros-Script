@@ -1,3 +1,16 @@
+# Phigros Script
+
+最新补丁版本：**data1.0.4**。
+
+[完整补丁源码包](updates/data1.0.4/PhigrosScript_data1.0.4_Source.zip) · [当前源码与说明](updates/data1.0.4/patchdata104/README.md) · [校验值](updates/data1.0.4/SHA256SUMS.txt)
+
+包含 Phigros 暂停/重试菜单适配、英文界面、Phira 导入取消、持续黄键及向内红键；已取消估算独立触点数过多时的启动拦截。安装包通过当前对话提供，GitHub 发布配套补丁源码及测试。
+
+根目录保留原 Alpha Gradle 工程；其构建不包含 data 系列 APK 补丁。最新补丁的基线要求、构建步骤与主机测试边界见版本目录。尚无安卓真机验证。
+
+<details>
+<summary>原 Alpha 版本说明</summary>
+
 # Phigros Script · Alpha
 
 在未 root 的安卓手机上，通过录屏识别和无障碍触控演奏。v0.1.7 改进纯视觉蓝键、红键和长按识别，并扩展 Phira 的 PGR / RPE / PEC / PBC 导入。提供两种模式：**Phigros 纯视觉**和**Phira 导入谱面**。文件均在手机本地解析。
@@ -126,3 +139,6 @@ gradle testDebugUnitTest lintDebug assembleDebug
 - capture/：录屏、悬浮窗确认、两种演奏会话。
 
 格式与时间规则参考：[Phira](https://github.com/TeamFlos/phira)、[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource)、[UnityPy](https://github.com/K0lb3/UnityPy)。Shizuku 接口参考 [Shizuku-API](https://github.com/RikkaApps/Shizuku-API)。
+
+
+</details>
