@@ -8,19 +8,26 @@ def gh(*args,check=True):
     if check and r.returncode:raise RuntimeError('GitHub operation failed: '+r.stderr[:700])
     return r
 def api(path):return json.loads(gh('api','repos/'+REPO+'/'+path).stdout)
+def find_release():
+    # Drafts have no published tag ref and GET /releases/tags/<tag> returns 404.
+    # Enumerate authenticated releases and then address the unique draft by ID.
+    pages=json.loads(gh('api','--paginate','--slurp','repos/'+REPO+'/releases?per_page=100').stdout)
+    matches=[r for page in pages for r in page if r['tag_name']==TAG]
+    if len(matches)>1:raise RuntimeError('Multiple releases share the tag; refusing to guess')
+    return matches[0] if matches else None
 def publish(assets_dir,manifest_path,notes_path):
     if os.environ.get('GITHUB_REPOSITORY')!=REPO:raise RuntimeError('Wrong repository')
-    commit=os.environ['GITHUB_SHA'];root=Path(assets_dir);expected=json.loads(Path(manifest_path).read_text())['assets']
+    manifest=json.loads(Path(manifest_path).read_text());commit=manifest.get('source_commit',os.environ['GITHUB_SHA']);root=Path(assets_dir);expected=manifest['assets']
     if set(expected)!={'PhigrosScript_data1.0.5.apk','PhigrosScript_data1.0.5_Source.zip','SHA256SUMS.txt'}:raise RuntimeError('Unexpected release assets')
     import hashlib
     for name,item in expected.items():
         p=root/name
         if p.stat().st_size!=item['size'] or hashlib.sha256(p.read_bytes()).hexdigest()!=item['sha256']:raise RuntimeError('Local asset mismatch')
-    r=gh('api','repos/'+REPO+'/releases/tags/'+TAG,check=False)
-    if r.returncode:
-        if 'HTTP 404' not in r.stderr:raise RuntimeError('Unable to inspect existing release')
+    release=find_release()
+    if release is None:
         gh('release','create',TAG,'--repo',REPO,'--target',commit,'--title','Phigros Script '+TAG,'--notes-file',notes_path,'--draft','--prerelease')
-    release=api('releases/tags/'+TAG)
+        release=find_release()
+    if release is None:raise RuntimeError('Created draft is not visible')
     if release['tag_name']!=TAG or release['target_commitish']!=commit:raise RuntimeError('Existing release points to different source')
     present={a['name']:a for a in release['assets']}
     if set(present)-set(expected):raise RuntimeError('Unexpected pre-existing assets; refusing to alter release')
@@ -31,7 +38,7 @@ def publish(assets_dir,manifest_path,notes_path):
         else:
             if not release['draft']:raise RuntimeError('Published release is incomplete; refusing mutation')
             gh('release','upload',TAG,str(root/name),'--repo',REPO)
-    release=api('releases/tags/'+TAG)
+    release=api('releases/'+str(release['id']))
     for name,item in expected.items():
         a=next((a for a in release['assets'] if a['name']==name),None)
         if a is None or a['state']!='uploaded' or a['size']!=item['size'] or a.get('digest')!='sha256:'+item['sha256']:raise RuntimeError('Uploaded asset verification failed')
