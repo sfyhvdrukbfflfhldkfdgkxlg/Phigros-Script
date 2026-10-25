@@ -1,0 +1,51 @@
+{
+  "base_sha256": "284bd64193d0c029937378cf68ecc68f6ab5c81a138d50ed5458d57caa82e346",
+  "assets": {
+    "PhigrosScript_data1.0.9.apk": {
+      "size": 48156238,
+      "sha256": "91d19afaccecc419c452ee196c73d624381a72c41a02aec7302c99f518f95cf3"
+    },
+    "PhigrosScript_data1.0.9_Source.zip": {
+      "size": 871702,
+      "sha256": "2a63d9623270bf58ac8cb6189c559b1474f4a584e2ca3727ad2b4163df820ccc"
+    },
+    "SHA256SUMS.txt": {
+      "size": 195,
+      "sha256": "fa388315c5eb90ebbf8b438e658435f4bca29f53eb99fb6d1059c7bdb3684d8b"
+    }
+  },
+  "parts": {
+    "apk-patch": {
+      "size": 245118,
+      "sha256": "add23ffc46511e708aa1356ac6d215f4991805d6ba77497d1c1fa4c72bc483b0",
+      "parts": [
+        {
+          "name": "apk-patch.part000",
+          "size": 245118,
+          "sha256": "add23ffc46511e708aa1356ac6d215f4991805d6ba77497d1c1fa4c72bc483b0"
+        }
+      ]
+    },
+    "source": {
+      "size": 871702,
+      "sha256": "2a63d9623270bf58ac8cb6189c559b1474f4a584e2ca3727ad2b4163df820ccc",
+      "parts": [
+        {
+          "name": "source.part000",
+          "size": 393216,
+          "sha256": "b7174f2c6c2baba33a7a2ee45d0d6d402046af425eb3a10b7e6606689180d931"
+        },
+        {
+          "name": "source.part001",
+          "size": 393216,
+          "sha256": "11cad33450ba60f01918378db6b20c00ba9ce78f3d591e17fa029c2f37738122"
+        },
+        {
+          "name": "source.part002",
+          "size": 85270,
+          "sha256": "0d5124a0ab6a0ec79bccbbb91e7d66afb30f8267a7c9c3239e167231ca1aa273"
+        }
+      ]
+    }
+  }
+}

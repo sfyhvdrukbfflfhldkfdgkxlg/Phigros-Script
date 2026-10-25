@@ -1,0 +1,1 @@
+PASS 16424 data109 checks: 1600-yellow eight-contact coverage, real Root/AOSP 10-pointer event models with hold and blue heads, capacity fallback, yellow sustained contact, bounded ongoing clock corrections. No device run.

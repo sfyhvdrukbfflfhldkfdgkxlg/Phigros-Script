@@ -1,0 +1,6 @@
+PASS reference chart 1: 3789/3789 root heads; each physical task DOWN once; peak 10 fingers; no invalid input or leftovers
+PASS reference chart 2: 1815/1815 root heads; each physical task DOWN once; peak 10 fingers; no invalid input or leftovers
+PASS reference chart 3: 1883/1883 root heads; each physical task DOWN once; peak 4 fingers; no invalid input or leftovers
+PASS explicit stop and root transport rejection release pointers and ownership
+PASS root visual: continuous holds with 40 repeated three-finger tap/flick chords, then stop
+ALL 14988 ROOT PLAYER CHECKS PASSED (host mock transport; no Android/su execution)

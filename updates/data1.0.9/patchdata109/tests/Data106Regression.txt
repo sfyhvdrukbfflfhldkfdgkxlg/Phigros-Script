@@ -1,0 +1,1 @@
+PASS 6330 data1.0.9 checks: mixed-role continuous paths, fresh blue heads, independent 2/3/4-note chords, alternating red actions, no teleports, two holds plus 100 blue heads on actual Root state/AOSP injector models, visual role changes and same-batch red forecasts. No device run.

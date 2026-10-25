@@ -1,16 +1,16 @@
 # Phigros Script
 
-最新补丁版本：**data1.0.8**。
+最新补丁版本：**data1.0.9**。
 
-[安装包与完整补丁源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.8) · [补丁源码与说明](updates/data1.0.8/patchdata108/README.md) · [校验值](updates/data1.0.8/SHA256SUMS.txt)
+[安装包与补丁源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.9) · [当前源码和构建说明](updates/data1.0.9/patchdata109/README.md) · [校验值](updates/data1.0.9/SHA256SUMS.txt)
 
-内置公开 Phigros 4.0.1.2 快照的 1057 个难度谱面首键事实。Root、APK 文件与已安装 APK 的导入共用逐谱时间表生成：保存每个音符的头/尾时间、offset、ID、类型和校验值，支持恢复和取消，优先使用实际导入数据。可在设置与工具查询首键基准。
+黄键采用持续接触或滑动，密集谱面段在覆盖与容量核对通过后使用 8 个持续触点。保留蓝键和长按头的新按下、多押及红键往返。Phigros 先按原谱开始，再用多帧轨迹共同匹配时钟；锁定后持续复核小幅漂移，平滑调整，不重播音符或打断长按。
 
-固定来源的 1057 张谱面和 677156 个音符已完成独立计算、实际原生解析和时间表恢复交叉检查。补齐官方 v1 打包坐标，并忽略 Aleph-0 IN 等谱面的反向判定线事件，保留音符时间。首键是音乐相对时间，原开局和音符校准仍保留。
+保留 1057 难度谱面的首键基准、逐谱时间表、Phira Root 逐张保存、导入取消、英文、暂停/重试、悬浮窗、录屏和检查更新。沿用 data 系列签名，可覆盖安装 data1.0.8。首键表不能单独替代设备同步，偏移微调仍保留。
 
-沿用原签名，可覆盖安装 data1.0.7。保留 Phira Root 逐张入库、混合手势、持续黄键、往返红键、真实多押、多长按、边缘保护、暂停／重试、英文、更新检查、悬浮窗和录屏。主机、实图、Root／AOSP 模型和打包 DEX 回归通过，尚无 Android 真机判定、同步或存储性能验证。
+主机、原谱、截图、Root/AOSP 事件模型及最终 APK DEX 回归通过，尚无 Android 真机判定、音画延迟或录屏性能验证。无法证明 8 指覆盖的谱面段保留逐轨方案；不能保证任意谱面全连。8 指占位仅用于谱面模式。
 
-根目录保留旧 Alpha Gradle 工程，其构建不包含 data 系列 APK 补丁。完整源码 ZIP 不含签名私钥、工具二进制、用户原包／照片或公开整库谱面，来源和复现步骤见版本目录。
+根目录保留旧 Alpha Gradle 工程，其构建不包含 data 系列 APK 补丁。复现步骤和范围见版本目录，完整补丁源码 ZIP 在 Releases。
 
 <details>
 <summary>原 Alpha 版本说明</summary>
@@ -146,4 +146,5 @@ gradle testDebugUnitTest lintDebug assembleDebug
 
 
 </details>
+
 
