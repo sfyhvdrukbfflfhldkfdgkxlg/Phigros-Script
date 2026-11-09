@@ -1,0 +1,1 @@
+PASS 36 Phigros latency checks: startup drift cannot reduce unfinished convergence to 3%, idle gaps settle a confirmed origin without crossing unsent heads, held contacts and submitted projections remain intact, and Root/AOSP models hit future heads after +/-2s startup errors. No device timing claim.

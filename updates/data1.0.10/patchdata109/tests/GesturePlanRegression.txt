@@ -1,0 +1,1 @@
+PASS 39 connected-gesture checks: moving hit anchors, interpolation, negative lead-in, independent lanes, tap/hold/flick heads, legacy switch, cache, capacity-safe bridging and 2000-note run.

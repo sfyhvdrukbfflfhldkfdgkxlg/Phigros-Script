@@ -1,0 +1,1 @@
+SKIP original user photo fixtures are not present; provide the two JPEG paths to PhigrosPhotoRegression.

@@ -1,0 +1,1 @@
+PASS 51 Phira/Pro foreground, exact active-client stop and Root chart-path checks (host model, no Android device).

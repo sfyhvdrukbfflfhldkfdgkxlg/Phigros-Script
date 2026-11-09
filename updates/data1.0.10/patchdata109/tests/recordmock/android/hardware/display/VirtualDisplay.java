@@ -1,0 +1,1 @@
+package android.hardware.display;import android.view.Surface;public final class VirtualDisplay {public int resizes,surfaces;public static class Callback{}public void resize(int w,int h,int d){resizes++;}public void setSurface(Surface s){surfaces++;}}

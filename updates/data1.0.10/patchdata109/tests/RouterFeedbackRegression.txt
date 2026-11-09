@@ -1,0 +1,1 @@
+PASS 12 actual router checks: reconnect resumes automatic mode, missing service reports a cause, startup/runtime/API failures reported, cancellation quiet and explicit legacy mode retained (host Android/reporter models).

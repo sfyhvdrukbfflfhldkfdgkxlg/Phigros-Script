@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:phiscript:gesture-recording:v1",
+  "title": "Phigros Script standalone gesture recording, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "name", "purpose", "timebase", "canvas", "durationMs", "interrupted", "stopReason", "frames"],
+  "properties": {
+    "schema": {"const": "io.github.phiscript.gesture-recording"},
+    "version": {"const": 1},
+    "name": {"type": "string"},
+    "purpose": {"const": "application-gesture-editing"},
+    "timebase": {"const": "android-uptime-relative-ms"},
+    "canvas": {
+      "type": "object", "additionalProperties": false,
+      "required": ["widthPx", "heightPx", "densityDpi", "rotation", "origin", "coordinates", "normalizedBy"],
+      "properties": {
+        "widthPx": {"type": "integer", "minimum": 1},
+        "heightPx": {"type": "integer", "minimum": 1},
+        "densityDpi": {"type": "integer", "minimum": 1},
+        "rotation": {"type": "integer", "minimum": 0, "maximum": 3},
+        "origin": {"const": "top-left"},
+        "coordinates": {"const": "view-local-px"},
+        "normalizedBy": {"const": "width-height"}
+      }
+    },
+    "durationMs": {"type": "integer", "minimum": 0, "maximum": 600000},
+    "interrupted": {"type": "boolean"},
+    "stopReason": {"type": "string"},
+    "frames": {
+      "type": "array", "maxItems": 100001,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["tMs", "action", "actionPointerId", "historical", "pointers"],
+        "properties": {
+          "tMs": {"type": "integer", "minimum": 0, "maximum": 600000},
+          "action": {"enum": ["DOWN", "POINTER_DOWN", "MOVE", "POINTER_UP", "UP", "CANCEL"]},
+          "actionPointerId": {"type": "integer", "minimum": -1},
+          "historical": {"type": "boolean"},
+          "pointers": {
+            "type": "array",
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["id", "x", "y", "nx", "ny", "pressure"],
+              "properties": {
+                "id": {"type": "integer", "minimum": 0},
+                "x": {"type": "number"}, "y": {"type": "number"},
+                "nx": {"type": "number"}, "ny": {"type": "number"},
+                "pressure": {"type": "number"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

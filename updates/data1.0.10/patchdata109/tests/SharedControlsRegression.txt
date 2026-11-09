@@ -1,0 +1,2 @@
+PASS 65 pixel-level shared-controls checks using actual PhiraPauseDetector, PhiraMenuGlyphs, GameplayDetector, PhiraViewport and raw pause glyph detector.
+Covers text-free menus, missing/swapped icons, blank screens, gameplay pause, default/wide/manual viewports, custom shared coordinates and frame consensus; synthetic pixels, no real-game captures.

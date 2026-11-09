@@ -1,0 +1,1 @@
+PASS 24 actual overlay-helper lifecycle/layout checks: visible preparation, in-place updates, preserved stop, persistent play/stop control, return, cleanup and queued-UI races (host UI models).

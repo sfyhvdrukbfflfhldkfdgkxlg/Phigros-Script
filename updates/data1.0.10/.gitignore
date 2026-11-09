@@ -1,0 +1,16 @@
+tools/
+current108/
+deliverables/
+analysis/data108*/
+analysis/*.jar
+analysis/*.apk
+analysis/*.log
+patchdata109/classes/
+patchdata109/dex/
+patchdata109/*.jar
+patchdata109/*classes/
+patch/signing/
+**/__pycache__/
+gesture-recorder/build/
+gesture-recorder/.gradle/
+gesture-recorder/local.properties

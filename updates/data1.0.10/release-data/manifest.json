@@ -1,0 +1,71 @@
+{
+  "base_sha256": "284bd64193d0c029937378cf68ecc68f6ab5c81a138d50ed5458d57caa82e346",
+  "assets": {
+    "PhigrosScript_data1.0.10.apk": {
+      "size": 48189006,
+      "sha256": "fca66e2426790b72fa8f9291f20470d167bcad05153677f6780771de8fffe20e"
+    },
+    "GestureRecorder_1.0.0.apk": {
+      "size": 29075,
+      "sha256": "60685996c5db3041dd839d6c87345c19a2420642d387af28d1ba4ea16ae5430d"
+    },
+    "PhigrosScript_data1.0.10_Source.zip": {
+      "size": 933678,
+      "sha256": "b79da0af280cad5e06069769000445e9e54f0b92f46738b1b7b0acab30293d4f"
+    },
+    "SHA256SUMS.txt": {
+      "size": 289,
+      "sha256": "642dd8d8287cd27924dcd2b9e421b8f172a023ced2faf46789f5477191b6db48"
+    }
+  },
+  "parts": {
+    "apk-patch": {
+      "size": 410985,
+      "sha256": "bb8f47641da326a49c75e0d7e0412c7f96a214384075b7d02fb48216e2a3a671",
+      "parts": [
+        {
+          "name": "apk-patch.part000",
+          "size": 393216,
+          "sha256": "643c01662ca2190ee96b76120a9eb46189a02c755c8cdf97a0485d581f0f39d9"
+        },
+        {
+          "name": "apk-patch.part001",
+          "size": 17769,
+          "sha256": "4a6b687436ed6613af819d7280c218dd169a35ebde0439da50679dff5f09c9ec"
+        }
+      ]
+    },
+    "source": {
+      "size": 933678,
+      "sha256": "b79da0af280cad5e06069769000445e9e54f0b92f46738b1b7b0acab30293d4f",
+      "parts": [
+        {
+          "name": "source.part000",
+          "size": 393216,
+          "sha256": "d82d6e353b5df1775ba3a1d1c3b7d07b9bc45e2eaee04af9161614dd284f576e"
+        },
+        {
+          "name": "source.part001",
+          "size": 393216,
+          "sha256": "1346846497286bde5a69d3cfd867cb7747667c2481501ed5dc32f3a384779f83"
+        },
+        {
+          "name": "source.part002",
+          "size": 147246,
+          "sha256": "f488f5d7416ffc80c3dc071f8baef7f5f13583cab59cfaa6c0d6bf923e20bd3d"
+        }
+      ]
+    },
+    "gesture-recorder": {
+      "size": 29075,
+      "sha256": "60685996c5db3041dd839d6c87345c19a2420642d387af28d1ba4ea16ae5430d",
+      "parts": [
+        {
+          "name": "gesture-recorder.part000",
+          "size": 29075,
+          "sha256": "60685996c5db3041dd839d6c87345c19a2420642d387af28d1ba4ea16ae5430d"
+        }
+      ]
+    }
+  }
+}

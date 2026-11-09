@@ -1,0 +1,2 @@
+package android.graphics;
+public class Bitmap {public final int phase;private final boolean portrait;public Bitmap(int phase){this.phase=phase;portrait=io.github.phiscript.capture.AutoEngineRegression.scenario.equals("portrait")&&io.github.phiscript.capture.AutoEngineRegression.snapshots<=3;}public int getWidth(){return portrait?600:1000;}public int getHeight(){return portrait?1000:600;}public boolean isRecycled(){return false;}}

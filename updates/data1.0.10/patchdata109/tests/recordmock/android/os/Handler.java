@@ -1,0 +1,1 @@
+package android.os;import java.util.*;public class Handler {static final List<Looper> loops=new ArrayList<>();final Looper loop;public Handler(Looper l){loop=l;loops.add(l);}public boolean post(Runnable r){if(loop.ending)return false;loop.tasks.add(r);return true;}public static void drainAll(){for(Looper l:new ArrayList<>(loops))while(!l.tasks.isEmpty())l.tasks.remove().run();}}

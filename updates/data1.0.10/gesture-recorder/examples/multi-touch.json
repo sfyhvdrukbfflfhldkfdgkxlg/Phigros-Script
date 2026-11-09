@@ -1,0 +1,181 @@
+{
+  "schema": "io.github.phiscript.gesture-recording",
+  "version": 1,
+  "name": "双指拖动（含停止取消）",
+  "purpose": "application-gesture-editing",
+  "timebase": "android-uptime-relative-ms",
+  "canvas": {
+    "widthPx": 100,
+    "heightPx": 200,
+    "densityDpi": 320,
+    "rotation": 1,
+    "origin": "top-left",
+    "coordinates": "view-local-px",
+    "normalizedBy": "width-height"
+  },
+  "durationMs": 50,
+  "interrupted": true,
+  "stopReason": "activity-paused",
+  "frames": [
+    {
+      "tMs": 10,
+      "action": "DOWN",
+      "actionPointerId": 7,
+      "historical": false,
+      "pointers": [
+        {
+          "id": 7,
+          "x": 10.0,
+          "y": 20.0,
+          "nx": 0.1,
+          "ny": 0.1,
+          "pressure": 0.75
+        }
+      ]
+    },
+    {
+      "tMs": 15,
+      "action": "POINTER_DOWN",
+      "actionPointerId": 2,
+      "historical": false,
+      "pointers": [
+        {
+          "id": 7,
+          "x": 11.0,
+          "y": 22.0,
+          "nx": 0.11,
+          "ny": 0.11,
+          "pressure": 0.75
+        },
+        {
+          "id": 2,
+          "x": 30.0,
+          "y": 40.0,
+          "nx": 0.3,
+          "ny": 0.2,
+          "pressure": 0.75
+        }
+      ]
+    },
+    {
+      "tMs": 16,
+      "action": "MOVE",
+      "actionPointerId": -1,
+      "historical": true,
+      "pointers": [
+        {
+          "id": 7,
+          "x": 12.0,
+          "y": 24.0,
+          "nx": 0.12,
+          "ny": 0.12,
+          "pressure": 0.75
+        },
+        {
+          "id": 2,
+          "x": 32.0,
+          "y": 42.0,
+          "nx": 0.32,
+          "ny": 0.21,
+          "pressure": 0.75
+        }
+      ]
+    },
+    {
+      "tMs": 20,
+      "action": "MOVE",
+      "actionPointerId": -1,
+      "historical": false,
+      "pointers": [
+        {
+          "id": 7,
+          "x": 15.0,
+          "y": 30.0,
+          "nx": 0.15,
+          "ny": 0.15,
+          "pressure": 0.75
+        },
+        {
+          "id": 2,
+          "x": 35.0,
+          "y": 45.0,
+          "nx": 0.35,
+          "ny": 0.225,
+          "pressure": 0.75
+        }
+      ]
+    },
+    {
+      "tMs": 20,
+      "action": "POINTER_UP",
+      "actionPointerId": 7,
+      "historical": false,
+      "pointers": [
+        {
+          "id": 7,
+          "x": 15.0,
+          "y": 30.0,
+          "nx": 0.15,
+          "ny": 0.15,
+          "pressure": 0.75
+        },
+        {
+          "id": 2,
+          "x": 35.0,
+          "y": 45.0,
+          "nx": 0.35,
+          "ny": 0.225,
+          "pressure": 0.75
+        }
+      ]
+    },
+    {
+      "tMs": 30,
+      "action": "UP",
+      "actionPointerId": 2,
+      "historical": false,
+      "pointers": [
+        {
+          "id": 2,
+          "x": 36.0,
+          "y": 46.0,
+          "nx": 0.36,
+          "ny": 0.23,
+          "pressure": 0.75
+        }
+      ]
+    },
+    {
+      "tMs": 40,
+      "action": "DOWN",
+      "actionPointerId": 7,
+      "historical": false,
+      "pointers": [
+        {
+          "id": 7,
+          "x": -10.0,
+          "y": 220.0,
+          "nx": -0.1,
+          "ny": 1.1,
+          "pressure": 0.75
+        }
+      ]
+    },
+    {
+      "tMs": 50,
+      "action": "CANCEL",
+      "actionPointerId": -1,
+      "historical": false,
+      "pointers": [
+        {
+          "id": 7,
+          "x": -10.0,
+          "y": 220.0,
+          "nx": -0.1,
+          "ny": 1.1,
+          "pressure": 0.75
+        }
+      ]
+    }
+  ]
+}

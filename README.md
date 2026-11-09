@@ -1,16 +1,16 @@
 # Phigros Script
 
-最新补丁版本：**data1.0.9**。
+最新补丁版本：**data1.0.10（预发布测试版）**。
 
-[安装包与补丁源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.9) · [当前源码和构建说明](updates/data1.0.9/patchdata109/README.md) · [校验值](updates/data1.0.9/SHA256SUMS.txt)
+[安装包与完整源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.10) · [源码与构建说明](updates/data1.0.10/patchdata109/README.md) · [验证记录](updates/data1.0.10/TESTING.md) · [校验值](updates/data1.0.10/SHA256SUMS.txt)
 
-黄键采用持续接触或滑动，密集谱面段在覆盖与容量核对通过后使用 8 个持续触点。保留蓝键和长按头的新按下、多押及红键往返。Phigros 先按原谱开始，再用多帧轨迹共同匹配时钟；锁定后持续复核小幅漂移，平滑调整，不重播音符或打断长按。
+本版修复 Phigros 校准延迟与 Phira Pro 兼容，噪域 active 时段关闭可选连续连接，录屏改为 1080p60。原音符、原始长按、普通区域的连接开关、首键资料和逐谱时间表继续保留。
 
-保留 1057 难度谱面的首键基准、逐谱时间表、Phira Root 逐张保存、导入取消、英文、暂停/重试、悬浮窗、录屏和检查更新。沿用 data 系列签名，可覆盖安装 data1.0.8。首键表不能单独替代设备同步，偏移微调仍保留。
+另有独立的 [手势录入器](updates/data1.0.10/gesture-recorder/README.md)：多指录入、预览和 JSON 导出；独立 APK 不集成到主程序，导出资料供开发时修改手势使用。
 
-主机、原谱、截图、Root/AOSP 事件模型及最终 APK DEX 回归通过，尚无 Android 真机判定、音画延迟或录屏性能验证。无法证明 8 指覆盖的谱面段保留逐轨方案；不能保证任意谱面全连。8 指占位仅用于谱面模式。
+**主程序 APK 使用新的开发测试签名，不能直接覆盖原版。** 旧谱面需重新导入才能读取噪域元数据。Host 与最终 DEX 回归、签名和对齐检查通过，尚无真机判定、GPU/EGL、持续 1080p60 或录入器 UI/SAF 验证。详情见 [发布说明](updates/data1.0.10/RELEASE_NOTES.md)。
 
-根目录保留旧 Alpha Gradle 工程，其构建不包含 data 系列 APK 补丁。复现步骤和范围见版本目录，完整补丁源码 ZIP 在 Releases。
+根目录 app/ 保留旧 Alpha Gradle 工程。data 系列的源码、构建说明与验证位于版本目录；完整源码 ZIP 在 Releases，包含完整回归所需的三个参考谱面。
 
 <details>
 <summary>原 Alpha 版本说明</summary>

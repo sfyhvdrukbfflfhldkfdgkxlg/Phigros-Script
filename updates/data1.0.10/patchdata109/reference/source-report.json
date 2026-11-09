@@ -1,0 +1,10 @@
+{
+  "chart_count": 1057,
+  "note_count": 677156,
+  "game_version": "4.0.1.2",
+  "source_commit": "5d40bfdf05bee53f5107a6ea5620ca0e953de815",
+  "archive_sha256": "20d8f451178b0ae778a52604a9d3284f8775fd5fded0eee8704ae3f1465ded12",
+  "fetched_at": "2026-10-24T21:06:01.765604+00:00",
+  "formula": "head_seconds = time * 1.875 / bpm; music_head = head_seconds + offset",
+  "note": "Relative music timings; not a measured retry-to-audio or device delay."
+}

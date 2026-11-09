@@ -1,0 +1,8 @@
+PASS JSON exactly 64 MiB
+PASS rejected JSON 64 MiB + 1 byte: Phira JSON 超过 64 MiB
+PASS rejected UTF-8 bytes above 64 MiB with fewer characters: Phira JSON 超过 64 MiB
+PASS Unicode byte counting and content preservation
+PASS raw JSON and normalized JSON above 20 MiB; seven notes retained
+PASS PEC above former 8 MiB limit; five notes retained
+PASS ZIP with two 36 MiB charts; 72 MiB retained data; metadata selection preserved
+PASS large-chart limits (host import/parser checks; not an Android device run)

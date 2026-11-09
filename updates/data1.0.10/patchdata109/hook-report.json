@@ -1,0 +1,21 @@
+{
+  "version": "data1.0.10",
+  "versionCode": 26,
+  "baseline": "data1.0.8",
+  "previous_source": "data1.0.9",
+  "changed_dex": [
+    "classes5.dex",
+    "classes6.dex",
+    "classes7.dex"
+  ],
+  "replaced_helper_dex": "classes8.dex",
+  "modified_smali": [
+    "smali_classes5/io/github/phiscript/capture/CaptureService.smali",
+    "smali_classes5/io/github/phiscript/capture/PhiraSessionEngine.smali",
+    "smali_classes6/io/github/phiscript/assets/PhiraImportDecoder.smali",
+    "smali_classes7/io/github/phiscript/engine/Chart$Companion.smali",
+    "smali_classes7/io/github/phiscript/engine/PhiraNativeChart$Companion.smali",
+    "smali_classes7/io/github/phiscript/input/TouchService.smali"
+  ],
+  "bundled_first_note_rows": 1057
+}

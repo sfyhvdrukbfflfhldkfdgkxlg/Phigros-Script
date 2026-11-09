@@ -1,0 +1,1 @@
+PASS 39 timing index checks: every head/tail saved atomically, offset once, deterministic restore/reuse/rebuild, failed/cancelled commit isolation, source separation, first-note reference validation, suffix matching, partial import resume, official v1 packed moves, backwards line-event compatibility and ownership cleanup. Host file/asset transport models only.

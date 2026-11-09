@@ -1,0 +1,1 @@
+PASS 651625 recording checks: 1080p orientation/aspect, 60Hz one-hour timing, actual CaptureVideo single-token/fallback hooks, independent image consumption and generation-safe queued cleanup. Host model; no device encoder/GL/performance claim.

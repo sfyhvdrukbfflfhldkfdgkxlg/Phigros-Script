@@ -1,0 +1,453 @@
+0	  ·  Screen capture permission is requested at start
+1	 ms until start; Volume Down or the notification stops playback
+2	 independent contacts; the current input limit is 
+3	 charts
+4	 chart difficulties
+5	 chart difficulties. Tap Start playback for automatic detection. Reimport after game updates, or if the library is unavailable after restarting.\nReads APKs only; game files are not modified. Unsupported resource formats report an error.
+6	 charts; skipped 
+7	 notes
+8	 packages
+9	 packages, but none could be decoded; see the run log for file errors
+10	 packages; added 
+11	 independent paths; taps and holds continue separately
+12	 independent paths; holds stay pressed; Volume Down stops playback
+13	 Too many APK directories
+14	 APK directory is too large
+15	 APK resources exceed the limit
+16	 Android 10+: Movies/PhigrosScript; Android 8/9: the app recording folder.\n\n
+17	 Android rejected multi-touch; check the accessibility service
+18	 Invalid Android user ID
+19	 Invalid BPM count
+20	 Invalid BPM
+21	 EGL initialization failed
+22	 Phigros · Import with Root
+23	 Phigros · Manual sync (fallback)
+24	 Phigros · Select song manually (fallback)
+25	 Phigros · Scan installed APKs
+26	 Phigros · Visual tracking
+27	 Phigros · Automatic chart playback
+28	 Phigros · Select APK files
+29	 Phigros preview: no pause, retry or chart touches will be sent
+30	 Phigros has been updated; reimport its library
+31	 Phigros left the foreground
+32	 Phigros manual sync
+33	 Phigros manual chart\n
+34	 Phigros manual chart playback
+35	 Phigros playback recording
+36	 This Phigros run has ended; waiting for a new song or restart
+37	 Phigros detection stopped; 
+38	 Phigros visual tracking
+39	 Phigros automatic sync
+40	 Phigros automatic sync / shared controls
+41	 Invalid Phigros automatic sync settings
+42	 Phigros automatic playback stopped
+43	 Phigros detection enabled: waiting for game controls; pause and centre retry are shared with Phira
+44	 Phigros automatic chart playback
+45	 Phigros library imported
+46	 Phigros chart playback stopped: 
+47	 Phira / RPE · Import with Root or files
+48	 Phira JSON exceeds 64 nesting levels
+49	 Phira JSON exceeds 64 MiB
+50	 Phira Root import: 
+51	 Phira · Detect / select chart
+52	 Phira · Chart playback
+53	 Phira import progress: completed 
+54	 Phira import did not fully complete
+55	 Phira import exceeded 20 minutes and was stopped
+56	 Invalid Phira user setting
+57	 Phira decode skipped: 
+58	 Phira read skipped: 
+59	 Phira library import results
+60	 Too many Phira library files; import in smaller batches
+61	 Phira library folders are nested too deeply
+62	 Too many Phira library folders; import in smaller batches
+63	 No readable Phira charts; check that downloads have completed
+64	 Phira chart playback
+65	 Invalid RPE BPM count
+66	 Invalid RPE BPM
+67	 Invalid RPE BPM starting beat
+68	 RPE compatibility
+69	 Root · Installed Phigros
+70	 Root import failed
+71	 Root ready: return to gameplay for automatic double-pause; the song title is not required yet
+72	 Root authorized; input backend ready
+73	 Root confirmed; reading downloaded Phira charts
+74	 Root authorization timed out; allow this app in your Root manager
+75	 Root cannot read Phigros chart resources
+76	 Root cannot read the Phigros resource index
+77	 Root is not enabled
+78	 Root is not enabled: 
+79	 Importing the installed Phigros APK resource index with Root…
+80	 Reading this Android user's Phira library with Root; complete the su prompt
+81	 Root playback failed: 
+82	 Root playback complete
+83	 The Root manager did not grant UID 0
+84	 Root visual playback started; Volume Down stops it
+85	 Root visual playback failed: 
+86	 Root input
+87	 Root input failed to start; check su authorization and device compatibility
+88	 Root input was not acknowledged; stopped and releasing contacts
+89	 Root request timed out; confirm authorization in your Root manager
+90	 Root read failed or was denied; game files were not modified
+91	 The Root library process did not finish normally
+92	 Root library handshake failed
+93	 Root chart playback: connected drags 
+94	 Root resources exceed the read limit
+95	 Root channel closed
+96	 Root channel is not ready
+97	 Root preconnection failed
+98	 Root preconnection has not released ownership; playback cancelled
+99	 Root (authorization required)
+100	 Shizuku tools and diagnostics
+101	\nRoot process: 
+102	\nStop reason: 
+103	\nReason: 
+104	\nReturn to the app to view the stop reason
+105	 Previous automatic detection stopped
+106	 Unavailable
+107	 Not an APK
+108	 Centre retry tapped; waiting for the pause menu to close and the new gameplay HUD
+109	 Centre retry confirmed; new gameplay detected, starting chart playback; start offset 
+110	 Plan independent paths for connected drags
+111	 More than 64 event layers
+112	 Event beat is missing
+113	 Event ends before it starts
+114	 Only installed APK paths returned by Android may be read
+115	 Computes note times and judge-line touch positions only. Visuals, audio, video and scripts are not rendered. New judgement extensions and UI-bound charts may be unsupported.
+116	 Save
+117	 Correct song recognition
+118	 Stop
+119	 Could not show the stop reason: 
+120	 Stop recording and playback
+121	 Stop playback
+122	 Stop automatic detection before changing sync settings.
+123	 Stop detection and playback
+124	 Stopped at: 
+125	 Allow overlay
+126	 Shared control settings
+127	 Close
+128	 Close / Stop
+129	 Out of memory; recording stopped, playback continues
+130	 Not enough memory to start recording; playback continues
+131	 Ready
+132	 Game focus changed during preparation; detection resumes when you return to Phigros
+133	 Invalid flick direction
+134	 Could not create recording: 
+135	 More than 100000 judge-line events
+136	 Invalid judge-line count
+137	 Too many visual detections in one frame
+138	 Too many notes on one line
+139	 Invalid settings
+140	 Cancel
+141	 Cancel Phira import
+142	 Recognition preview
+143	 Read-only
+144	 Too many simultaneous notes for Android gestures
+145	 Recording startup timed out
+146	 Enable accessibility service
+147	 Gesture callback timed out; stopped and released contacts
+148	 Multi-touch playback: connected drags 
+149	 Failed
+150	 Import ran out of memory; completed charts were kept. Reduce the size of individual charts and retry
+151	 Import charts
+152	 No Phigros library
+153	 No completed recording yet; finish a playback run first
+154	 Invalid screen settings
+155	 Screen size changed
+156	 Screen size changed; start again
+157	 Invalid screen size
+158	 Minimum side margins (0–96 dp)
+159	 Root visual touches stopped
+160	 Root touches stopped
+161	 Visual touches stopped
+162	 Touches stopped
+163	 Double-tapped Phigros pause; waiting for the shared Phira three-button menu
+164	 Double-pause sent; waiting for the three menu icons
+165	 Found 
+166	 Recording and playback preparation cancelled
+167	 Cancelled; 
+168	 Playback is already running
+169	 Another touch task is active
+170	 Another detection or playback task is active
+171	 Shared Phira three-button pause menu confirmed; menu text is not required
+172	 Centre retry icon confirmed; tapping the shared Phira retry position once
+173	 Paused, but the song and difficulty cannot be uniquely matched. Check the imported game version, aliases and recognition regions
+174	 Automatically paused; identifying the song and difficulty. Ambiguous matches will not restart or play
+175	 Matched 
+176	 Matched: 
+177	 Read 
+178	 Result screen reached; touch input did not start
+179	 UI-bound lines with playable notes are unsupported; touch positions cannot be computed reliably
+180	 App recording folder/
+181	 Minimum bottom margin (0–96 dp)
+182	 Enter an integer from 0 to 15000.
+183	 Start playback
+184	 Start playback and recording
+185	 Start (configured delay)
+186	 Authorization, detection or playback is still active. Stop it before switching.
+187	 No remaining notes
+188	 Recording
+189	 Recording location
+190	 Recordings are saved to 
+191	 Recording is out of memory
+192	 Recording is out of memory; playback continues
+193	 Recording preparation timed out; retry or turn off automatic recording
+194	 Switch to Phigros in landscape before recording
+195	 Recording failed: 
+196	 Recording finalization timed out
+197	 Recording saved: 
+198	 Recording stopped
+199	 Recording cancelled
+200	 Screen capture ended
+201	 Capture permission was cancelled; playback did not start
+202	 Capture permission is no longer valid
+203	 Capture authorized; tap Start in the game. Video has no audio
+204	 Could not submit the recording
+205	 Recording shader compilation failed
+206	 Recording shader linking failed
+207	 Recording rendering failed
+208	 Recording skipped a frame: 
+209	 Recording too short or encoding incomplete; no damaged video was saved
+210	 Idle
+211	 Overlay allowed
+212	 Overlay permission required
+213	 Processed 
+214	 Screen capture was stopped by Android or the user. Start again and grant capture permission
+215	 Invalid manual sync delay
+216	 Manual sync: enter the selected song in the game, then tap Start on the control bar. Chart zero uses your configured delay; align it manually. Stop and restart after pausing, retrying or changing songs.\n\nVolume Down and the notification stop playback. Root also requires accessibility for foreground protection.
+217	 Manual start and viewport
+218	 Gesture did not finish
+219	 Gesture planning cancelled
+220	 Open control bar
+221	 Playback stop reason
+222	 Playback recording
+223	 Playback recording (silent)\n\nAllow capture of the game screen, then tap Start on the floating control bar.\n\nVideo is written only during playback and saved when playback stops. Android 10+: Movies/PhigrosScript.\n\nAutomatic recording can be turned off on the home screen.
+224	 Record automatically during playback
+225	 Invalid beat denominator or value
+226	 Beat must be a three-number array
+227	 Beat is out of range
+228	 Avoid system gesture areas using Android insets and these minimum margins. Flicks move inward. Applies to Root/accessibility and chart/visual playback. Moving edge notes inward may affect judgement; pause and retry taps retain their original positions.
+229	 Authorization complete; waiting for Phigros to return to the foreground. Detection resumes automatically
+230	 Phigros lost focus during authorization; return to the game and start again
+231	 Status updates after authorization; return to the game to continue matching the song.
+232	 Control bar ready: tap Start inside the game. Manual synchronization is required.
+233	 Control window reconnection failed
+234	 Control window reconnection timed out; start playback again
+235	 Action incomplete
+236	 Supports JSON / ZIP / PEZ, simultaneous holds, parent lines, variable BPM, both sides and supported event layers. Computes touches only; video, effects, custom scripts, playable UI-bound lines and newer extensions have limits. Universal compatibility or full combos are not guaranteed.
+237	 Invalid number: 
+238	 A new contact occupied the continuation handshake; stopped
+239	 No usable recording EGL configuration
+240	 Cannot create import cache
+241	 Cannot create the recording folder
+242	 Cannot create the gallery video
+243	 Cannot start the recording service: 
+244	 Cannot start the recording thread; playback continues: 
+245	 Cannot copy the captured frame
+246	 Cannot safely schedule the contacts; stopped
+247	 Cannot enable automatic detection
+248	 Cannot start
+249	 Cannot open the capture permission screen: 
+250	 Cannot open the recording output
+251	 Cannot bind the encoder surface
+252	 Cannot compute flick position
+253	 Cannot compute connected drag position
+254	 Cannot compute connected drag path
+255	 Cannot compute note position
+256	 Accessibility
+257	 Accessibility and Shizuku
+258	 Accessibility connected
+259	 Accessibility is not connected. Re-enable the service in settings; Root mode also needs it to confirm game focus
+260	 Accessibility rebound; restoring the control window and automatic detection
+261	 Accessibility disconnected
+262	 Accessibility input
+263	 Accessibility diagnostics and Shizuku
+264	 Accessibility connection changed
+265	 The old control window is invalid; waiting for service recovery: 
+266	 Time is out of range
+267	 Yes
+268	 Whether
+269	 Invalid pause detection region
+270	 Pause detection, the three menu icons and centre retry position are shared with Phira. Game controls are detected before song recognition; menu text is not required.\n\nStart time uses new gameplay after retry. Positive offsets delay input and negative offsets advance it. Range: -3000 to 10000 ms.
+271	 Song is not uniquely matched; recognized titles: 
+272	 Chart library
+273	 At most 10 independent contacts are supported
+274	 Maximum distance / gameplay height (0.01–0.50)
+275	 Not imported
+276	 Installed Phigros was not found
+277	 No Phira library folder for this Android user. Download or import charts in official Phira first
+278	 Chart resources not found
+279	 No visual frame received; contacts released
+280	 Unknown action
+281	 Unknown note type: 
+282	 Could not confirm the three-button pause menu. Check the shared Phira viewport and pause region
+283	 Could not read game resources
+284	 Recording has already started for this run
+285	 Recording is not ready; grant capture permission again
+286	 This run has ended. Waiting for a new song or start; a paused game will not be retried automatically
+287	 Permissions and input
+288	 Permissions ready; detecting the game pause control
+289	 Search
+290	 View / copy accessibility diagnostics
+291	 View latest recording
+292	 Song ID or difficulty; leave blank to list all
+293	 Song or difficulty changed; restart detection
+294	 Preparing the Root channel; game controls will be detected after authorization
+295	 Cancelling Phira import; completed charts will be kept
+296	 Starting automatic detection
+297	 Processing…
+298	 Processing library
+299	 Recording the game screen without audio; stopping playback saves the video
+300	 Playing · Volume Down stops playback
+301	 Playing
+302	 Waiting for ROOT authorization
+303	 Requesting Root; the input backend becomes ready after authorization
+304	 Reading 
+305	 Connecting Root input; the configured delay starts after it is ready
+306	 This chart needs 
+307	 No matching chart
+308	 No Phira charts to import
+309	 No playable notes
+310	 Game size changed; preparing the input channel again
+311	 Game frames stopped; releasing touch input
+312	 Playback console
+313	 Playback complete
+314	 Records silent MP4 during playback and saves it when finished
+315	 Playback recording started (silent, using the authorized screen)
+316	 Keep the game in landscape; Volume Down stops playback
+317	 Playback mode
+318	 Invalid playback mode
+319	 Playback mode; tap to change
+320	 Delay from tapping Start to chart zero (0–15000 ms). Align the game manually; retry is not detected automatically.\n\nUses the normalized gameplay viewport. A centred 16:9 limit is enabled by default for wide screens; disable it to use the full configured viewport.
+321	 Cyclic parent-line relationship
+322	 Invalid parent-line index
+323	 Could not adjust the status window: 
+324	 Gameplay viewport is too small to continue holds
+325	 Gameplay viewport extends beyond the screen
+326	 Gameplay viewport extends beyond the screen; recalibrate it
+327	 Could not read the UI status field: 
+328	 Margins must be from 0 to 96 dp
+329	 Cannot read folder: 
+330	 The target game is not in the foreground
+331	 Maximum adjacent-note interval (20–300 ms)
+332	 OK
+333	 Confirm
+334	 Waiting for Phigros in the foreground
+335	 Waiting for Phigros in the foreground; only gameplay will be operated
+336	 Waiting for Root authorization…
+337	 Verifying the three menu icons and shared retry position; menu text is not required
+338	 Waiting for the paused three-button menu to settle
+339	 Waiting for a fresh landscape game capture; confirm capture permission
+340	 Waiting for accessibility to reconnect; detection will resume automatically
+341	 Waiting for the gameplay pause icon or centre menu; song selection is not tapped
+342	 Filter Phigros charts
+343	 Manage permissions and input
+344	 Android cancelled the gesture; start playback again
+345	 Android ended capture permission; stopping this run
+346	 Android rejected Root input
+347	 Not enough touch area after system-edge margins; check the gameplay viewport
+348	 Visual multi-touch playback started
+349	 Too many continued contacts for the gesture capacity
+350	 Encoder headers are not ready
+351	 Encoder format changed more than once
+352	 Missing field: 
+353	 Installed APK path is missing
+354	 Action is missing
+355	 Capture permission for this run is missing
+356	 Chart library is missing
+357	 Automatic recording failed (playback continues): 
+358	 Automatic playback stopped: 
+359	 Automatic pause: detecting the shared Phira pause control / three-button menu
+360	 Automatic detection
+361	 Automatic detection ran out of memory; reduce capture size and retry
+362	 Automatic detection enabled
+363	 Import the Phigros library before automatic chart playback
+364	 Invalid menu tap settings
+365	 Centre and limit the viewport to 16:9
+366	 Too many queued visual taps
+367	 Too many queued visual taps; lower the game speed or use chart mode
+368	 Visual frame expired; stopped and released contacts
+369	 Visual frame time moved backwards
+370	 Duplicate visual contact ID
+371	 Invalid visual contact coordinates
+372	 Visual contact coordinates are outside the screen
+373	 More than ten visual contacts; stopped safely
+374	 More than ten independent visual holds
+375	 Video encoder error 
+376	 Touch input is still stopping; end the session before retrying
+377	 Input ready; 
+378	 Invalid contact coordinates or ID
+379	 Touch input must run on a background thread
+380	 Input method
+381	 Invalid touch time or count
+382	 Contact batch exceeds Android's safe capacity; stopped
+383	 Invalid contact count
+384	 Invalid contact time; stopped
+385	 Record why the service closes
+386	 Device compatibility error: 
+387	 Settings and tools
+388	 Recognition regions, shared pause/retry and Phira latency
+389	 Detect chart · Synchronize start · Play automatically
+390	 Use the game in landscape
+391	 Keep landscape orientation
+392	 Finish the current import, detection or playback before changing mode or library.
+393	 Stop the task first
+394	 Stop the current task first
+395	 Switch to Phigros gameplay before tapping Start
+396	 Enable accessibility first for foreground protection and Volume Down to stop
+397	 Complete or cancel the current capture permission request first
+398	 Import the Phigros library before enabling automatic detection.
+399	 Use Root import first, or scan / import an APK file.
+400	 Import the installed Phigros library with Root, or select its APK files.
+401	 End the current task first
+402	 Open the control bar on the main thread
+403	 Enable accessibility in Android settings: 
+404	 Try a different song ID or clear the filter.
+405	 Enter an integer from -3000 to 10000.
+406	 Reading Phira chart 
+407	 Could not read chart
+408	 Invalid chart-package file count
+409	 Invalid chart-package path
+410	 Chart-package path escapes its root
+411	 Duplicate chart paths or package size limit exceeded
+412	 Library transfer counts do not match
+413	 Invalid or excessive library transfer records
+414	 Chart contains invalid touch coordinates
+415	 Chart loaded; verifying menu icons before tapping centre retry
+416	 Chart loaded: 
+417	 Chart needs more than ten independent contacts
+418	 Invalid Bezier parameter count
+419	 Invalid Bezier parameters
+420	 Bezier time control points must be from 0 to 1
+421	 Invalid resource name or limit
+422	 Start offset (ms)
+423	 Run log  −
+424	 Run log  +
+425	 Enter gameplay for automatic pause, chart matching and centre retry.
+426	 Connect Shizuku
+427	 Not enough contact IDs for gesture continuation; stopped
+428	 Connected drags use independent finger paths through their actual hit positions. Only nearby notes on the same line and side connect.\n\nTaps, hold heads and flicks retain fresh contacts. Root and accessibility share this plan; accessibility submits all fingers together. Turn this off for the previous strategy.
+429	 Connected gestures and edge avoidance
+430	 Gesture settings are out of range
+431	 Select the matching game mode and import charts to start.
+432	 Select the same song / difficulty as the game
+433	 Choose input: Root / Accessibility
+434	 Enable accessibility with Shizuku
+435	 Avoid notification, navigation and Back gesture areas
+436	 Some notes were moved into the safe touch area to avoid system gestures; edge-note judgements may be affected
+437	 Restart
+438	 Restart
+439	 Retry
+440	 Could not verify the menu or song before retry; input cancelled. Check the shared Phira viewport and retry position
+441	 New gameplay was not confirmed after retry; playback cancelled. Check the retry position and screen capture
+442	 Invalid retry timestamp
+443	 Invalid note side
+444	 More than 100000 notes
+445	 Invalid note duration
+446	 Invalid note time (maximum two hours)
+447	 Minimum top margin (0–96 dp)
+448	 (preview only)
+449	 ; gallery refresh failed: 
+450	 , reading chart
+451	 ; skipped 
+452	 ; difficulty: 

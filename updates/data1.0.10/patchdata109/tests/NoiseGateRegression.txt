@@ -1,0 +1,1 @@
+PASS 35 noise checks: Next/native/Line2Area active times, BPM/lifecycle/offset, ready exclusion, no cross-window reuse, safe-run recovery, sustained yellow and original hold retention, dense fallback and cache invalidation. Conservative time barriers; no geometry avoidance or Android device run.

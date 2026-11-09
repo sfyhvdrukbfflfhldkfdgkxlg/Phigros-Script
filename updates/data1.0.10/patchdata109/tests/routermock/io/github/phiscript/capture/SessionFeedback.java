@@ -1,0 +1,1 @@
+package io.github.phiscript.capture;import android.content.Context;public class SessionFeedback {public static int clears,errors;public static Throwable last;public static void clear(Context c){clears++;}public static void stage(Context c,String s){}public static void failed(Context c,Throwable e){errors++;last=e;}}

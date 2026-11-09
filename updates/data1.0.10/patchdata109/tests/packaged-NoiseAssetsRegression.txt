@@ -1,0 +1,1 @@
+PASS 28 noise asset checks: real decoder/Root pipe, raw-directory and metadata-free archives, exact chart sidecar association, generic fallback, PGR/RPE Next/native embedded and empty priority, ambiguity/path guards and original chart counts; native hook=true.

@@ -1,0 +1,1 @@
+PASS 47 automatic identity/start-clock checks: fresh/distinct votes, ambiguity, stale/future frames, restart boundary, restart-receipt validation, bounded verification delay, menu interruption and calibration

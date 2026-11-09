@@ -1,0 +1,2 @@
+package android.view.accessibility;
+public class AccessibilityWindowInfo {public static final int TYPE_APPLICATION=1,TYPE_SYSTEM=3,TYPE_ACCESSIBILITY_OVERLAY=4;public int type;public boolean focused;public AccessibilityNodeInfo root;public AccessibilityWindowInfo(int t,boolean f,String pkg){type=t;focused=f;root=pkg==null?null:new AccessibilityNodeInfo(pkg);}public boolean isFocused(){return focused;}public int getType(){return type;}public AccessibilityNodeInfo getRoot(){return root;}}

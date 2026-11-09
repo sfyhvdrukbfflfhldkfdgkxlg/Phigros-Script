@@ -1,0 +1,8 @@
+PASS chart planner, 10 holds, startup catch-up, mixed chords, cancellation, release, edge fallback
+PASS visual hold dropout, ID reclassification, duplicate frame, 10-to-10 handoff, queued shots
+PASS parser pgr_v1_multihold.json: 7 notes, 3 holds
+PASS parser pgr_v3_multihold.json: 7 notes, 3 holds
+PASS parser rpe_empty_layers_bpm_parent.json: 6 notes, 3 holds
+PASS parser pec_multihold.pec: 5 notes, 2 holds
+PASS layered animations, empty-layer gaps, fake notes, parent lines, BPM-changing holds
+ALL 87 CHECKS PASSED (host simulation; no device run)

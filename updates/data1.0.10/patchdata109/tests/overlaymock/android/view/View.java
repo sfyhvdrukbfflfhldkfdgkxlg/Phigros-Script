@@ -1,0 +1,2 @@
+package android.view;
+public class View {public static final int GONE=8;private int visibility;private ViewGroup.LayoutParams params;public int getVisibility(){return visibility;}public void setVisibility(int v){visibility=v;}public void setLayoutParams(ViewGroup.LayoutParams p){params=p;}public ViewGroup.LayoutParams getLayoutParams(){return params;}public void setPadding(int l,int t,int r,int b){}public void setMinimumHeight(int h){}public void setMinimumWidth(int w){}public void setContentDescription(CharSequence s){}}

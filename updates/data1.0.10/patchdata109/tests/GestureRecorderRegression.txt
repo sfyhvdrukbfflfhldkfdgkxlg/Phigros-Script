@@ -1,0 +1,5 @@
+PASS recorder model regression and JSON round-trip (gesture-recorder/tests/run.sh).
+PASS Draft 2020-12 schema and shipped example plus actual regression export.
+PASS separate package io.github.phiscript.gesturerecorder, minSdk 26 / targetSdk 35, zero permissions.
+PASS APK signature v2/v3 and zipalign; local build key excluded from delivery.
+No Android UI, SAF or hardware multi-touch test.

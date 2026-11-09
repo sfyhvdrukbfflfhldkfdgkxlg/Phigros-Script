@@ -1,0 +1,1 @@
+package io.github.phiscript;import android.content.Context;public final class AppSettings {public static boolean enabled;public AppSettings(Context c){}public boolean flag(String k,boolean f){return enabled;}}
