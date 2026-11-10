@@ -1,0 +1,31 @@
+{
+  "charts": [
+    {
+      "path": "GOODRAGE.EBIMAYO.0/IN.json",
+      "bytes": 1203668,
+      "sha1": "02ad918ba0d1444a114119c822288c269a2ecd6e"
+    },
+    {
+      "path": "PixelRebelz.Normal1zer.0/IN.json",
+      "bytes": 1955000,
+      "sha1": "d8ff1d44578471c437dd954ca7ad3cc729c14325"
+    },
+    {
+      "path": "Rrharil.TeamGrimoire.0/IN.json",
+      "bytes": 3937154,
+      "sha1": "bea64d181aac7a3d39c652be84edf623bd92469d"
+    },
+    {
+      "path": "SecretIllumination.Yooh.0/IN.json",
+      "bytes": 5731507,
+      "sha1": "d26d67f32033040e0106bb6f405823d57d67bd8c"
+    },
+    {
+      "path": "TheChariotREVIIVAL.Attoclef.0/EZ.json",
+      "bytes": 1351222,
+      "sha1": "acb744f5b201a408c230a0aabb81a1863569a611"
+    }
+  ],
+  "zip_bytes": 1485023,
+  "sha256": "c51130618653fa95a048816662eb257815da93d3ec40f94a06601e09e049e07b"
+}

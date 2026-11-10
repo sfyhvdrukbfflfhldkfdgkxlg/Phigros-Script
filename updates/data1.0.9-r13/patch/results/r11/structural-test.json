@@ -1,0 +1,25 @@
+{
+  "version_code": 35,
+  "large_heap": true,
+  "new_share_entries": 1052,
+  "new_share_expected": 1057,
+  "new_share_missing": 5,
+  "apk_sha256": "1d5df775269a261c0f544f727615c9645d10c829ec9256c811cefbf1aa413ba8",
+  "bytes": 48226295,
+  "dex_classes": 9532,
+  "dex_versions": [
+    "dex\n038\u0000"
+  ],
+  "duplicate_classes": 0,
+  "changed_original_entries": [
+    "AndroidManifest.xml",
+    "classes11.dex",
+    "classes4.dex",
+    "classes5.dex",
+    "classes6.dex",
+    "classes7.dex",
+    "classes8.dex"
+  ],
+  "unchanged_original_entries": 446,
+  "catalog_entries": 1022
+}

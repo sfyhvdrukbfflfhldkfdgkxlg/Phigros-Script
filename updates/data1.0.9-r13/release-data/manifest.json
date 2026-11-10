@@ -1,0 +1,89 @@
+{
+  "base": {
+    "size": 48156238,
+    "sha256": "91d19afaccecc419c452ee196c73d624381a72c41a02aec7302c99f518f95cf3"
+  },
+  "parts": {
+    "delta": {
+      "size": 790167,
+      "sha256": "d0b272119dece79ac756e605aa9459d7063c62b45b8265b1b36c0e4a18119d49",
+      "parts": [
+        {
+          "size": 245760,
+          "sha256": "9027e78dbc21917fc457ca62eb979b06ae6f8fabe698415538593fbd69353127",
+          "name": "delta.001"
+        },
+        {
+          "size": 245760,
+          "sha256": "c3ceaf054e8a738ff9c2c22b4a28ef5977a04044984a654440bd65068010ac82",
+          "name": "delta.002"
+        },
+        {
+          "size": 245760,
+          "sha256": "9d4e4bca6fe9ac63d1666f870da364aeabf6903da17364a31e0d75938525e248",
+          "name": "delta.003"
+        },
+        {
+          "size": 52887,
+          "sha256": "042c619e6800fbf9f8c89f09efcf6e465090708afa25bbe892108e0eca56c4ed",
+          "name": "delta.004"
+        }
+      ]
+    },
+    "gesture": {
+      "size": 20881,
+      "sha256": "459d6fb685f76337d074374f280399212fcba3ae346cf3ef3f4e75665a86f371",
+      "parts": [
+        {
+          "size": 20881,
+          "sha256": "459d6fb685f76337d074374f280399212fcba3ae346cf3ef3f4e75665a86f371",
+          "name": "gesture.001"
+        }
+      ]
+    },
+    "source": {
+      "size": 847733,
+      "sha256": "2385990a32dcf04827a639d67c9784e5c805e1c7b49fd543164d20dba42b2aa5",
+      "parts": [
+        {
+          "size": 245760,
+          "sha256": "ec41999b08c8215d38d8110c8f19f5f8fd502ccc6c30edb8330a5767db30faf6",
+          "name": "source.001"
+        },
+        {
+          "size": 245760,
+          "sha256": "ff66c3ef092517069bc625fcb30541af15e05408d1b4ff12480cb17396f81d99",
+          "name": "source.002"
+        },
+        {
+          "size": 245760,
+          "sha256": "68733b992531b6342bac362662bf56020260453a76d71a5784f4faa7f8eb3fa8",
+          "name": "source.003"
+        },
+        {
+          "size": 110453,
+          "sha256": "2559dd073edcdff55f50ef961c7a7b2303bd06a7312f38d8112dc7591956f9be",
+          "name": "source.004"
+        }
+      ]
+    }
+  },
+  "assets": {
+    "PhigrosScript_data1.0.9-r13.apk": {
+      "size": 48226295,
+      "sha256": "d2ec51caabf787deb9549811f946ed605c1fb610cc9466cccad668c158fa99d6"
+    },
+    "GestureCapture_1.0.apk": {
+      "size": 20881,
+      "sha256": "459d6fb685f76337d074374f280399212fcba3ae346cf3ef3f4e75665a86f371"
+    },
+    "PhigrosScript_patch.zip": {
+      "size": 847733,
+      "sha256": "2385990a32dcf04827a639d67c9784e5c805e1c7b49fd543164d20dba42b2aa5"
+    },
+    "SHA256SUMS.txt": {
+      "size": 277,
+      "sha256": "b7a9b3e330b23dab813ec7a438a962b0093cf7f9647f462c773755577d39fb53"
+    }
+  }
+}

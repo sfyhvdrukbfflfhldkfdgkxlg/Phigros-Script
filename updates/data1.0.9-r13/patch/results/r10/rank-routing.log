@@ -1,0 +1,22 @@
+loaded exact rank 50 / 1057
+loaded exact rank 100 / 1057
+loaded exact rank 150 / 1057
+loaded exact rank 200 / 1057
+loaded exact rank 250 / 1057
+loaded exact rank 300 / 1057
+loaded exact rank 350 / 1057
+loaded exact rank 400 / 1057
+loaded exact rank 450 / 1057
+loaded exact rank 500 / 1057
+loaded exact rank 550 / 1057
+loaded exact rank 600 / 1057
+loaded exact rank 650 / 1057
+loaded exact rank 700 / 1057
+loaded exact rank 750 / 1057
+loaded exact rank 800 / 1057
+loaded exact rank 850 / 1057
+loaded exact rank 900 / 1057
+loaded exact rank 950 / 1057
+loaded exact rank 1000 / 1057
+loaded exact rank 1050 / 1057
+PASS exact rank routing {"ocrExactMatches":1030,"ambiguousOcrRequiresManual":["Ark.kanoryo.0/AT.json","Ark.kanoryo.0/EZ.json","Ark.kanoryo.0/HD.json","Ark.kanoryo.0/IN.json","Rebirth.ああああ.0/EZ.json","Rebirth.ああああ.0/HD.json","Rebirth.ああああ.0/IN.json"],"notes":677156,"chartsLoadedByExactRank":1057,"wrongRankSubstitutions":0,"noiseAreas":17782,"nativePositionSamples":9513,"assertions":14772}

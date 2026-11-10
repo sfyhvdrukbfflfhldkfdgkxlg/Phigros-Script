@@ -1,0 +1,18 @@
+{
+  "ocrExactMatches": 1030,
+  "ambiguousOcrRequiresManual": [
+    "Ark.kanoryo.0/AT.json",
+    "Ark.kanoryo.0/EZ.json",
+    "Ark.kanoryo.0/HD.json",
+    "Ark.kanoryo.0/IN.json",
+    "Rebirth.ああああ.0/EZ.json",
+    "Rebirth.ああああ.0/HD.json",
+    "Rebirth.ああああ.0/IN.json"
+  ],
+  "notes": 677156,
+  "chartsLoadedByExactRank": 1057,
+  "wrongRankSubstitutions": 0,
+  "noiseAreas": 17782,
+  "nativePositionSamples": 9513,
+  "assertions": 14772
+}
