@@ -1,0 +1,38 @@
+{
+  "baselineApkSha256": "91094698f5cb10efcae78a88eabd18d99c2b925d26d8c70e693d19a8a38e3cb3",
+  "finalApkSha256": "1d5df775269a261c0f544f727615c9645d10c829ec9256c811cefbf1aa413ba8",
+  "changedEntries": [
+    "AndroidManifest.xml",
+    "classes11.dex",
+    "classes12.dex",
+    "classes4.dex",
+    "classes5.dex",
+    "classes6.dex",
+    "classes7.dex",
+    "classes8.dex"
+  ],
+  "byteIdenticalDex": {
+    "classes3.dex": "582edff204dd2a708b402cbc4c7d5ab4a9190c382e0949baeca441ceda99a365",
+    "classes10.dex": "f5e8bedbb6fe2cd2dead14a64bbf794b5bc2b825e1a8ea7dc177c1b04a81e045",
+    "classes.dex": "96f90f25b90ad7c511c1c1dadad2b57d47a79965f908fdf39c5c140932697c18",
+    "classes2.dex": "ebe4fc08906e2ebffc48afa2cad9462a063b4dd989a79d0af21468c5a72760fd",
+    "classes9.dex": "ce7d495b1001f6f352393cdc31030f23e11b8ddb9bcbe3c72c9206bc9daa89a3"
+  },
+  "addedClasses": [
+    "io/github/phiscript/vision/PhigrosChartMatcher$$ExternalSyntheticLambda0.smali",
+    "io/github/phiscript/vision/PhigrosChartMatcher.smali"
+  ],
+  "changedExistingMethods": [
+    [
+      "io/github/phiscript/assets/SessionChartSource.smali",
+      "public match(Lio/github/phiscript/vision/OcrLabels;Ljava/util/List;)Lio/github/phiscript/vision/PhiraCandidate;"
+    ],
+    [
+      "io/github/phiscript/root/HomeScreen.smali",
+      "private build()V"
+    ]
+  ],
+  "unchangedExistingMethods": 2950,
+  "originalGameAndInputInstructionsUnchanged": true,
+  "fullScriptZipSha256": "6c4507b52015c059d04efa07851bb07038abf0867bf78474484bedcc6f5a253f"
+}

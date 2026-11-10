@@ -1,0 +1,254 @@
+package io.github.phiscript.input;
+
+import android.accessibilityservice.GestureDescription;
+import android.graphics.Path;
+import android.os.Looper;
+import android.os.SystemClock;
+import android.view.WindowManager;
+import android.util.DisplayMetrics;
+import io.github.phiscript.engine.Chart;
+import io.github.phiscript.engine.Point;
+import io.github.phiscript.engine.TouchEvent;
+import io.github.phiscript.engine.TouchTimelineKt;
+import io.github.phiscript.engine.Viewport;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
+
+/** Shared by every chart decoder, independent of song identity and chart format. */
+public final class ChartMultiTouchPlayer {
+    private ChartMultiTouchPlayer() {}
+
+    public static void play(TouchService service, Chart chart, long epoch,
+            Viewport viewport, AtomicBoolean stop, Function1<? super String, Unit> status,
+            AtomicBoolean playing, AtomicBoolean cancelled) throws InterruptedException {
+        if (io.github.phiscript.root.InputBackend.rootEnabled) {
+            RootChartPlayer.play(service,chart,epoch,viewport,stop,status,playing,cancelled);
+            return;
+        }
+        if (Looper.myLooper() == Looper.getMainLooper())
+            throw new IllegalStateException("触控必须在后台线程执行");
+        if (!playing.compareAndSet(false, true))
+            throw new IllegalStateException("已有演奏在运行");
+        cancelled.set(false);
+        GestureChannel channel = null;
+        Map<TouchEvent, GestureChannel.Live> active = new LinkedHashMap<>();
+        try {
+            if (!service.getGameForeground()) throw new IllegalStateException("目标游戏尚未处于前台");
+            int[] screen = dimensions(service);
+            if (viewport.getWidth() <= 0 || viewport.getHeight() <= 0
+                || viewport.getLeft() < 0 || viewport.getTop() < 0
+                || viewport.getRight() > screen[0] + 1 || viewport.getBottom() > screen[1] + 1)
+                throw new IllegalArgumentException("玩法视口超出屏幕，请重新校准");
+            TouchSafety safety=TouchSafety.read(service,screen[0],screen[1],viewport);
+            GesturePlan plan=GesturePlan.forPlayback(chart,GestureProfile.read(service),viewport,safety.bounds);
+            if(plan.unavailableNotes>0)status.invoke("规划中有 "+plan.unavailableNotes+" 个音符在判定窗口内未找到安全可用触点");
+            ChartPlaybackClock clock=ChartPlaybackClock.resolve(epoch);
+            List<TouchEvent> events = new ArrayList<>();
+            int skipped=0;long maxLate=0;
+            long initialWall=SystemClock.uptimeMillis();
+            long initial = clock.snapshot(initialWall).chartAt(initialWall);
+            for (TouchEvent event : plan.events) {
+                // Catch up a hold already in progress. Never filter a future head
+                // merely because it is within 25 ms of starting the player.
+                if (event.getEndMs() > initial
+                    && (plan.isContinuous(event) || event.getStartMs() >= initial - 100))
+                    events.add(event);
+                else skipped++;
+            }
+            if (events.isEmpty()) { status.invoke("当前已无后续音符"); return; }
+            channel = new GestureChannel(service);
+            if(!channel.reusesIds())status.invoke("此系统的无障碍触点复用受限，密集长按建议使用 Root 模式");
+            status.invoke("多点演奏：连接手势 "+plan.connectedGroups+" 组独立轨迹，蓝键保留按下，黄键滑接，红键来回滑动");
+            List<TouchEvent> blockedContacts=new ArrayList<>();
+            int cursor = 0;
+            int strokeLimit = Math.min(GestureDescription.getMaxStrokeCount(), GestureChannel.POINTER_LIMIT);
+            boolean warned = false;
+            long lastDimensionCheck = 0;
+            while ((cursor < events.size() || !active.isEmpty() || !blockedContacts.isEmpty())
+                    && !stop.get() && !cancelled.get() && service.getGameForeground()) {
+                long wall = SystemClock.uptimeMillis();
+                if (wall - lastDimensionCheck >= 250) {
+                    int[] current = dimensions(service);
+                    if (current[0] != screen[0] || current[1] != screen[1])
+                        throw new IllegalStateException("屏幕尺寸变化，请重新开始");
+                    lastDimensionCheck = wall;
+                }
+                ChartPlaybackClock.Slice timing=clock.snapshot(wall);
+                long now = timing.chartAt(wall);
+                for(int i=blockedContacts.size()-1;i>=0;i--)
+                    if(blockedContacts.get(i).getEndMs()<=now)blockedContacts.remove(i);
+                if (active.isEmpty() && blockedContacts.isEmpty() && cursor < events.size()
+                        && events.get(cursor).getStartMs() > now + 24) {
+                    GestureChannel.sleep(Math.max(1,Math.min(10, timing.wallAt(events.get(cursor).getStartMs()-24)-wall)));
+                    continue;
+                }
+                // Expired one-shots are dropped, not replayed in a dense burst.
+                while (cursor < events.size() && events.get(cursor).getEndMs() <= now){cursor++;skipped++;}
+                if (active.isEmpty() && blockedContacts.isEmpty() && cursor >= events.size()) break;
+                boolean expired=false;
+                for (TouchEvent held : active.keySet()) if (held.getEndMs()<=now) expired=true;
+                if (expired) {
+                    // The callback can arrive after a chart tail. Lift those
+                    // fingers before admitting a replacement chord, while
+                    // preserving every other continuing finger.
+                    GestureBatch<TouchEvent> retirement=new GestureBatch<>();
+                    for (Map.Entry<TouchEvent,GestureChannel.Live> entry:active.entrySet()) {
+                        GestureChannel.Live live=entry.getValue();
+                        retirement.add(entry.getKey(),live,
+                            GestureChannel.path(live.x,live.y,live.x,live.y),0,1,
+                            entry.getKey().getEndMs()>now,live.x,live.y);
+                    }
+                    Map<TouchEvent,GestureChannel.Live> previous=active;
+                    active=retirement.next;
+                    try { channel.send(retirement); }
+                    catch (InterruptedException | RuntimeException failure) {
+                        if (channel.cancelled) active.clear();
+                        else if (!channel.accepted) active=previous;
+                        throw failure;
+                    }
+                    continue;
+                }
+                List<TouchEvent> resume=new ArrayList<>(blockedContacts);blockedContacts.clear();
+                int incoming=resume.size();
+                for (int i=cursor; i<events.size()
+                        && events.get(i).getStartMs()<now+ChordPlanner.CHUNK_MS; i++) incoming++;
+                boolean naturalEnd=cursor<events.size();
+                if (naturalEnd) for (TouchEvent held : active.keySet())
+                    if (held.getEndMs()>events.get(cursor).getStartMs()) naturalEnd=false;
+                if (!active.isEmpty() && ((incoming > channel.availableStarts() && !naturalEnd)
+                        || channel.oldChain())) {
+                    resume.addAll(active.keySet());
+                    channel.finish(active.values());
+                    active.clear();
+                    wall=SystemClock.uptimeMillis();timing=clock.snapshot(wall);now=timing.chartAt(wall);
+                    for (int i=resume.size()-1;i>=0;i--)
+                        if (resume.get(i).getEndMs()<=now) resume.remove(i);
+                    if (resume.isEmpty()) continue;
+                }
+                int capacity=Math.min(strokeLimit, active.size()+channel.availableStarts());
+                long end = ChordPlanner.endOfBatch(events, cursor, active.size()+resume.size(), now, capacity);
+                for(TouchEvent held:active.keySet())end=plan.nextBoundary(held,now,end);
+                for(TouchEvent held:resume)end=plan.nextBoundary(held,now,end);
+                for(int i=cursor;i<events.size()&&events.get(i).getStartMs()<end;i++)end=plan.nextBoundary(events.get(i),now,end);
+                Map<TouchEvent, GestureChannel.Live> work = new LinkedHashMap<>(active);
+                for (TouchEvent e : resume) work.put(e,null);
+                while (cursor < events.size() && events.get(cursor).getStartMs() < end)
+                    work.put(events.get(cursor++), null);
+                GestureBatch<TouchEvent> batch = new GestureBatch<>();
+                boolean[] bounded = new boolean[1];
+                // The first step of a continued gesture must contain exactly
+                // the old pointers. New fingers join strictly after that step.
+                long newPointerOffset = active.isEmpty() ? 0 : 2;
+                for (Map.Entry<TouchEvent, GestureChannel.Live> entry : work.entrySet()) {
+                    TouchEvent e = entry.getKey();
+                    GestureChannel.Live prior = entry.getValue();
+                    // The continuation handshake is measured in wall milliseconds,
+                    // including while the chart clock is slewing faster or slower.
+                    long downWall=prior==null?Math.max(wall+newPointerOffset,timing.wallAt(e.getStartMs())):wall;
+                    long down=timing.chartAt(downWall);
+                    if(prior==null&&(e.getNote().getType()==1||e.getNote().getType()==3))maxLate=Math.max(maxLate,down-Math.round(e.getNote().getTimeSeconds()*1000));
+                    long up = Math.max(down + 1, Math.min(e.getEndMs(), end));
+                    boolean keep = e.getEndMs() > end;
+                    try {
+                        Point from = prior == null ? safety.point(plan,chart, e, down, viewport, screen, bounded)
+                            : new Point(prior.x, prior.y);
+                        Point to = safety.point(plan,chart, e, up, viewport, screen, bounded);
+                        if (prior != null && keep) {
+                            float[] endpoint = GestureChannel.liveEndpoint(prior, to.getX(), to.getY(),
+                                safety.bounds.left,safety.bounds.top,safety.bounds.right,safety.bounds.bottom);
+                            to = new Point(endpoint[0], endpoint[1]);
+                        }
+                        Path path = new Path(); path.moveTo(from.getX(), from.getY());
+                        Point checkedPoint=from;long checkedTime=down;
+                        // Sample moving/rotating judge lines within the chunk.
+                        long upWall=Math.max(downWall+1,timing.wallAt(up));
+                        for (long sample = downWall + 8; sample < upWall; sample += 8) {
+                            long t=timing.chartAt(sample);
+                            Point p = safety.point(plan,chart, e, t, viewport, screen, bounded);
+                            TapMod.segment(chart,viewport,checkedPoint,p,checkedTime,t);checkedPoint=p;checkedTime=t;
+                            path.lineTo(p.getX(), p.getY());
+                        }
+                        TapMod.segment(chart,viewport,checkedPoint,to,checkedTime,up);
+                        path.lineTo(to.getX(), to.getY());
+                        batch.add(e,prior,path,Math.max(0,downWall-wall),Math.max(1,upWall-wall),keep,to.getX(),to.getY());
+                    } catch(TapMod.NoSafePoint blocked) {
+                        if(prior!=null)batch.add(e,prior,GestureChannel.path(prior.x,prior.y,prior.x,prior.y),0,1,false,prior.x,prior.y);
+                        if(e.getEndMs()>end)blockedContacts.add(e);
+                    }
+                }
+                if(batch.isEmpty()){GestureChannel.sleep(4);continue;}
+                batch.rebase(SystemClock.uptimeMillis()-wall);
+                // If waiting is interrupted, the just-submitted continuation is
+                // the most recent candidate to lift, not its stale predecessor.
+                Map<TouchEvent, GestureChannel.Live> previous = active;
+                active = batch.next;
+                try {
+                    channel.send(batch);
+                } catch (InterruptedException | RuntimeException failure) {
+                    if (channel.cancelled) active.clear();
+                    else if (!channel.accepted) active = previous;
+                    throw failure;
+                }
+                if (bounded[0] && !warned) {
+                    status.invoke("部分音符已移入可触控区域，避免系统边缘手势；边缘音符可能无法命中");
+                    warned = true;
+                }
+            }
+            status.invoke(stop.get() || cancelled.get() || !service.getGameForeground()
+                ? "已停止触摸" : "演奏完成");
+            status.invoke("输入统计：跳过 "+skipped+" 个过期手势，最大按下调度延迟 "+Math.max(0,maxLate)+" ms");
+        } finally {
+            try { if (channel != null) channel.release(active.values()); }
+            finally { if (channel != null) channel.close(); playing.set(false); }
+        }
+    }
+
+    static int[] dimensions(TouchService service) {
+        WindowManager wm = (WindowManager) service.getSystemService(WindowManager.class);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            android.graphics.Rect bounds = wm.getMaximumWindowMetrics().getBounds();
+            return new int[]{bounds.width(), bounds.height()};
+        }
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getRealMetrics(metrics);
+        return new int[]{metrics.widthPixels, metrics.heightPixels};
+    }
+
+    static Point point(Chart chart, TouchEvent e, long time, Viewport v,
+            int[] screen, boolean[] bounded) {
+        Point p;
+        try {
+            p = TouchTimelineKt.touchPosition(chart, e, time, v);
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            // A flick outside the viewport has no valid clipped segment in the
+            // original code. Keep the rest of the song running at the edge.
+            double seconds = Math.max(e.getStartMs(), Math.min(e.getEndMs(), time)) / 1000.0;
+            p = chart.position(e.getNote(), seconds, v, false);
+            if (p == null) throw ex;
+            bounded[0] = true;
+            if (e.getNote().getType() == 4) {
+                float x = GestureChannel.clamp(p.getX(), 0, screen[0] - 1);
+                float y = GestureChannel.clamp(p.getY(), 0, screen[1] - 1);
+                Point n = chart.judgeNormal(e.getNote(), seconds, v);
+                FlickGeometry.Pixel target = FlickGeometry.INSTANCE.endpoint(x, y,
+                    n.getX() * v.getHeight() * .1f, n.getY() * v.getHeight() * .1f,
+                    screen[0], screen[1]);
+                float progress = Math.max(0, Math.min(1, (time - e.getStartMs()) / 60f));
+                p = new Point(x + (target.getX() - x) * progress,
+                    y + (target.getY() - y) * progress);
+            }
+        }
+        if (p == null) throw new IllegalArgumentException("无法计算音符落点");
+        float x = GestureChannel.clamp(p.getX(), Math.max(0, v.getLeft()),
+            Math.min(screen[0] - 1, Math.nextDown(v.getRight())));
+        float y = GestureChannel.clamp(p.getY(), Math.max(0, v.getTop()),
+            Math.min(screen[1] - 1, Math.nextDown(v.getBottom())));
+        if (x != p.getX() || y != p.getY()) bounded[0] = true;
+        return new Point(x, y);
+    }
+}

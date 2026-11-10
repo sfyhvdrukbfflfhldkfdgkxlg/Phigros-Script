@@ -1,0 +1,135 @@
+PASS multi-touch, pointer order, historical samples, id reuse, inter-gesture gap, validation, limit and CANCEL
+{
+  "canvas": {
+    "widthPx": 1000,
+    "heightPx": 500
+  },
+  "purpose": "edit-application-gestures",
+  "endReason": "停止",
+  "origin": "canvas-top-left",
+  "format": "phiscript.gesture-edit",
+  "name": "双指\n样本",
+  "version": 1,
+  "durationMs": 170,
+  "events": [
+    {
+      "changedId": 2,
+      "action": "down",
+      "historical": false,
+      "tMs": 22,
+      "points": [{
+        "x": 200,
+        "y": 100,
+        "nx": 0.20000000298023224,
+        "id": 2,
+        "ny": 0.20000000298023224
+      }]
+    },
+    {
+      "changedId": 6,
+      "action": "down",
+      "historical": false,
+      "tMs": 31,
+      "points": [
+        {
+          "x": 200,
+          "y": 100,
+          "nx": 0.20000000298023224,
+          "id": 2,
+          "ny": 0.20000000298023224
+        },
+        {
+          "x": 600,
+          "y": 300,
+          "nx": 0.6000000238418579,
+          "id": 6,
+          "ny": 0.6000000238418579
+        }
+      ]
+    },
+    {
+      "changedId": -1,
+      "action": "move",
+      "historical": true,
+      "tMs": 33,
+      "points": [
+        {
+          "x": 600,
+          "y": 300,
+          "nx": 0.6000000238418579,
+          "id": 6,
+          "ny": 0.6000000238418579
+        },
+        {
+          "x": 200,
+          "y": 100,
+          "nx": 0.20000000298023224,
+          "id": 2,
+          "ny": 0.20000000298023224
+        }
+      ]
+    },
+    {
+      "changedId": 2,
+      "action": "up",
+      "historical": false,
+      "tMs": 33,
+      "points": [
+        {
+          "x": 600,
+          "y": 300,
+          "nx": 0.6000000238418579,
+          "id": 6,
+          "ny": 0.6000000238418579
+        },
+        {
+          "x": 200,
+          "y": 100,
+          "nx": 0.20000000298023224,
+          "id": 2,
+          "ny": 0.20000000298023224
+        }
+      ]
+    },
+    {
+      "changedId": 6,
+      "action": "up",
+      "historical": false,
+      "tMs": 41,
+      "points": [{
+        "x": 600,
+        "y": 300,
+        "nx": 0.6000000238418579,
+        "id": 6,
+        "ny": 0.6000000238418579
+      }]
+    },
+    {
+      "changedId": 2,
+      "action": "down",
+      "historical": false,
+      "tMs": 160,
+      "points": [{
+        "x": 200,
+        "y": 100,
+        "nx": 0.20000000298023224,
+        "id": 2,
+        "ny": 0.20000000298023224
+      }]
+    },
+    {
+      "changedId": -1,
+      "action": "cancel",
+      "historical": false,
+      "tMs": 170,
+      "points": [{
+        "x": 200,
+        "y": 100,
+        "nx": 0.20000000298023224,
+        "id": 2,
+        "ny": 0.20000000298023224
+      }]
+    }
+  ],
+  "timeUnit": "ms"
+}
