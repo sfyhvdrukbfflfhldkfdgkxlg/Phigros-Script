@@ -1,0 +1,31 @@
+name: Publish data1.0.9-r12
+on:
+  push:
+    branches: ['release/data1.0.9-r12']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data109-r12
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/release/data1.0.9-r12'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Download signed public base
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download data1.0.9 -R "$GITHUB_REPOSITORY" -p PhigrosScript_data1.0.9.apk -D base
+      - name: Reconstruct and verify both APKs, source and checksums
+        run: python3 updates/data1.0.9-r12/restore.py base/PhigrosScript_data1.0.9.apk updates/data1.0.9-r12/release-data release
+      - name: Publish verified R11-compatible update
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 updates/data1.0.9-r12/publish.py release updates/data1.0.9-r12/release-data/manifest.json updates/data1.0.9-r12/RELEASE_NOTES.md

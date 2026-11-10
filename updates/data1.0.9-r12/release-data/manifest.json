@@ -1,0 +1,65 @@
+{
+  "base_sha256": "91d19afaccecc419c452ee196c73d624381a72c41a02aec7302c99f518f95cf3",
+  "parts": {
+    "delta": [
+      {
+        "name": "delta.part000",
+        "sha256": "af81678e656c209d7c44f5ffdd3a66a3daa90e1035084e3c9d08613efefa040d"
+      },
+      {
+        "name": "delta.part001",
+        "sha256": "d6680f1540ba675eb727be8bbddcbd9a70522d0dc8a70661307dd7e3e973315e"
+      },
+      {
+        "name": "delta.part002",
+        "sha256": "bc94ed5a986df4e01a3e42222128b1ba479d8c71612beb99ba2adc926e1b3f62"
+      },
+      {
+        "name": "delta.part003",
+        "sha256": "d5fc488857d7e8a14d472941cb364e90bda4870005c024b539b80a6641d3f89e"
+      }
+    ],
+    "recorder": [
+      {
+        "name": "recorder.part000",
+        "sha256": "60685996c5db3041dd839d6c87345c19a2420642d387af28d1ba4ea16ae5430d"
+      }
+    ],
+    "source": [
+      {
+        "name": "source.part000",
+        "sha256": "70e48c82927fab8d2f02f1e433be070c0fd41d56f915e392fd9e85509ea12a7a"
+      },
+      {
+        "name": "source.part001",
+        "sha256": "844e0896b719429224b2e71a6de189585e8ccf2b2109ef02bd6756f306b7a0d4"
+      },
+      {
+        "name": "source.part002",
+        "sha256": "17cb54725178aa52b0b499cc3abafe21b9d780e7b6a3d9428059c4e8e77cc75e"
+      },
+      {
+        "name": "source.part003",
+        "sha256": "92f44b876ed411092b87e50fbc0c492f27fd2fd04feda0369fda7e1934c33031"
+      }
+    ]
+  },
+  "assets": {
+    "PhigrosScript_data1.0.9-r12.apk": {
+      "sha256": "5f13ea5e8b91f57687b3005f208546ac3511f8bba4561d56aac76432153eba6a",
+      "size": 48226295
+    },
+    "GestureRecorder_1.0.0.apk": {
+      "sha256": "60685996c5db3041dd839d6c87345c19a2420642d387af28d1ba4ea16ae5430d",
+      "size": 29075
+    },
+    "PhigrosScript_patch.zip": {
+      "sha256": "8fa800162caa6dca1e692438867ecf4cf2fca82db1ae590fa6bd1aff411f3c57",
+      "size": 857353
+    },
+    "SHA256SUMS.txt": {
+      "sha256": "d21a5e8026e53d35665cec272279ce1d4afe6eaa0c56854d798d05e873d62719",
+      "size": 280
+    }
+  }
+}
