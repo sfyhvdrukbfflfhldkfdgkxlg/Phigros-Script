@@ -1,0 +1,5 @@
+import java.io.*;import java.nio.file.*;import java.nio.charset.StandardCharsets;import io.github.phiscript.engine.*;import io.github.phiscript.input.*;
+public class SampleTest{
+ public static void main(String[] args)throws Exception{TapMod.init(new android.content.Context());File[] list=new File("analysis/samples").listFiles(f->f.getName().endsWith(".json"));int count=0,notes=0,noise=0;for(File f:list){Chart c=Chart.Companion.parse(new String(Files.readAllBytes(f.toPath()),StandardCharsets.UTF_8));if(c.getNotes().isEmpty())throw new AssertionError("no notes");count++;notes+=c.getNotes().size();noise+=BlockAreaSet.count(c);Viewport v=new Viewport(0,0,1920,1080);for(Note n:c.getNotes()){Point p=c.position(n,n.getTimeSeconds(),v,false);if(!Float.isFinite(p.getX())||!Float.isFinite(p.getY())||p.getX()<0||p.getX()>1920||p.getY()<0||p.getY()>1080)throw new AssertionError("out of bounds "+f);}
+ System.out.println("PASS actual chart "+f.getName()+" notes="+c.getNotes().size()+" blockAreas="+BlockAreaSet.count(c));c=null;System.gc();}System.out.println("PASS actual samples="+count+" notes="+notes+" total noise metadata="+noise);}
+}

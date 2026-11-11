@@ -1,0 +1,16 @@
+{
+  "crossingFix": "only one branch changed; all other planner instructions preserved",
+  "removedLegacyClasses": [
+    "assets/ChartTimingIndex",
+    "root/FirstNoteBrowser",
+    "capture/PhigrosStartGate",
+    "capture/PhigrosControls",
+    "capture/PhigrosHudProbe",
+    "capture/SharedPhiraControls"
+  ],
+  "legacyClassReferences": 0,
+  "timeTableImportAndPlaybackCalls": 0,
+  "activeCalibration": "RecognitionSettings + one RetryCalibration",
+  "sharedSessionClock": "PhiraRestartClock (R8 parity audit)",
+  "apk": "PhigrosScript_data1.0.9-r13.apk"
+}

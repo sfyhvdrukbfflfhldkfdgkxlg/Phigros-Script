@@ -1,0 +1,32 @@
+name: Publish data1.0.9-r15
+on:
+  push:
+    branches: [release/data1.0.9-r15]
+    paths: ['.github/workflows/publish-data109-r15.yml', 'updates/data1.0.9-r15/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data109-r15
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/release/data1.0.9-r15'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Download the base release and restore the signed APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download data1.0.9-r13 --repo "$GITHUB_REPOSITORY" --pattern PhigrosScript_data1.0.9-r13.apk --dir base
+          python3 updates/data1.0.9-r15/restore_apk.py base/PhigrosScript_data1.0.9-r13.apk release/PhigrosScript_data1.0.9-r15.apk
+      - name: Package the source tree and publish verified assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 updates/data1.0.9-r15/publish.py

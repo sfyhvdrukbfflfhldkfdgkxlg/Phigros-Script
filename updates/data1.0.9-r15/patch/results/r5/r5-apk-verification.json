@@ -1,0 +1,13 @@
+{
+  "versionCode": 29,
+  "versionName": "data1.0.9",
+  "package": "io.github.phiscript",
+  "minSdkVersion": 26,
+  "targetSdkVersion": 35,
+  "apkSha256": "0b1a6a4e7151a54874995ba3d683a05c66e3622a0a0b3c96294eb1eafca5002f",
+  "apkBytes": 48111524,
+  "v2Verified": true,
+  "v3Verified": true,
+  "alignmentKiB": 16,
+  "certificateSha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc"
+}

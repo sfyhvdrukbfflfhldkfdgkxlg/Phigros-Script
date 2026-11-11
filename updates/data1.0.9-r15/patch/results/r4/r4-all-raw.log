@@ -1,0 +1,22 @@
+checked 50 / 1057; failures=0
+checked 100 / 1057; failures=0
+checked 150 / 1057; failures=0
+checked 200 / 1057; failures=0
+checked 250 / 1057; failures=0
+checked 300 / 1057; failures=0
+checked 350 / 1057; failures=0
+checked 400 / 1057; failures=0
+checked 450 / 1057; failures=0
+checked 500 / 1057; failures=0
+checked 550 / 1057; failures=0
+checked 600 / 1057; failures=0
+checked 650 / 1057; failures=0
+checked 700 / 1057; failures=0
+checked 750 / 1057; failures=0
+checked 800 / 1057; failures=0
+checked 850 / 1057; failures=0
+checked 900 / 1057; failures=0
+checked 950 / 1057; failures=0
+checked 1000 / 1057; failures=0
+checked 1050 / 1057; failures=0
+{"parsedCharts":1057,"notes":677156,"failures":[],"noiseCharts":25,"noiseAreas":17782}

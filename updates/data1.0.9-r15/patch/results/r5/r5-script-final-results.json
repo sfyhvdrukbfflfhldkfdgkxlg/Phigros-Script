@@ -1,0 +1,17 @@
+{
+  "charts": 1057,
+  "notes": 677156,
+  "noiseCharts": 25,
+  "noiseAreas": 17782,
+  "scriptBytes": 2582006420,
+  "positionComparisons": 822571,
+  "assertions": 4507473,
+  "maxVisiblePixelError": 0.5,
+  "maximumFrames": 245066,
+  "maximumScriptBytes": 15858965,
+  "failures": [],
+  "source": "7aGiven/Phigros_Resource",
+  "sourceChartCommit": "5d40bfdf05bee53f5107a6ea5620ca0e953de815",
+  "zipBytes": 289165129,
+  "zipSha256": "6c4507b52015c059d04efa07851bb07038abf0867bf78474484bedcc6f5a253f"
+}
