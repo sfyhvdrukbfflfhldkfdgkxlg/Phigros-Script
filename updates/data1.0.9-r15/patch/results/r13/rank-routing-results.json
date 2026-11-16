@@ -1,0 +1,10 @@
+{
+  "ocrExactMatches": 1037,
+  "ambiguousOcrRequiresManual": [],
+  "notes": 677156,
+  "chartsLoadedByExactRank": 1057,
+  "wrongRankSubstitutions": 0,
+  "noiseAreas": 17782,
+  "nativePositionSamples": 9513,
+  "assertions": 14780
+}

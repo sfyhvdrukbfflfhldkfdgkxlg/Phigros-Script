@@ -1,0 +1,1 @@
+package io.github.phiscript.capture;import android.graphics.*;import io.github.phiscript.vision.NormalizedPoint;final class CourseHudProbe {CourseHudProbe(RectF r){}NormalizedPoint observe(Bitmap b){return b.phase==1?new NormalizedPoint(.05f,.05f):null;}}

@@ -1,0 +1,63 @@
+[
+  {
+    "path": "GOODRAGE.EBIMAYO.0/IN.json",
+    "present": false,
+    "listed": [
+      "EZ.json",
+      "HD.json"
+    ],
+    "total": 2,
+    "title": "GOODRAGE",
+    "bytes": 1203668,
+    "noiseCount": 0
+  },
+  {
+    "path": "PixelRebelz.Normal1zer.0/IN.json",
+    "present": false,
+    "listed": [
+      "HD.json",
+      "EZ.json"
+    ],
+    "total": 2,
+    "title": "Pixel Rebelz",
+    "bytes": 1955000,
+    "noiseCount": 0
+  },
+  {
+    "path": "Rrharil.TeamGrimoire.0/IN.json",
+    "present": false,
+    "listed": [
+      "HD.json",
+      "EZ.json",
+      "AT.json"
+    ],
+    "total": 3,
+    "title": "Rrhar'il",
+    "bytes": 3937154,
+    "noiseCount": 0
+  },
+  {
+    "path": "SecretIllumination.Yooh.0/IN.json",
+    "present": false,
+    "listed": [
+      "HD.json",
+      "EZ.json"
+    ],
+    "total": 2,
+    "title": "Secret Illumination",
+    "bytes": 5731507,
+    "noiseCount": 0
+  },
+  {
+    "path": "TheChariotREVIIVAL.Attoclef.0/EZ.json",
+    "present": false,
+    "listed": [
+      "IN.json",
+      "HD.json"
+    ],
+    "total": 2,
+    "title": "The Chariot ~REVIIVAL~",
+    "bytes": 1351222,
+    "noiseCount": 0
+  }
+]

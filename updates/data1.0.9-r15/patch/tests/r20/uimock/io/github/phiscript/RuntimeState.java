@@ -1,0 +1,1 @@
+package io.github.phiscript;import java.util.concurrent.atomic.*;public class RuntimeState{public static final RuntimeState INSTANCE=new RuntimeState();final AtomicBoolean running=new AtomicBoolean();final AtomicReference<Object> active=new AtomicReference<>();public AtomicBoolean getRunning(){return running;}public AtomicReference<Object> getActiveTouchStop(){return active;}}

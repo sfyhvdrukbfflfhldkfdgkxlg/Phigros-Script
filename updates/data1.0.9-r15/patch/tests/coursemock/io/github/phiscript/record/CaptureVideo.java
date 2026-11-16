@@ -1,0 +1,1 @@
+package io.github.phiscript.record;public class CaptureVideo {private static boolean active;public static void playing(){if(!active){active=true;io.github.phiscript.capture.CourseEngineRegression.recordings++;}}public static void finished(){active=false;}}

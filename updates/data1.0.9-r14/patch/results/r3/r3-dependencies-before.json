@@ -1,0 +1,10 @@
+{
+  "missing_original_classes": [
+    "Lio/github/phiscript/capture/PhigrosAutoEngine$$ExternalSyntheticBackportWithForwarding0;"
+  ],
+  "missing_original_methods": [
+    "Lio/github/phiscript/capture/PhigrosAutoEngine$$ExternalSyntheticBackportWithForwarding0;->m(Ljava/util/concurrent/atomic/AtomicReference;Ljava/lang/Object;Ljava/lang/Object;)Z"
+  ],
+  "missing_original_fields": [],
+  "final_classes": 9522
+}

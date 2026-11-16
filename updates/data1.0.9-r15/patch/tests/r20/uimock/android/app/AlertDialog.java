@@ -1,0 +1,1 @@
+package android.app;public class AlertDialog{public boolean shown;final android.view.Window window=new android.view.Window();public void show(){shown=true;}public android.view.Window getWindow(){return window;}}

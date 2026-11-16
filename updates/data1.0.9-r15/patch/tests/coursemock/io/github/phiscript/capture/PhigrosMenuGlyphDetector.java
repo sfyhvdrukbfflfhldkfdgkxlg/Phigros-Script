@@ -1,0 +1,1 @@
+package io.github.phiscript.capture;import android.graphics.Bitmap;import io.github.phiscript.vision.NormalizedPoint;final class PhigrosMenuGlyphDetector {NormalizedPoint locate(Bitmap b){return b.phase==2?new NormalizedPoint(.5f,.5f):null;}}

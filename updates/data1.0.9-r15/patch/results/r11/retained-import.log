@@ -1,0 +1,1 @@
+PASS import lifecycle 208 assertions (save, close, restore, repeat, cancel)

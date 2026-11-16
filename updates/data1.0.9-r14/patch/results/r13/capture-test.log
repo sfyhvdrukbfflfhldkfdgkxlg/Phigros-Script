@@ -1,0 +1,1 @@
+PASS final APK capture coordinator: real frame ingress, 60Hz timestamps, source updates and holds, two reusable buffers, exact-owner and foreground gates, disabled capture, cleanup and encoder failure.

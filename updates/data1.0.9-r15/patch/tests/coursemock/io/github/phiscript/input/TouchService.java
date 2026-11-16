@@ -1,0 +1,1 @@
+package io.github.phiscript.input;import android.content.Context;public class TouchService extends Context {public static TouchService current;public static final Companion Companion=new Companion();public TouchService(){current=this;}public boolean getGameForeground(){return true;}public static class Companion {public TouchService getCurrent(){return current;}}}

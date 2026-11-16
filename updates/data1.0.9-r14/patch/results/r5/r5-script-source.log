@@ -1,0 +1,1 @@
+PASS native script source 19 assertions: deterministic conversion, pinned recovery, offline import, isolated caches, corruption, deletion and single-file import

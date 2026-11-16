@@ -1,0 +1,1 @@
+package android.net;public class Uri{private String value;private Uri(String s){value=s;}public static Uri parse(String s){return new Uri(s);}public static Uri fromFile(java.io.File f){return parse(f.toURI().toString());}public String toString(){return value;}public String getLastPathSegment(){return new java.io.File(java.net.URI.create(value)).getName();}}

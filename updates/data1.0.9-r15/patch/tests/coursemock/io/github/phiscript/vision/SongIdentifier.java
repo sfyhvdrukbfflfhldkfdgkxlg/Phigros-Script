@@ -1,0 +1,1 @@
+package io.github.phiscript.vision;import android.graphics.Bitmap;import java.util.*;public class SongIdentifier implements AutoCloseable {public SongIdentifier(OcrConfig c){}public OcrLabels readLabels(Bitmap b){return new OcrLabels(Collections.singletonList("Song"),Collections.singletonList("IN"),Collections.emptyList(),b.phase==2,b.phase==3,null);}public void close(){}}

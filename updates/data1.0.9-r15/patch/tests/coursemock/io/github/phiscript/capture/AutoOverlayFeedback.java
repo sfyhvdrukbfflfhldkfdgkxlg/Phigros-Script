@@ -1,0 +1,1 @@
+package io.github.phiscript.capture;import android.content.Context;public class AutoOverlayFeedback {public AutoOverlayFeedback(Context c,RecognitionOverlay r){}public void show(String s){}public void waiting(String s){}public void playing(){}public void close(){CourseEngineRegression.overlayClosed++;}}

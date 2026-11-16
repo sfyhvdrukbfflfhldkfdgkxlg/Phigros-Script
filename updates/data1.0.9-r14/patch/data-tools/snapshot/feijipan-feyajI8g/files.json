@@ -1,0 +1,5412 @@
+[
+  {
+    "id": "66104977518",
+    "name": "README.txt",
+    "path": "Phigros/README.txt"
+  },
+  {
+    "id": "66113017919",
+    "name": "EZ.json",
+    "path": "Phigros/charts/000AinSophAur.Yumeji.0/EZ.json"
+  },
+  {
+    "id": "66113022515",
+    "name": "HD.json",
+    "path": "Phigros/charts/000AinSophAur.Yumeji.0/HD.json"
+  },
+  {
+    "id": "66113026165",
+    "name": "IN.json",
+    "path": "Phigros/charts/000AinSophAur.Yumeji.0/IN.json"
+  },
+  {
+    "id": "66113004313",
+    "name": "EZ.json",
+    "path": "Phigros/charts/70MinutesFighters.かたぎり.0/EZ.json"
+  },
+  {
+    "id": "66113012562",
+    "name": "HD.json",
+    "path": "Phigros/charts/70MinutesFighters.かたぎり.0/HD.json"
+  },
+  {
+    "id": "66113014332",
+    "name": "IN.json",
+    "path": "Phigros/charts/70MinutesFighters.かたぎり.0/IN.json"
+  },
+  {
+    "id": "66112990891",
+    "name": "EZ.json",
+    "path": "Phigros/charts/996.李化禹.0/EZ.json"
+  },
+  {
+    "id": "66112994923",
+    "name": "HD.json",
+    "path": "Phigros/charts/996.李化禹.0/HD.json"
+  },
+  {
+    "id": "66113007298",
+    "name": "IN.json",
+    "path": "Phigros/charts/996.李化禹.0/IN.json"
+  },
+  {
+    "id": "66112942984",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ABYSSMOTION192333.ariiolTSAR奏Sou.0/EZ.json"
+  },
+  {
+    "id": "66112948816",
+    "name": "HD.json",
+    "path": "Phigros/charts/ABYSSMOTION192333.ariiolTSAR奏Sou.0/HD.json"
+  },
+  {
+    "id": "66112951942",
+    "name": "IN.json",
+    "path": "Phigros/charts/ABYSSMOTION192333.ariiolTSAR奏Sou.0/IN.json"
+  },
+  {
+    "id": "66112647382",
+    "name": "AT.json",
+    "path": "Phigros/charts/ATHAZA.LeaF.0/AT.json"
+  },
+  {
+    "id": "66112649286",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ATHAZA.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66112659714",
+    "name": "HD.json",
+    "path": "Phigros/charts/ATHAZA.LeaF.0/HD.json"
+  },
+  {
+    "id": "66112660456",
+    "name": "IN.json",
+    "path": "Phigros/charts/ATHAZA.LeaF.0/IN.json"
+  },
+  {
+    "id": "66112976655",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AboutTheUniverse.SOTUIMIssionary.0/EZ.json"
+  },
+  {
+    "id": "66112979030",
+    "name": "HD.json",
+    "path": "Phigros/charts/AboutTheUniverse.SOTUIMIssionary.0/HD.json"
+  },
+  {
+    "id": "66113002506",
+    "name": "IN.json",
+    "path": "Phigros/charts/AboutTheUniverse.SOTUIMIssionary.0/IN.json"
+  },
+  {
+    "id": "66112965536",
+    "name": "AT.json",
+    "path": "Phigros/charts/AbsoluTedisoRdeR.AcuteDisarray.0/AT.json"
+  },
+  {
+    "id": "66112963005",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AbsoluTedisoRdeR.AcuteDisarray.0/EZ.json"
+  },
+  {
+    "id": "66112964798",
+    "name": "HD.json",
+    "path": "Phigros/charts/AbsoluTedisoRdeR.AcuteDisarray.0/HD.json"
+  },
+  {
+    "id": "66112981576",
+    "name": "IN.json",
+    "path": "Phigros/charts/AbsoluTedisoRdeR.AcuteDisarray.0/IN.json"
+  },
+  {
+    "id": "66112932085",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Adastraperaspera.RabbitHouse.0/EZ.json"
+  },
+  {
+    "id": "66112935980",
+    "name": "HD.json",
+    "path": "Phigros/charts/Adastraperaspera.RabbitHouse.0/HD.json"
+  },
+  {
+    "id": "66112951310",
+    "name": "IN.json",
+    "path": "Phigros/charts/Adastraperaspera.RabbitHouse.0/IN.json"
+  },
+  {
+    "id": "66112923041",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AfterDawn.S9ryne.0/EZ.json"
+  },
+  {
+    "id": "66112928096",
+    "name": "HD.json",
+    "path": "Phigros/charts/AfterDawn.S9ryne.0/HD.json"
+  },
+  {
+    "id": "66112929332",
+    "name": "IN.json",
+    "path": "Phigros/charts/AfterDawn.S9ryne.0/IN.json"
+  },
+  {
+    "id": "66112913783",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AfterZABANIYAMUGEdit.Daily天利.0/EZ.json"
+  },
+  {
+    "id": "66112900778",
+    "name": "HD.json",
+    "path": "Phigros/charts/AfterZABANIYAMUGEdit.Daily天利.0/HD.json"
+  },
+  {
+    "id": "66112919968",
+    "name": "IN.json",
+    "path": "Phigros/charts/AfterZABANIYAMUGEdit.Daily天利.0/IN.json"
+  },
+  {
+    "id": "66112892657",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Ajourneytothemoonlight.Yesod.0/EZ.json"
+  },
+  {
+    "id": "66112896259",
+    "name": "HD.json",
+    "path": "Phigros/charts/Ajourneytothemoonlight.Yesod.0/HD.json"
+  },
+  {
+    "id": "66112891735",
+    "name": "IN.json",
+    "path": "Phigros/charts/Ajourneytothemoonlight.Yesod.0/IN.json"
+  },
+  {
+    "id": "66112876706",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Alb.Avans.0/EZ.json"
+  },
+  {
+    "id": "66112876170",
+    "name": "HD.json",
+    "path": "Phigros/charts/Alb.Avans.0/HD.json"
+  },
+  {
+    "id": "66112880554",
+    "name": "IN.json",
+    "path": "Phigros/charts/Alb.Avans.0/IN.json"
+  },
+  {
+    "id": "66112853564",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Aleph0.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66112862758",
+    "name": "HD.json",
+    "path": "Phigros/charts/Aleph0.LeaF.0/HD.json"
+  },
+  {
+    "id": "66112864537",
+    "name": "IN.json",
+    "path": "Phigros/charts/Aleph0.LeaF.0/IN.json"
+  },
+  {
+    "id": "66112841779",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Aliceinaxxxxxxxx.Nagiha.0/EZ.json"
+  },
+  {
+    "id": "66112865529",
+    "name": "HD.json",
+    "path": "Phigros/charts/Aliceinaxxxxxxxx.Nagiha.0/HD.json"
+  },
+  {
+    "id": "66112852396",
+    "name": "IN.json",
+    "path": "Phigros/charts/Aliceinaxxxxxxxx.Nagiha.0/IN.json"
+  },
+  {
+    "id": "66112836795",
+    "name": "AT.json",
+    "path": "Phigros/charts/Ametrine.GRYSCLMIssionary.0/AT.json"
+  },
+  {
+    "id": "66112828841",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Ametrine.GRYSCLMIssionary.0/EZ.json"
+  },
+  {
+    "id": "66112830690",
+    "name": "HD.json",
+    "path": "Phigros/charts/Ametrine.GRYSCLMIssionary.0/HD.json"
+  },
+  {
+    "id": "66112839566",
+    "name": "IN.json",
+    "path": "Phigros/charts/Ametrine.GRYSCLMIssionary.0/IN.json"
+  },
+  {
+    "id": "66112818438",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AnotherMe.DAAN.0/EZ.json"
+  },
+  {
+    "id": "66112819714",
+    "name": "HD.json",
+    "path": "Phigros/charts/AnotherMe.DAAN.0/HD.json"
+  },
+  {
+    "id": "66112821543",
+    "name": "IN.json",
+    "path": "Phigros/charts/AnotherMe.DAAN.0/IN.json"
+  },
+  {
+    "id": "66112809419",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AnotherMe.NeutralMoon.0/EZ.json"
+  },
+  {
+    "id": "66112811342",
+    "name": "HD.json",
+    "path": "Phigros/charts/AnotherMe.NeutralMoon.0/HD.json"
+  },
+  {
+    "id": "66112810496",
+    "name": "IN.json",
+    "path": "Phigros/charts/AnotherMe.NeutralMoon.0/IN.json"
+  },
+  {
+    "id": "66112795046",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AnotherRound.JustinDai.0/EZ.json"
+  },
+  {
+    "id": "66112798761",
+    "name": "HD.json",
+    "path": "Phigros/charts/AnotherRound.JustinDai.0/HD.json"
+  },
+  {
+    "id": "66112798821",
+    "name": "IN.json",
+    "path": "Phigros/charts/AnotherRound.JustinDai.0/IN.json"
+  },
+  {
+    "id": "66112773078",
+    "name": "AT.json",
+    "path": "Phigros/charts/Antithese.Blacklolita.0/AT.json"
+  },
+  {
+    "id": "66112783620",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Antithese.Blacklolita.0/EZ.json"
+  },
+  {
+    "id": "66112783058",
+    "name": "HD.json",
+    "path": "Phigros/charts/Antithese.Blacklolita.0/HD.json"
+  },
+  {
+    "id": "66112783175",
+    "name": "IN.json",
+    "path": "Phigros/charts/Antithese.Blacklolita.0/IN.json"
+  },
+  {
+    "id": "66112758101",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Aphasia.闫东炜.0/EZ.json"
+  },
+  {
+    "id": "66112759320",
+    "name": "HD.json",
+    "path": "Phigros/charts/Aphasia.闫东炜.0/HD.json"
+  },
+  {
+    "id": "66112773079",
+    "name": "IN.json",
+    "path": "Phigros/charts/Aphasia.闫东炜.0/IN.json"
+  },
+  {
+    "id": "66112746655",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AphroditesChildshortver.RUQOA.0/EZ.json"
+  },
+  {
+    "id": "66112748648",
+    "name": "HD.json",
+    "path": "Phigros/charts/AphroditesChildshortver.RUQOA.0/HD.json"
+  },
+  {
+    "id": "66112761892",
+    "name": "IN.json",
+    "path": "Phigros/charts/AphroditesChildshortver.RUQOA.0/IN.json"
+  },
+  {
+    "id": "66112737681",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Apocalypse.アリスシャッハと魔法の楽団.0/EZ.json"
+  },
+  {
+    "id": "66112740098",
+    "name": "HD.json",
+    "path": "Phigros/charts/Apocalypse.アリスシャッハと魔法の楽団.0/HD.json"
+  },
+  {
+    "id": "66112748871",
+    "name": "IN.json",
+    "path": "Phigros/charts/Apocalypse.アリスシャッハと魔法の楽団.0/IN.json"
+  },
+  {
+    "id": "66112727720",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Apocalyptic.ZClaxxSumaiLight.0/EZ.json"
+  },
+  {
+    "id": "66112728023",
+    "name": "HD.json",
+    "path": "Phigros/charts/Apocalyptic.ZClaxxSumaiLight.0/HD.json"
+  },
+  {
+    "id": "66112733354",
+    "name": "IN.json",
+    "path": "Phigros/charts/Apocalyptic.ZClaxxSumaiLight.0/IN.json"
+  },
+  {
+    "id": "66112712165",
+    "name": "AT.json",
+    "path": "Phigros/charts/Archidoxen.Se_IRA.0/AT.json"
+  },
+  {
+    "id": "66112713750",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Archidoxen.Se_IRA.0/EZ.json"
+  },
+  {
+    "id": "66112717325",
+    "name": "HD.json",
+    "path": "Phigros/charts/Archidoxen.Se_IRA.0/HD.json"
+  },
+  {
+    "id": "66112725748",
+    "name": "IN.json",
+    "path": "Phigros/charts/Archidoxen.Se_IRA.0/IN.json"
+  },
+  {
+    "id": "66112702956",
+    "name": "AT.json",
+    "path": "Phigros/charts/Ark.kanoryo.0/AT.json"
+  },
+  {
+    "id": "66112699493",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Ark.kanoryo.0/EZ.json"
+  },
+  {
+    "id": "66112704139",
+    "name": "HD.json",
+    "path": "Phigros/charts/Ark.kanoryo.0/HD.json"
+  },
+  {
+    "id": "66112706693",
+    "name": "IN.json",
+    "path": "Phigros/charts/Ark.kanoryo.0/IN.json"
+  },
+  {
+    "id": "66112683448",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Arkhei.SeraAmagi.0/EZ.json"
+  },
+  {
+    "id": "66112688148",
+    "name": "HD.json",
+    "path": "Phigros/charts/Arkhei.SeraAmagi.0/HD.json"
+  },
+  {
+    "id": "66112693564",
+    "name": "IN.json",
+    "path": "Phigros/charts/Arkhei.SeraAmagi.0/IN.json"
+  },
+  {
+    "id": "66112672493",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ArtificialExistence.JunKuroda.0/EZ.json"
+  },
+  {
+    "id": "66112682603",
+    "name": "HD.json",
+    "path": "Phigros/charts/ArtificialExistence.JunKuroda.0/HD.json"
+  },
+  {
+    "id": "66112677721",
+    "name": "IN.json",
+    "path": "Phigros/charts/ArtificialExistence.JunKuroda.0/IN.json"
+  },
+  {
+    "id": "66112616139",
+    "name": "AT.json",
+    "path": "Phigros/charts/AvataarReincarnationofKalpa.ScarletteakaCrYmson.0/AT.json"
+  },
+  {
+    "id": "66112621623",
+    "name": "EZ.json",
+    "path": "Phigros/charts/AvataarReincarnationofKalpa.ScarletteakaCrYmson.0/EZ.json"
+  },
+  {
+    "id": "66112638950",
+    "name": "HD.json",
+    "path": "Phigros/charts/AvataarReincarnationofKalpa.ScarletteakaCrYmson.0/HD.json"
+  },
+  {
+    "id": "66112623292",
+    "name": "IN.json",
+    "path": "Phigros/charts/AvataarReincarnationofKalpa.ScarletteakaCrYmson.0/IN.json"
+  },
+  {
+    "id": "66112606194",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Aventyr.GrandThawRigelTheatre.0/EZ.json"
+  },
+  {
+    "id": "66112616046",
+    "name": "HD.json",
+    "path": "Phigros/charts/Aventyr.GrandThawRigelTheatre.0/HD.json"
+  },
+  {
+    "id": "66112615069",
+    "name": "IN.json",
+    "path": "Phigros/charts/Aventyr.GrandThawRigelTheatre.0/IN.json"
+  },
+  {
+    "id": "66112594351",
+    "name": "AT.json",
+    "path": "Phigros/charts/BANGINGSTRIKE.DewPleiades.0/AT.json"
+  },
+  {
+    "id": "66112597973",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BANGINGSTRIKE.DewPleiades.0/EZ.json"
+  },
+  {
+    "id": "66112606912",
+    "name": "HD.json",
+    "path": "Phigros/charts/BANGINGSTRIKE.DewPleiades.0/HD.json"
+  },
+  {
+    "id": "66112605284",
+    "name": "IN.json",
+    "path": "Phigros/charts/BANGINGSTRIKE.DewPleiades.0/IN.json"
+  },
+  {
+    "id": "66112501095",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BRAINHACKER.SOMON.0/EZ.json"
+  },
+  {
+    "id": "66112499933",
+    "name": "HD.json",
+    "path": "Phigros/charts/BRAINHACKER.SOMON.0/HD.json"
+  },
+  {
+    "id": "66112506410",
+    "name": "IN.json",
+    "path": "Phigros/charts/BRAINHACKER.SOMON.0/IN.json"
+  },
+  {
+    "id": "66112582948",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BelieveLightfeat果丸哒呦.ScalerMestie果丸哒呦.0/EZ.json"
+  },
+  {
+    "id": "66112587368",
+    "name": "HD.json",
+    "path": "Phigros/charts/BelieveLightfeat果丸哒呦.ScalerMestie果丸哒呦.0/HD.json"
+  },
+  {
+    "id": "66112599810",
+    "name": "IN.json",
+    "path": "Phigros/charts/BelieveLightfeat果丸哒呦.ScalerMestie果丸哒呦.0/IN.json"
+  },
+  {
+    "id": "66112575449",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BetterGraphicAnimation.ルゼ.0/EZ.json"
+  },
+  {
+    "id": "66112577283",
+    "name": "HD.json",
+    "path": "Phigros/charts/BetterGraphicAnimation.ルゼ.0/HD.json"
+  },
+  {
+    "id": "66112585390",
+    "name": "IN.json",
+    "path": "Phigros/charts/BetterGraphicAnimation.ルゼ.0/IN.json"
+  },
+  {
+    "id": "66112556551",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Bitterblossom.imvi.0/EZ.json"
+  },
+  {
+    "id": "66112564020",
+    "name": "HD.json",
+    "path": "Phigros/charts/Bitterblossom.imvi.0/HD.json"
+  },
+  {
+    "id": "66112573416",
+    "name": "IN.json",
+    "path": "Phigros/charts/Bitterblossom.imvi.0/IN.json"
+  },
+  {
+    "id": "66112545448",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Bloom.targ麻团qwq.0/EZ.json"
+  },
+  {
+    "id": "66112553594",
+    "name": "HD.json",
+    "path": "Phigros/charts/Bloom.targ麻团qwq.0/HD.json"
+  },
+  {
+    "id": "66112562382",
+    "name": "IN.json",
+    "path": "Phigros/charts/Bloom.targ麻团qwq.0/IN.json"
+  },
+  {
+    "id": "66112529333",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BonusTime.MegaloPaleWhite.0/EZ.json"
+  },
+  {
+    "id": "66112539321",
+    "name": "HD.json",
+    "path": "Phigros/charts/BonusTime.MegaloPaleWhite.0/HD.json"
+  },
+  {
+    "id": "66112540181",
+    "name": "IN.json",
+    "path": "Phigros/charts/BonusTime.MegaloPaleWhite.0/IN.json"
+  },
+  {
+    "id": "66112516871",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Bougainvillea.Jade.0/EZ.json"
+  },
+  {
+    "id": "66112527893",
+    "name": "HD.json",
+    "path": "Phigros/charts/Bougainvillea.Jade.0/HD.json"
+  },
+  {
+    "id": "66112531709",
+    "name": "IN.json",
+    "path": "Phigros/charts/Bougainvillea.Jade.0/IN.json"
+  },
+  {
+    "id": "66112508320",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BoundedQuietude.FiniteLimitvsSiLiS.0/EZ.json"
+  },
+  {
+    "id": "66112517556",
+    "name": "HD.json",
+    "path": "Phigros/charts/BoundedQuietude.FiniteLimitvsSiLiS.0/HD.json"
+  },
+  {
+    "id": "66112516845",
+    "name": "IN.json",
+    "path": "Phigros/charts/BoundedQuietude.FiniteLimitvsSiLiS.0/IN.json"
+  },
+  {
+    "id": "66112489786",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BraveNotes.TurquoiseDRIVENota.0/EZ.json"
+  },
+  {
+    "id": "66112490165",
+    "name": "HD.json",
+    "path": "Phigros/charts/BraveNotes.TurquoiseDRIVENota.0/HD.json"
+  },
+  {
+    "id": "66112493587",
+    "name": "IN.json",
+    "path": "Phigros/charts/BraveNotes.TurquoiseDRIVENota.0/IN.json"
+  },
+  {
+    "id": "66112466158",
+    "name": "AT.json",
+    "path": "Phigros/charts/BreakOver.Kforest.0/AT.json"
+  },
+  {
+    "id": "66112479291",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BreakOver.Kforest.0/EZ.json"
+  },
+  {
+    "id": "66112478128",
+    "name": "HD.json",
+    "path": "Phigros/charts/BreakOver.Kforest.0/HD.json"
+  },
+  {
+    "id": "66112479072",
+    "name": "IN.json",
+    "path": "Phigros/charts/BreakOver.Kforest.0/IN.json"
+  },
+  {
+    "id": "66112455725",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BreakThroughTheBarrier.lixound.0/EZ.json"
+  },
+  {
+    "id": "66112467148",
+    "name": "HD.json",
+    "path": "Phigros/charts/BreakThroughTheBarrier.lixound.0/HD.json"
+  },
+  {
+    "id": "66112466906",
+    "name": "IN.json",
+    "path": "Phigros/charts/BreakThroughTheBarrier.lixound.0/IN.json"
+  },
+  {
+    "id": "66112442139",
+    "name": "EZ.json",
+    "path": "Phigros/charts/BrokenSky.JungoMAX3feat刘佳宜Snow幻影刃shadow.0/EZ.json"
+  },
+  {
+    "id": "66112456320",
+    "name": "HD.json",
+    "path": "Phigros/charts/BrokenSky.JungoMAX3feat刘佳宜Snow幻影刃shadow.0/HD.json"
+  },
+  {
+    "id": "66112454315",
+    "name": "IN.json",
+    "path": "Phigros/charts/BrokenSky.JungoMAX3feat刘佳宜Snow幻影刃shadow.0/IN.json"
+  },
+  {
+    "id": "66112429336",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Burn.NceS.0/EZ.json"
+  },
+  {
+    "id": "66112429323",
+    "name": "HD.json",
+    "path": "Phigros/charts/Burn.NceS.0/HD.json"
+  },
+  {
+    "id": "66112440071",
+    "name": "IN.json",
+    "path": "Phigros/charts/Burn.NceS.0/IN.json"
+  },
+  {
+    "id": "66112184506",
+    "name": "EZ.json",
+    "path": "Phigros/charts/CROSSSOUL.HyuNfeatSyepias.0/EZ.json"
+  },
+  {
+    "id": "66112190810",
+    "name": "HD.json",
+    "path": "Phigros/charts/CROSSSOUL.HyuNfeatSyepias.0/HD.json"
+  },
+  {
+    "id": "66112196817",
+    "name": "IN.json",
+    "path": "Phigros/charts/CROSSSOUL.HyuNfeatSyepias.0/IN.json"
+  },
+  {
+    "id": "66112406292",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Cereris.SunsetRayNceS.0/EZ.json"
+  },
+  {
+    "id": "66112405957",
+    "name": "HD.json",
+    "path": "Phigros/charts/Cereris.SunsetRayNceS.0/HD.json"
+  },
+  {
+    "id": "66112417030",
+    "name": "IN.json",
+    "path": "Phigros/charts/Cereris.SunsetRayNceS.0/IN.json"
+  },
+  {
+    "id": "66112392863",
+    "name": "EZ.json",
+    "path": "Phigros/charts/CervelleConnexion.SCTL.0/EZ.json"
+  },
+  {
+    "id": "66112392896",
+    "name": "HD.json",
+    "path": "Phigros/charts/CervelleConnexion.SCTL.0/HD.json"
+  },
+  {
+    "id": "66112405692",
+    "name": "IN.json",
+    "path": "Phigros/charts/CervelleConnexion.SCTL.0/IN.json"
+  },
+  {
+    "id": "66112373566",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Chronologika.Hundotte.0/EZ.json"
+  },
+  {
+    "id": "66112382692",
+    "name": "HD.json",
+    "path": "Phigros/charts/Chronologika.Hundotte.0/HD.json"
+  },
+  {
+    "id": "66112388490",
+    "name": "IN.json",
+    "path": "Phigros/charts/Chronologika.Hundotte.0/IN.json"
+  },
+  {
+    "id": "66112361525",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Chronomia.Lime.0/EZ.json"
+  },
+  {
+    "id": "66112382844",
+    "name": "HD.json",
+    "path": "Phigros/charts/Chronomia.Lime.0/HD.json"
+  },
+  {
+    "id": "66112370851",
+    "name": "IN.json",
+    "path": "Phigros/charts/Chronomia.Lime.0/IN.json"
+  },
+  {
+    "id": "66112344378",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ChronosCollapseLaCampanella.SunsetRay.0/EZ.json"
+  },
+  {
+    "id": "66112353812",
+    "name": "HD.json",
+    "path": "Phigros/charts/ChronosCollapseLaCampanella.SunsetRay.0/HD.json"
+  },
+  {
+    "id": "66112355786",
+    "name": "IN.json",
+    "path": "Phigros/charts/ChronosCollapseLaCampanella.SunsetRay.0/IN.json"
+  },
+  {
+    "id": "66112334163",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Chronostasis.黒皇帝.0/EZ.json"
+  },
+  {
+    "id": "66112332466",
+    "name": "HD.json",
+    "path": "Phigros/charts/Chronostasis.黒皇帝.0/HD.json"
+  },
+  {
+    "id": "66112341633",
+    "name": "IN.json",
+    "path": "Phigros/charts/Chronostasis.黒皇帝.0/IN.json"
+  },
+  {
+    "id": "66112323210",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Cipher20.TetrajectoryfeatCtymax.0/EZ.json"
+  },
+  {
+    "id": "66112324105",
+    "name": "HD.json",
+    "path": "Phigros/charts/Cipher20.TetrajectoryfeatCtymax.0/HD.json"
+  },
+  {
+    "id": "66112344284",
+    "name": "IN.json",
+    "path": "Phigros/charts/Cipher20.TetrajectoryfeatCtymax.0/IN.json"
+  },
+  {
+    "id": "66112315845",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ClassMemories.AntistarfeatCtymax.0/EZ.json"
+  },
+  {
+    "id": "66112316529",
+    "name": "HD.json",
+    "path": "Phigros/charts/ClassMemories.AntistarfeatCtymax.0/HD.json"
+  },
+  {
+    "id": "66112323306",
+    "name": "IN.json",
+    "path": "Phigros/charts/ClassMemories.AntistarfeatCtymax.0/IN.json"
+  },
+  {
+    "id": "66112307512",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Cleyera.Riya.0/EZ.json"
+  },
+  {
+    "id": "66112307806",
+    "name": "HD.json",
+    "path": "Phigros/charts/Cleyera.Riya.0/HD.json"
+  },
+  {
+    "id": "66112315846",
+    "name": "IN.json",
+    "path": "Phigros/charts/Cleyera.Riya.0/IN.json"
+  },
+  {
+    "id": "66112299309",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ClockParadox.WyvernP.0/EZ.json"
+  },
+  {
+    "id": "66112302681",
+    "name": "HD.json",
+    "path": "Phigros/charts/ClockParadox.WyvernP.0/HD.json"
+  },
+  {
+    "id": "66112312030",
+    "name": "IN.json",
+    "path": "Phigros/charts/ClockParadox.WyvernP.0/IN.json"
+  },
+  {
+    "id": "66112288920",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ColorfulDays.P4koofeatつゆり花鈴.0/EZ.json"
+  },
+  {
+    "id": "66112291481",
+    "name": "HD.json",
+    "path": "Phigros/charts/ColorfulDays.P4koofeatつゆり花鈴.0/HD.json"
+  },
+  {
+    "id": "66112291714",
+    "name": "IN.json",
+    "path": "Phigros/charts/ColorfulDays.P4koofeatつゆり花鈴.0/IN.json"
+  },
+  {
+    "id": "66112277453",
+    "name": "EZ.json",
+    "path": "Phigros/charts/CometFeat符白牙.CNHKSS.0/EZ.json"
+  },
+  {
+    "id": "66112276992",
+    "name": "HD.json",
+    "path": "Phigros/charts/CometFeat符白牙.CNHKSS.0/HD.json"
+  },
+  {
+    "id": "66112279129",
+    "name": "IN.json",
+    "path": "Phigros/charts/CometFeat符白牙.CNHKSS.0/IN.json"
+  },
+  {
+    "id": "66112265542",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ComputeItWithSomeDevilishAlcoholicSteampunkEngines.かめりあ.0/EZ.json"
+  },
+  {
+    "id": "66112262525",
+    "name": "HD.json",
+    "path": "Phigros/charts/ComputeItWithSomeDevilishAlcoholicSteampunkEngines.かめりあ.0/HD.json"
+  },
+  {
+    "id": "66112265541",
+    "name": "IN.json",
+    "path": "Phigros/charts/ComputeItWithSomeDevilishAlcoholicSteampunkEngines.かめりあ.0/IN.json"
+  },
+  {
+    "id": "66112253651",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Concvssion.Halv.0/EZ.json"
+  },
+  {
+    "id": "66112254922",
+    "name": "HD.json",
+    "path": "Phigros/charts/Concvssion.Halv.0/HD.json"
+  },
+  {
+    "id": "66112254162",
+    "name": "IN.json",
+    "path": "Phigros/charts/Concvssion.Halv.0/IN.json"
+  },
+  {
+    "id": "66112235503",
+    "name": "EZ.json",
+    "path": "Phigros/charts/CraveWave.LandRoot.0/EZ.json"
+  },
+  {
+    "id": "66112243035",
+    "name": "HD.json",
+    "path": "Phigros/charts/CraveWave.LandRoot.0/HD.json"
+  },
+  {
+    "id": "66112239968",
+    "name": "IN.json",
+    "path": "Phigros/charts/CraveWave.LandRoot.0/IN.json"
+  },
+  {
+    "id": "66112211937",
+    "name": "AT.json",
+    "path": "Phigros/charts/Credits.Frums.0/AT.json"
+  },
+  {
+    "id": "66112217425",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Credits.Frums.0/EZ.json"
+  },
+  {
+    "id": "66112223889",
+    "name": "HD.json",
+    "path": "Phigros/charts/Credits.Frums.0/HD.json"
+  },
+  {
+    "id": "66112230171",
+    "name": "IN.json",
+    "path": "Phigros/charts/Credits.Frums.0/IN.json"
+  },
+  {
+    "id": "66112202490",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Cristalisia.onoken.0/EZ.json"
+  },
+  {
+    "id": "66112207230",
+    "name": "HD.json",
+    "path": "Phigros/charts/Cristalisia.onoken.0/HD.json"
+  },
+  {
+    "id": "66112230068",
+    "name": "IN.json",
+    "path": "Phigros/charts/Cristalisia.onoken.0/IN.json"
+  },
+  {
+    "id": "66112171851",
+    "name": "EZ.json",
+    "path": "Phigros/charts/CrushBETA.shadow_bling.0/EZ.json"
+  },
+  {
+    "id": "66112173986",
+    "name": "HD.json",
+    "path": "Phigros/charts/CrushBETA.shadow_bling.0/HD.json"
+  },
+  {
+    "id": "66112202505",
+    "name": "IN.json",
+    "path": "Phigros/charts/CrushBETA.shadow_bling.0/IN.json"
+  },
+  {
+    "id": "66112158720",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Cryogenic.CamelliaftPetraGurin.0/EZ.json"
+  },
+  {
+    "id": "66112162575",
+    "name": "HD.json",
+    "path": "Phigros/charts/Cryogenic.CamelliaftPetraGurin.0/HD.json"
+  },
+  {
+    "id": "66112179909",
+    "name": "IN.json",
+    "path": "Phigros/charts/Cryogenic.CamelliaftPetraGurin.0/IN.json"
+  },
+  {
+    "id": "66112115469",
+    "name": "AT.json",
+    "path": "Phigros/charts/Cthugha.USAO.0/AT.json"
+  },
+  {
+    "id": "66112117207",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Cthugha.USAO.0/EZ.json"
+  },
+  {
+    "id": "66112129370",
+    "name": "HD.json",
+    "path": "Phigros/charts/Cthugha.USAO.0/HD.json"
+  },
+  {
+    "id": "66112126559",
+    "name": "IN.json",
+    "path": "Phigros/charts/Cthugha.USAO.0/IN.json"
+  },
+  {
+    "id": "66112098597",
+    "name": "AT.json",
+    "path": "Phigros/charts/Cuvism.Fl00tvsHalv.0/AT.json"
+  },
+  {
+    "id": "66112105347",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Cuvism.Fl00tvsHalv.0/EZ.json"
+  },
+  {
+    "id": "66112107359",
+    "name": "HD.json",
+    "path": "Phigros/charts/Cuvism.Fl00tvsHalv.0/HD.json"
+  },
+  {
+    "id": "66112117585",
+    "name": "IN.json",
+    "path": "Phigros/charts/Cuvism.Fl00tvsHalv.0/IN.json"
+  },
+  {
+    "id": "66111969669",
+    "name": "AT.json",
+    "path": "Phigros/charts/DESTRUCTION321.Normal1zervsBrokenNerdz.0/AT.json"
+  },
+  {
+    "id": "66111970085",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DESTRUCTION321.Normal1zervsBrokenNerdz.0/EZ.json"
+  },
+  {
+    "id": "66111977057",
+    "name": "HD.json",
+    "path": "Phigros/charts/DESTRUCTION321.Normal1zervsBrokenNerdz.0/HD.json"
+  },
+  {
+    "id": "66111979457",
+    "name": "IN.json",
+    "path": "Phigros/charts/DESTRUCTION321.Normal1zervsBrokenNerdz.0/IN.json"
+  },
+  {
+    "id": "66112087537",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DancewithSilence.かめりあ.0/EZ.json"
+  },
+  {
+    "id": "66112096059",
+    "name": "HD.json",
+    "path": "Phigros/charts/DancewithSilence.かめりあ.0/HD.json"
+  },
+  {
+    "id": "66112105115",
+    "name": "IN.json",
+    "path": "Phigros/charts/DancewithSilence.かめりあ.0/IN.json"
+  },
+  {
+    "id": "66112071376",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Dash.小红Akane李祥辉.0/EZ.json"
+  },
+  {
+    "id": "66112079372",
+    "name": "HD.json",
+    "path": "Phigros/charts/Dash.小红Akane李祥辉.0/HD.json"
+  },
+  {
+    "id": "66112084330",
+    "name": "IN.json",
+    "path": "Phigros/charts/Dash.小红Akane李祥辉.0/IN.json"
+  },
+  {
+    "id": "66112062388",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DataErr0r.Cosmograph.0/EZ.json"
+  },
+  {
+    "id": "66112066902",
+    "name": "HD.json",
+    "path": "Phigros/charts/DataErr0r.Cosmograph.0/HD.json"
+  },
+  {
+    "id": "66112071120",
+    "name": "IN.json",
+    "path": "Phigros/charts/DataErr0r.Cosmograph.0/IN.json"
+  },
+  {
+    "id": "66112040973",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DeadSoul.SoundSouler.0/EZ.json"
+  },
+  {
+    "id": "66112043349",
+    "name": "HD.json",
+    "path": "Phigros/charts/DeadSoul.SoundSouler.0/HD.json"
+  },
+  {
+    "id": "66112046854",
+    "name": "IN.json",
+    "path": "Phigros/charts/DeadSoul.SoundSouler.0/IN.json"
+  },
+  {
+    "id": "66112033352",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Demiurge.Rabpit.0/EZ.json"
+  },
+  {
+    "id": "66112034766",
+    "name": "HD.json",
+    "path": "Phigros/charts/Demiurge.Rabpit.0/HD.json"
+  },
+  {
+    "id": "66112037058",
+    "name": "IN.json",
+    "path": "Phigros/charts/Demiurge.Rabpit.0/IN.json"
+  },
+  {
+    "id": "66112025262",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Demonkin.ForgedReigns.0/EZ.json"
+  },
+  {
+    "id": "66112024387",
+    "name": "HD.json",
+    "path": "Phigros/charts/Demonkin.ForgedReigns.0/HD.json"
+  },
+  {
+    "id": "66112028095",
+    "name": "IN.json",
+    "path": "Phigros/charts/Demonkin.ForgedReigns.0/IN.json"
+  },
+  {
+    "id": "66112000872",
+    "name": "AT.json",
+    "path": "Phigros/charts/DerRichter.Ωμεγα.0/AT.json"
+  },
+  {
+    "id": "66112015967",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DerRichter.Ωμεγα.0/EZ.json"
+  },
+  {
+    "id": "66112011273",
+    "name": "HD.json",
+    "path": "Phigros/charts/DerRichter.Ωμεγα.0/HD.json"
+  },
+  {
+    "id": "66112013090",
+    "name": "IN.json",
+    "path": "Phigros/charts/DerRichter.Ωμεγα.0/IN.json"
+  },
+  {
+    "id": "66112002399",
+    "name": "AT.json",
+    "path": "Phigros/charts/DerSchneid.Ωμεγα.0/AT.json"
+  },
+  {
+    "id": "66111986801",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DerSchneid.Ωμεγα.0/EZ.json"
+  },
+  {
+    "id": "66111987477",
+    "name": "HD.json",
+    "path": "Phigros/charts/DerSchneid.Ωμεγα.0/HD.json"
+  },
+  {
+    "id": "66111999997",
+    "name": "IN.json",
+    "path": "Phigros/charts/DerSchneid.Ωμεγα.0/IN.json"
+  },
+  {
+    "id": "66111959983",
+    "name": "AT.json",
+    "path": "Phigros/charts/DesultorySignals.technoplanet.0/AT.json"
+  },
+  {
+    "id": "66111957256",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DesultorySignals.technoplanet.0/EZ.json"
+  },
+  {
+    "id": "66111959629",
+    "name": "HD.json",
+    "path": "Phigros/charts/DesultorySignals.technoplanet.0/HD.json"
+  },
+  {
+    "id": "66111977036",
+    "name": "IN.json",
+    "path": "Phigros/charts/DesultorySignals.technoplanet.0/IN.json"
+  },
+  {
+    "id": "66111927647",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DevIAtiOnshortver.polysha.0/EZ.json"
+  },
+  {
+    "id": "66111940988",
+    "name": "HD.json",
+    "path": "Phigros/charts/DevIAtiOnshortver.polysha.0/HD.json"
+  },
+  {
+    "id": "66111937244",
+    "name": "IN.json",
+    "path": "Phigros/charts/DevIAtiOnshortver.polysha.0/IN.json"
+  },
+  {
+    "id": "66111937635",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DevastatingHistory.NAMV.0/EZ.json"
+  },
+  {
+    "id": "66111949235",
+    "name": "HD.json",
+    "path": "Phigros/charts/DevastatingHistory.NAMV.0/HD.json"
+  },
+  {
+    "id": "66111947792",
+    "name": "IN.json",
+    "path": "Phigros/charts/DevastatingHistory.NAMV.0/IN.json"
+  },
+  {
+    "id": "66111917267",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Devotion.Connexio.0/EZ.json"
+  },
+  {
+    "id": "66111918331",
+    "name": "HD.json",
+    "path": "Phigros/charts/Devotion.Connexio.0/HD.json"
+  },
+  {
+    "id": "66111928722",
+    "name": "IN.json",
+    "path": "Phigros/charts/Devotion.Connexio.0/IN.json"
+  },
+  {
+    "id": "66111898530",
+    "name": "AT.json",
+    "path": "Phigros/charts/DiamondDust.MasahiroGodspeedAoki.0/AT.json"
+  },
+  {
+    "id": "66111899920",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DiamondDust.MasahiroGodspeedAoki.0/EZ.json"
+  },
+  {
+    "id": "66111907769",
+    "name": "HD.json",
+    "path": "Phigros/charts/DiamondDust.MasahiroGodspeedAoki.0/HD.json"
+  },
+  {
+    "id": "66111909345",
+    "name": "IN.json",
+    "path": "Phigros/charts/DiamondDust.MasahiroGodspeedAoki.0/IN.json"
+  },
+  {
+    "id": "66111891386",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DiamondEyes.SYNTHETIC.0/EZ.json"
+  },
+  {
+    "id": "66111890524",
+    "name": "HD.json",
+    "path": "Phigros/charts/DiamondEyes.SYNTHETIC.0/HD.json"
+  },
+  {
+    "id": "66111907780",
+    "name": "IN.json",
+    "path": "Phigros/charts/DiamondEyes.SYNTHETIC.0/IN.json"
+  },
+  {
+    "id": "66111875648",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Disorder.HyuNfeatYURI.0/EZ.json"
+  },
+  {
+    "id": "66111880289",
+    "name": "HD.json",
+    "path": "Phigros/charts/Disorder.HyuNfeatYURI.0/HD.json"
+  },
+  {
+    "id": "66111886206",
+    "name": "IN.json",
+    "path": "Phigros/charts/Disorder.HyuNfeatYURI.0/IN.json"
+  },
+  {
+    "id": "66111871428",
+    "name": "AT.json",
+    "path": "Phigros/charts/DistortedFate.Sakuzyo.0/AT.json"
+  },
+  {
+    "id": "66111863387",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DistortedFate.Sakuzyo.0/EZ.json"
+  },
+  {
+    "id": "66111865918",
+    "name": "HD.json",
+    "path": "Phigros/charts/DistortedFate.Sakuzyo.0/HD.json"
+  },
+  {
+    "id": "66111881862",
+    "name": "IN.json",
+    "path": "Phigros/charts/DistortedFate.Sakuzyo.0/IN.json"
+  },
+  {
+    "id": "66111854061",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Dlyrotz.Likey.0/EZ.json"
+  },
+  {
+    "id": "66111854902",
+    "name": "HD.json",
+    "path": "Phigros/charts/Dlyrotz.Likey.0/HD.json"
+  },
+  {
+    "id": "66111859964",
+    "name": "IN.json",
+    "path": "Phigros/charts/Dlyrotz.Likey.0/IN.json"
+  },
+  {
+    "id": "66111843786",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DontNeverAround.HAMA.0/EZ.json"
+  },
+  {
+    "id": "66111845351",
+    "name": "HD.json",
+    "path": "Phigros/charts/DontNeverAround.HAMA.0/HD.json"
+  },
+  {
+    "id": "66111847234",
+    "name": "IN.json",
+    "path": "Phigros/charts/DontNeverAround.HAMA.0/IN.json"
+  },
+  {
+    "id": "66111833783",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Doppelganger.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66111835538",
+    "name": "HD.json",
+    "path": "Phigros/charts/Doppelganger.LeaF.0/HD.json"
+  },
+  {
+    "id": "66111837813",
+    "name": "IN.json",
+    "path": "Phigros/charts/Doppelganger.LeaF.0/IN.json"
+  },
+  {
+    "id": "66111823182",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Dreamland.z1onkyrrin.0/EZ.json"
+  },
+  {
+    "id": "66111823610",
+    "name": "HD.json",
+    "path": "Phigros/charts/Dreamland.z1onkyrrin.0/HD.json"
+  },
+  {
+    "id": "66111825453",
+    "name": "IN.json",
+    "path": "Phigros/charts/Dreamland.z1onkyrrin.0/IN.json"
+  },
+  {
+    "id": "66111806863",
+    "name": "EZ.json",
+    "path": "Phigros/charts/DropIt.Asuka.0/EZ.json"
+  },
+  {
+    "id": "66111811598",
+    "name": "HD.json",
+    "path": "Phigros/charts/DropIt.Asuka.0/HD.json"
+  },
+  {
+    "id": "66111816469",
+    "name": "IN.json",
+    "path": "Phigros/charts/DropIt.Asuka.0/IN.json"
+  },
+  {
+    "id": "66111744131",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ENERGYSYNERGYMATRIX.Tanchiky.0/EZ.json"
+  },
+  {
+    "id": "66111745196",
+    "name": "HD.json",
+    "path": "Phigros/charts/ENERGYSYNERGYMATRIX.Tanchiky.0/HD.json"
+  },
+  {
+    "id": "66111756863",
+    "name": "IN.json",
+    "path": "Phigros/charts/ENERGYSYNERGYMATRIX.Tanchiky.0/IN.json"
+  },
+  {
+    "id": "66111700617",
+    "name": "AT.json",
+    "path": "Phigros/charts/ERABYECONNEC10N.かめりあ.0/AT.json"
+  },
+  {
+    "id": "66111690926",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ERABYECONNEC10N.かめりあ.0/EZ.json"
+  },
+  {
+    "id": "66111691877",
+    "name": "HD.json",
+    "path": "Phigros/charts/ERABYECONNEC10N.かめりあ.0/HD.json"
+  },
+  {
+    "id": "66111700604",
+    "name": "IN.json",
+    "path": "Phigros/charts/ERABYECONNEC10N.かめりあ.0/IN.json"
+  },
+  {
+    "id": "66111801033",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ElCondorPasaPhigrosEdit.PlasticFruits.0/EZ.json"
+  },
+  {
+    "id": "66111803758",
+    "name": "HD.json",
+    "path": "Phigros/charts/ElCondorPasaPhigrosEdit.PlasticFruits.0/HD.json"
+  },
+  {
+    "id": "66111815573",
+    "name": "IN.json",
+    "path": "Phigros/charts/ElCondorPasaPhigrosEdit.PlasticFruits.0/IN.json"
+  },
+  {
+    "id": "66111787369",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Electron.ElousFZ.0/EZ.json"
+  },
+  {
+    "id": "66111791474",
+    "name": "HD.json",
+    "path": "Phigros/charts/Electron.ElousFZ.0/HD.json"
+  },
+  {
+    "id": "66111795335",
+    "name": "IN.json",
+    "path": "Phigros/charts/Electron.ElousFZ.0/IN.json"
+  },
+  {
+    "id": "66111778250",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Eltaw.Fl00t.0/EZ.json"
+  },
+  {
+    "id": "66111778654",
+    "name": "HD.json",
+    "path": "Phigros/charts/Eltaw.Fl00t.0/HD.json"
+  },
+  {
+    "id": "66111794746",
+    "name": "IN.json",
+    "path": "Phigros/charts/Eltaw.Fl00t.0/IN.json"
+  },
+  {
+    "id": "66111768812",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Elúltimobaile.Θ.0/EZ.json"
+  },
+  {
+    "id": "66111769520",
+    "name": "HD.json",
+    "path": "Phigros/charts/Elúltimobaile.Θ.0/HD.json"
+  },
+  {
+    "id": "66111783048",
+    "name": "IN.json",
+    "path": "Phigros/charts/Elúltimobaile.Θ.0/IN.json"
+  },
+  {
+    "id": "66111756854",
+    "name": "EZ.json",
+    "path": "Phigros/charts/EndMe.ZxNXasDelaina.0/EZ.json"
+  },
+  {
+    "id": "66111756835",
+    "name": "HD.json",
+    "path": "Phigros/charts/EndMe.ZxNXasDelaina.0/HD.json"
+  },
+  {
+    "id": "66111765935",
+    "name": "IN.json",
+    "path": "Phigros/charts/EndMe.ZxNXasDelaina.0/IN.json"
+  },
+  {
+    "id": "66111716970",
+    "name": "EZ.json",
+    "path": "Phigros/charts/EnginexStartmelodymix.CrossingSound.0/EZ.json"
+  },
+  {
+    "id": "66111722458",
+    "name": "HD.json",
+    "path": "Phigros/charts/EnginexStartmelodymix.CrossingSound.0/HD.json"
+  },
+  {
+    "id": "66111732474",
+    "name": "IN.json",
+    "path": "Phigros/charts/EnginexStartmelodymix.CrossingSound.0/IN.json"
+  },
+  {
+    "id": "66111707163",
+    "name": "AT.json",
+    "path": "Phigros/charts/EntrancetotheChaos.打打だいずvssiromaru.0/AT.json"
+  },
+  {
+    "id": "66111708425",
+    "name": "EZ.json",
+    "path": "Phigros/charts/EntrancetotheChaos.打打だいずvssiromaru.0/EZ.json"
+  },
+  {
+    "id": "66111712193",
+    "name": "HD.json",
+    "path": "Phigros/charts/EntrancetotheChaos.打打だいずvssiromaru.0/HD.json"
+  },
+  {
+    "id": "66111722387",
+    "name": "IN.json",
+    "path": "Phigros/charts/EntrancetotheChaos.打打だいずvssiromaru.0/IN.json"
+  },
+  {
+    "id": "66111680361",
+    "name": "EZ.json",
+    "path": "Phigros/charts/EradicationCatastrophe.NceS.0/EZ.json"
+  },
+  {
+    "id": "66111679476",
+    "name": "HD.json",
+    "path": "Phigros/charts/EradicationCatastrophe.NceS.0/HD.json"
+  },
+  {
+    "id": "66111683067",
+    "name": "IN.json",
+    "path": "Phigros/charts/EradicationCatastrophe.NceS.0/IN.json"
+  },
+  {
+    "id": "66111671266",
+    "name": "EZ.json",
+    "path": "Phigros/charts/EternalSnow.AbyssIdols.0/EZ.json"
+  },
+  {
+    "id": "66111672278",
+    "name": "HD.json",
+    "path": "Phigros/charts/EternalSnow.AbyssIdols.0/HD.json"
+  },
+  {
+    "id": "66111675233",
+    "name": "IN.json",
+    "path": "Phigros/charts/EternalSnow.AbyssIdols.0/IN.json"
+  },
+  {
+    "id": "66111659792",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Evanescent.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66111660988",
+    "name": "HD.json",
+    "path": "Phigros/charts/Evanescent.LeaF.0/HD.json"
+  },
+  {
+    "id": "66111657846",
+    "name": "IN.json",
+    "path": "Phigros/charts/Evanescent.LeaF.0/IN.json"
+  },
+  {
+    "id": "66111633162",
+    "name": "AT.json",
+    "path": "Phigros/charts/ExoplanetaryMirage.かめりあ.0/AT.json"
+  },
+  {
+    "id": "66111643568",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ExoplanetaryMirage.かめりあ.0/EZ.json"
+  },
+  {
+    "id": "66111641737",
+    "name": "HD.json",
+    "path": "Phigros/charts/ExoplanetaryMirage.かめりあ.0/HD.json"
+  },
+  {
+    "id": "66111643342",
+    "name": "IN.json",
+    "path": "Phigros/charts/ExoplanetaryMirage.かめりあ.0/IN.json"
+  },
+  {
+    "id": "66111552553",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FULiAUTOBUSTER.MYUKKE.0/EZ.json"
+  },
+  {
+    "id": "66111555416",
+    "name": "HD.json",
+    "path": "Phigros/charts/FULiAUTOBUSTER.MYUKKE.0/HD.json"
+  },
+  {
+    "id": "66111557991",
+    "name": "IN.json",
+    "path": "Phigros/charts/FULiAUTOBUSTER.MYUKKE.0/IN.json"
+  },
+  {
+    "id": "66111544426",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FULiAUTOSHOOTER.MYUKKE.0/EZ.json"
+  },
+  {
+    "id": "66111549517",
+    "name": "HD.json",
+    "path": "Phigros/charts/FULiAUTOSHOOTER.MYUKKE.0/HD.json"
+  },
+  {
+    "id": "66111550526",
+    "name": "IN.json",
+    "path": "Phigros/charts/FULiAUTOSHOOTER.MYUKKE.0/IN.json"
+  },
+  {
+    "id": "66111624481",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Feast远东之宴.茶鸣拾贰律.0/EZ.json"
+  },
+  {
+    "id": "66111630078",
+    "name": "HD.json",
+    "path": "Phigros/charts/Feast远东之宴.茶鸣拾贰律.0/HD.json"
+  },
+  {
+    "id": "66111631736",
+    "name": "IN.json",
+    "path": "Phigros/charts/Feast远东之宴.茶鸣拾贰律.0/IN.json"
+  },
+  {
+    "id": "66111614377",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FinalStep.Lime.0/EZ.json"
+  },
+  {
+    "id": "66111619501",
+    "name": "HD.json",
+    "path": "Phigros/charts/FinalStep.Lime.0/HD.json"
+  },
+  {
+    "id": "66111623536",
+    "name": "IN.json",
+    "path": "Phigros/charts/FinalStep.Lime.0/IN.json"
+  },
+  {
+    "id": "66111605774",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FindMe.Kforest.0/EZ.json"
+  },
+  {
+    "id": "66111609940",
+    "name": "HD.json",
+    "path": "Phigros/charts/FindMe.Kforest.0/HD.json"
+  },
+  {
+    "id": "66111616098",
+    "name": "IN.json",
+    "path": "Phigros/charts/FindMe.Kforest.0/IN.json"
+  },
+  {
+    "id": "66111598201",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FixationsTowardtheStars.Foodbot.0/EZ.json"
+  },
+  {
+    "id": "66111603457",
+    "name": "HD.json",
+    "path": "Phigros/charts/FixationsTowardtheStars.Foodbot.0/HD.json"
+  },
+  {
+    "id": "66111605710",
+    "name": "IN.json",
+    "path": "Phigros/charts/FixationsTowardtheStars.Foodbot.0/IN.json"
+  },
+  {
+    "id": "66111588281",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FlutterEcho.Cansol.0/EZ.json"
+  },
+  {
+    "id": "66111592128",
+    "name": "HD.json",
+    "path": "Phigros/charts/FlutterEcho.Cansol.0/HD.json"
+  },
+  {
+    "id": "66111598520",
+    "name": "IN.json",
+    "path": "Phigros/charts/FlutterEcho.Cansol.0/IN.json"
+  },
+  {
+    "id": "66111578070",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FracturedAngel.DJRaisei.0/EZ.json"
+  },
+  {
+    "id": "66111584566",
+    "name": "HD.json",
+    "path": "Phigros/charts/FracturedAngel.DJRaisei.0/HD.json"
+  },
+  {
+    "id": "66111586818",
+    "name": "IN.json",
+    "path": "Phigros/charts/FracturedAngel.DJRaisei.0/IN.json"
+  },
+  {
+    "id": "66111570793",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FreakyUndulationsNobleKnightsofTune.JehezukielKURORAK.0/EZ.json"
+  },
+  {
+    "id": "66111575286",
+    "name": "HD.json",
+    "path": "Phigros/charts/FreakyUndulationsNobleKnightsofTune.JehezukielKURORAK.0/HD.json"
+  },
+  {
+    "id": "66111577205",
+    "name": "IN.json",
+    "path": "Phigros/charts/FreakyUndulationsNobleKnightsofTune.JehezukielKURORAK.0/IN.json"
+  },
+  {
+    "id": "66111560406",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FrozenHeart.A39沙包P.0/EZ.json"
+  },
+  {
+    "id": "66111563840",
+    "name": "HD.json",
+    "path": "Phigros/charts/FrozenHeart.A39沙包P.0/HD.json"
+  },
+  {
+    "id": "66111569046",
+    "name": "IN.json",
+    "path": "Phigros/charts/FrozenHeart.A39沙包P.0/IN.json"
+  },
+  {
+    "id": "66111531852",
+    "name": "EZ.json",
+    "path": "Phigros/charts/FutureMind.RayNauticaRekuMochizuki.0/EZ.json"
+  },
+  {
+    "id": "66111538291",
+    "name": "HD.json",
+    "path": "Phigros/charts/FutureMind.RayNauticaRekuMochizuki.0/HD.json"
+  },
+  {
+    "id": "66111539426",
+    "name": "IN.json",
+    "path": "Phigros/charts/FutureMind.RayNauticaRekuMochizuki.0/IN.json"
+  },
+  {
+    "id": "66111491038",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GOODBOUNCE.EBIMAYO.0/EZ.json"
+  },
+  {
+    "id": "66111493802",
+    "name": "HD.json",
+    "path": "Phigros/charts/GOODBOUNCE.EBIMAYO.0/HD.json"
+  },
+  {
+    "id": "66111501567",
+    "name": "IN.json",
+    "path": "Phigros/charts/GOODBOUNCE.EBIMAYO.0/IN.json"
+  },
+  {
+    "id": "66111479147",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GOODFORTUNE.EBIMAYO.0/EZ.json"
+  },
+  {
+    "id": "66111481014",
+    "name": "HD.json",
+    "path": "Phigros/charts/GOODFORTUNE.EBIMAYO.0/HD.json"
+  },
+  {
+    "id": "66111507730",
+    "name": "IN.json",
+    "path": "Phigros/charts/GOODFORTUNE.EBIMAYO.0/IN.json"
+  },
+  {
+    "id": "66111483199",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GOODRAGE.EBIMAYO.0/EZ.json"
+  },
+  {
+    "id": "66111465738",
+    "name": "HD.json",
+    "path": "Phigros/charts/GOODRAGE.EBIMAYO.0/HD.json"
+  },
+  {
+    "id": "66111444354",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GOODTEK.EBIMAYO.0/EZ.json"
+  },
+  {
+    "id": "66111447988",
+    "name": "HD.json",
+    "path": "Phigros/charts/GOODTEK.EBIMAYO.0/HD.json"
+  },
+  {
+    "id": "66111457738",
+    "name": "IN.json",
+    "path": "Phigros/charts/GOODTEK.EBIMAYO.0/IN.json"
+  },
+  {
+    "id": "66111435035",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GOODWORLD.EBIMAYO.0/EZ.json"
+  },
+  {
+    "id": "66111437944",
+    "name": "HD.json",
+    "path": "Phigros/charts/GOODWORLD.EBIMAYO.0/HD.json"
+  },
+  {
+    "id": "66111440961",
+    "name": "IN.json",
+    "path": "Phigros/charts/GOODWORLD.EBIMAYO.0/IN.json"
+  },
+  {
+    "id": "66111381613",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GVNGlitterVomitusandNeon.SaltySaltUnfold33.0/EZ.json"
+  },
+  {
+    "id": "66111415282",
+    "name": "HD.json",
+    "path": "Phigros/charts/GVNGlitterVomitusandNeon.SaltySaltUnfold33.0/HD.json"
+  },
+  {
+    "id": "66111415277",
+    "name": "IN.json",
+    "path": "Phigros/charts/GVNGlitterVomitusandNeon.SaltySaltUnfold33.0/IN.json"
+  },
+  {
+    "id": "66111522972",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GetBack.CAP3.0/EZ.json"
+  },
+  {
+    "id": "66111526815",
+    "name": "HD.json",
+    "path": "Phigros/charts/GetBack.CAP3.0/HD.json"
+  },
+  {
+    "id": "66111528197",
+    "name": "IN.json",
+    "path": "Phigros/charts/GetBack.CAP3.0/IN.json"
+  },
+  {
+    "id": "66111514894",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GetReady.iF.0/EZ.json"
+  },
+  {
+    "id": "66111518478",
+    "name": "HD.json",
+    "path": "Phigros/charts/GetReady.iF.0/HD.json"
+  },
+  {
+    "id": "66111519291",
+    "name": "IN.json",
+    "path": "Phigros/charts/GetReady.iF.0/IN.json"
+  },
+  {
+    "id": "66111502196",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Glaciaxion.SunsetRay.0/EZ.json"
+  },
+  {
+    "id": "66111510308",
+    "name": "HD.json",
+    "path": "Phigros/charts/Glaciaxion.SunsetRay.0/HD.json"
+  },
+  {
+    "id": "66111511094",
+    "name": "IN.json",
+    "path": "Phigros/charts/Glaciaxion.SunsetRay.0/IN.json"
+  },
+  {
+    "id": "66111422181",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Grimheart.Puru.0/EZ.json"
+  },
+  {
+    "id": "66111422504",
+    "name": "HD.json",
+    "path": "Phigros/charts/Grimheart.Puru.0/HD.json"
+  },
+  {
+    "id": "66111431099",
+    "name": "IN.json",
+    "path": "Phigros/charts/Grimheart.Puru.0/IN.json"
+  },
+  {
+    "id": "66111398495",
+    "name": "EZ.json",
+    "path": "Phigros/charts/GungnirFracture.Kryexe.0/EZ.json"
+  },
+  {
+    "id": "66111408138",
+    "name": "HD.json",
+    "path": "Phigros/charts/GungnirFracture.Kryexe.0/HD.json"
+  },
+  {
+    "id": "66111466302",
+    "name": "IN.json",
+    "path": "Phigros/charts/GungnirFracture.Kryexe.0/IN.json"
+  },
+  {
+    "id": "66111334482",
+    "name": "EZ.json",
+    "path": "Phigros/charts/HAZARD.Limpid.0/EZ.json"
+  },
+  {
+    "id": "66111341863",
+    "name": "HD.json",
+    "path": "Phigros/charts/HAZARD.Limpid.0/HD.json"
+  },
+  {
+    "id": "66111372057",
+    "name": "IN.json",
+    "path": "Phigros/charts/HAZARD.Limpid.0/IN.json"
+  },
+  {
+    "id": "66111355036",
+    "name": "EZ.json",
+    "path": "Phigros/charts/HardcoreKwaya.EnFr.0/EZ.json"
+  },
+  {
+    "id": "66111366336",
+    "name": "HD.json",
+    "path": "Phigros/charts/HardcoreKwaya.EnFr.0/HD.json"
+  },
+  {
+    "id": "66111374460",
+    "name": "IN.json",
+    "path": "Phigros/charts/HardcoreKwaya.EnFr.0/IN.json"
+  },
+  {
+    "id": "66111312481",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Helios.NOABotaNya.0/EZ.json"
+  },
+  {
+    "id": "66111320806",
+    "name": "HD.json",
+    "path": "Phigros/charts/Helios.NOABotaNya.0/HD.json"
+  },
+  {
+    "id": "66111326311",
+    "name": "IN.json",
+    "path": "Phigros/charts/Helios.NOABotaNya.0/IN.json"
+  },
+  {
+    "id": "66111292081",
+    "name": "EZ.json",
+    "path": "Phigros/charts/HorizonBlue.NothingButRequiemfeatAikapinChiyoko.0/EZ.json"
+  },
+  {
+    "id": "66111299470",
+    "name": "HD.json",
+    "path": "Phigros/charts/HorizonBlue.NothingButRequiemfeatAikapinChiyoko.0/HD.json"
+  },
+  {
+    "id": "66111343194",
+    "name": "IN.json",
+    "path": "Phigros/charts/HorizonBlue.NothingButRequiemfeatAikapinChiyoko.0/IN.json"
+  },
+  {
+    "id": "66111264094",
+    "name": "EZ.json",
+    "path": "Phigros/charts/HumaN.SOTUI.0/EZ.json"
+  },
+  {
+    "id": "66111302650",
+    "name": "HD.json",
+    "path": "Phigros/charts/HumaN.SOTUI.0/HD.json"
+  },
+  {
+    "id": "66111286283",
+    "name": "IN.json",
+    "path": "Phigros/charts/HumaN.SOTUI.0/IN.json"
+  },
+  {
+    "id": "66111270845",
+    "name": "AT.json",
+    "path": "Phigros/charts/Hydra.JamesLandinoXAkiraComplex.0/AT.json"
+  },
+  {
+    "id": "66111188178",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Hydra.JamesLandinoXAkiraComplex.0/EZ.json"
+  },
+  {
+    "id": "66111235413",
+    "name": "HD.json",
+    "path": "Phigros/charts/Hydra.JamesLandinoXAkiraComplex.0/HD.json"
+  },
+  {
+    "id": "66111381077",
+    "name": "IN.json",
+    "path": "Phigros/charts/Hydra.JamesLandinoXAkiraComplex.0/IN.json"
+  },
+  {
+    "id": "66110958361",
+    "name": "EZ.json",
+    "path": "Phigros/charts/IMustSayNo.TangJuan.0/EZ.json"
+  },
+  {
+    "id": "66111007369",
+    "name": "HD.json",
+    "path": "Phigros/charts/IMustSayNo.TangJuan.0/HD.json"
+  },
+  {
+    "id": "66110970400",
+    "name": "IN.json",
+    "path": "Phigros/charts/IMustSayNo.TangJuan.0/IN.json"
+  },
+  {
+    "id": "66110757229",
+    "name": "AT.json",
+    "path": "Phigros/charts/INFiNiTEENERZYOverdoze.RekuMochizuki.0/AT.json"
+  },
+  {
+    "id": "66110769014",
+    "name": "EZ.json",
+    "path": "Phigros/charts/INFiNiTEENERZYOverdoze.RekuMochizuki.0/EZ.json"
+  },
+  {
+    "id": "66110822354",
+    "name": "HD.json",
+    "path": "Phigros/charts/INFiNiTEENERZYOverdoze.RekuMochizuki.0/HD.json"
+  },
+  {
+    "id": "66110855047",
+    "name": "IN.json",
+    "path": "Phigros/charts/INFiNiTEENERZYOverdoze.RekuMochizuki.0/IN.json"
+  },
+  {
+    "id": "66111104409",
+    "name": "AT.json",
+    "path": "Phigros/charts/Igallta.SeURa.0/AT.json"
+  },
+  {
+    "id": "66111089192",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Igallta.SeURa.0/EZ.json"
+  },
+  {
+    "id": "66111106852",
+    "name": "HD.json",
+    "path": "Phigros/charts/Igallta.SeURa.0/HD.json"
+  },
+  {
+    "id": "66111161266",
+    "name": "IN.json",
+    "path": "Phigros/charts/Igallta.SeURa.0/IN.json"
+  },
+  {
+    "id": "66110981621",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Implexrough.Silentroommommy.0/EZ.json"
+  },
+  {
+    "id": "66110991420",
+    "name": "HD.json",
+    "path": "Phigros/charts/Implexrough.Silentroommommy.0/HD.json"
+  },
+  {
+    "id": "66111000674",
+    "name": "IN.json",
+    "path": "Phigros/charts/Implexrough.Silentroommommy.0/IN.json"
+  },
+  {
+    "id": "66110924788",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Incyde.YbeLL.0/EZ.json"
+  },
+  {
+    "id": "66110946128",
+    "name": "HD.json",
+    "path": "Phigros/charts/Incyde.YbeLL.0/HD.json"
+  },
+  {
+    "id": "66111023641",
+    "name": "IN.json",
+    "path": "Phigros/charts/Incyde.YbeLL.0/IN.json"
+  },
+  {
+    "id": "66110858870",
+    "name": "AT.json",
+    "path": "Phigros/charts/IndelibleScar.Noah.0/AT.json"
+  },
+  {
+    "id": "66110835927",
+    "name": "EZ.json",
+    "path": "Phigros/charts/IndelibleScar.Noah.0/EZ.json"
+  },
+  {
+    "id": "66110848285",
+    "name": "HD.json",
+    "path": "Phigros/charts/IndelibleScar.Noah.0/HD.json"
+  },
+  {
+    "id": "66110960494",
+    "name": "IN.json",
+    "path": "Phigros/charts/IndelibleScar.Noah.0/IN.json"
+  },
+  {
+    "id": "66110769418",
+    "name": "EZ.json",
+    "path": "Phigros/charts/InfinityHeaven.HyuN.0/EZ.json"
+  },
+  {
+    "id": "66110776460",
+    "name": "HD.json",
+    "path": "Phigros/charts/InfinityHeaven.HyuN.0/HD.json"
+  },
+  {
+    "id": "66110745569",
+    "name": "IN.json",
+    "path": "Phigros/charts/InfinityHeaven.HyuN.0/IN.json"
+  },
+  {
+    "id": "66110707177",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Initialize.iF.0/EZ.json"
+  },
+  {
+    "id": "66110718920",
+    "name": "HD.json",
+    "path": "Phigros/charts/Initialize.iF.0/HD.json"
+  },
+  {
+    "id": "66110729475",
+    "name": "IN.json",
+    "path": "Phigros/charts/Initialize.iF.0/IN.json"
+  },
+  {
+    "id": "66110688134",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Introduction/EZ.json"
+  },
+  {
+    "id": "66110659977",
+    "name": "EZ.json",
+    "path": "Phigros/charts/InvertedWorld.ARForest.0/EZ.json"
+  },
+  {
+    "id": "66110730836",
+    "name": "HD.json",
+    "path": "Phigros/charts/InvertedWorld.ARForest.0/HD.json"
+  },
+  {
+    "id": "66110679173",
+    "name": "IN.json",
+    "path": "Phigros/charts/InvertedWorld.ARForest.0/IN.json"
+  },
+  {
+    "id": "66110623925",
+    "name": "EZ.json",
+    "path": "Phigros/charts/JourneywithYou.Iris.0/EZ.json"
+  },
+  {
+    "id": "66110665844",
+    "name": "HD.json",
+    "path": "Phigros/charts/JourneywithYou.Iris.0/HD.json"
+  },
+  {
+    "id": "66110726507",
+    "name": "IN.json",
+    "path": "Phigros/charts/JourneywithYou.Iris.0/IN.json"
+  },
+  {
+    "id": "66110606035",
+    "name": "EZ.json",
+    "path": "Phigros/charts/JunXionBetweenLifeAndDeathVIPMix.1N6Fs.0/EZ.json"
+  },
+  {
+    "id": "66110649006",
+    "name": "HD.json",
+    "path": "Phigros/charts/JunXionBetweenLifeAndDeathVIPMix.1N6Fs.0/HD.json"
+  },
+  {
+    "id": "66110615764",
+    "name": "IN.json",
+    "path": "Phigros/charts/JunXionBetweenLifeAndDeathVIPMix.1N6Fs.0/IN.json"
+  },
+  {
+    "id": "66110452069",
+    "name": "EZ.json",
+    "path": "Phigros/charts/KIZUNAResolution.TAG.0/EZ.json"
+  },
+  {
+    "id": "66110467846",
+    "name": "HD.json",
+    "path": "Phigros/charts/KIZUNAResolution.TAG.0/HD.json"
+  },
+  {
+    "id": "66110591297",
+    "name": "IN.json",
+    "path": "Phigros/charts/KIZUNAResolution.TAG.0/IN.json"
+  },
+  {
+    "id": "66110288340",
+    "name": "EZ.json",
+    "path": "Phigros/charts/KMoeVIP.ZxNX.0/EZ.json"
+  },
+  {
+    "id": "66110344662",
+    "name": "HD.json",
+    "path": "Phigros/charts/KMoeVIP.ZxNX.0/HD.json"
+  },
+  {
+    "id": "66110441874",
+    "name": "IN.json",
+    "path": "Phigros/charts/KMoeVIP.ZxNX.0/IN.json"
+  },
+  {
+    "id": "66110571144",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Kerberos.Zris.0/EZ.json"
+  },
+  {
+    "id": "66110625453",
+    "name": "HD.json",
+    "path": "Phigros/charts/Kerberos.Zris.0/HD.json"
+  },
+  {
+    "id": "66110591689",
+    "name": "IN.json",
+    "path": "Phigros/charts/Kerberos.Zris.0/IN.json"
+  },
+  {
+    "id": "66110536331",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Khalid.Dolphin.0/EZ.json"
+  },
+  {
+    "id": "66110551685",
+    "name": "HD.json",
+    "path": "Phigros/charts/Khalid.Dolphin.0/HD.json"
+  },
+  {
+    "id": "66110561103",
+    "name": "IN.json",
+    "path": "Phigros/charts/Khalid.Dolphin.0/IN.json"
+  },
+  {
+    "id": "66110502099",
+    "name": "EZ.json",
+    "path": "Phigros/charts/KhronostasisKatharsis.Halv.0/EZ.json"
+  },
+  {
+    "id": "66110513802",
+    "name": "HD.json",
+    "path": "Phigros/charts/KhronostasisKatharsis.Halv.0/HD.json"
+  },
+  {
+    "id": "66110525898",
+    "name": "IN.json",
+    "path": "Phigros/charts/KhronostasisKatharsis.Halv.0/IN.json"
+  },
+  {
+    "id": "66110468018",
+    "name": "EZ.json",
+    "path": "Phigros/charts/KirakiraNoelStory.RekuMochizuki.0/EZ.json"
+  },
+  {
+    "id": "66110575480",
+    "name": "HD.json",
+    "path": "Phigros/charts/KirakiraNoelStory.RekuMochizuki.0/HD.json"
+  },
+  {
+    "id": "66110485805",
+    "name": "IN.json",
+    "path": "Phigros/charts/KirakiraNoelStory.RekuMochizuki.0/IN.json"
+  },
+  {
+    "id": "66110200427",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Komplexe.雄之助featSennzai.0/EZ.json"
+  },
+  {
+    "id": "66110238868",
+    "name": "HD.json",
+    "path": "Phigros/charts/Komplexe.雄之助featSennzai.0/HD.json"
+  },
+  {
+    "id": "66110387270",
+    "name": "IN.json",
+    "path": "Phigros/charts/Komplexe.雄之助featSennzai.0/IN.json"
+  },
+  {
+    "id": "66110089632",
+    "name": "EZ.json",
+    "path": "Phigros/charts/LabyrinthinKowloonWalledWorld.かめりあ.0/EZ.json"
+  },
+  {
+    "id": "66110131261",
+    "name": "HD.json",
+    "path": "Phigros/charts/LabyrinthinKowloonWalledWorld.かめりあ.0/HD.json"
+  },
+  {
+    "id": "66110195458",
+    "name": "IN.json",
+    "path": "Phigros/charts/LabyrinthinKowloonWalledWorld.かめりあ.0/IN.json"
+  },
+  {
+    "id": "66110009784",
+    "name": "AT.json",
+    "path": "Phigros/charts/LeaveAllBehind.rider.0/AT.json"
+  },
+  {
+    "id": "66109928739",
+    "name": "EZ.json",
+    "path": "Phigros/charts/LeaveAllBehind.rider.0/EZ.json"
+  },
+  {
+    "id": "66109982128",
+    "name": "HD.json",
+    "path": "Phigros/charts/LeaveAllBehind.rider.0/HD.json"
+  },
+  {
+    "id": "66110037836",
+    "name": "IN.json",
+    "path": "Phigros/charts/LeaveAllBehind.rider.0/IN.json"
+  },
+  {
+    "id": "66109848062",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Letempsperdu.Daison.0/EZ.json"
+  },
+  {
+    "id": "66109876471",
+    "name": "HD.json",
+    "path": "Phigros/charts/Letempsperdu.Daison.0/HD.json"
+  },
+  {
+    "id": "66110034434",
+    "name": "IN.json",
+    "path": "Phigros/charts/Letempsperdu.Daison.0/IN.json"
+  },
+  {
+    "id": "66109668202",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Locomotive.K.0/EZ.json"
+  },
+  {
+    "id": "66109680517",
+    "name": "HD.json",
+    "path": "Phigros/charts/Locomotive.K.0/HD.json"
+  },
+  {
+    "id": "66109743246",
+    "name": "IN.json",
+    "path": "Phigros/charts/Locomotive.K.0/IN.json"
+  },
+  {
+    "id": "66109594910",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Luminescence.米虾Fomiki初云CLoudie.0/EZ.json"
+  },
+  {
+    "id": "66109598672",
+    "name": "HD.json",
+    "path": "Phigros/charts/Luminescence.米虾Fomiki初云CLoudie.0/HD.json"
+  },
+  {
+    "id": "66109649196",
+    "name": "IN.json",
+    "path": "Phigros/charts/Luminescence.米虾Fomiki初云CLoudie.0/IN.json"
+  },
+  {
+    "id": "66109524367",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Luminescent.Daison.0/EZ.json"
+  },
+  {
+    "id": "66109507136",
+    "name": "HD.json",
+    "path": "Phigros/charts/Luminescent.Daison.0/HD.json"
+  },
+  {
+    "id": "66109612087",
+    "name": "IN.json",
+    "path": "Phigros/charts/Luminescent.Daison.0/IN.json"
+  },
+  {
+    "id": "66109404567",
+    "name": "EZ.json",
+    "path": "Phigros/charts/LuminousEntitiesLostHeart.NormalMfeatUsagiDenki.0/EZ.json"
+  },
+  {
+    "id": "66109467461",
+    "name": "HD.json",
+    "path": "Phigros/charts/LuminousEntitiesLostHeart.NormalMfeatUsagiDenki.0/HD.json"
+  },
+  {
+    "id": "66109510103",
+    "name": "IN.json",
+    "path": "Phigros/charts/LuminousEntitiesLostHeart.NormalMfeatUsagiDenki.0/IN.json"
+  },
+  {
+    "id": "66109399588",
+    "name": "AT.json",
+    "path": "Phigros/charts/Lyrith迷宮リリス.ユメミド.0/AT.json"
+  },
+  {
+    "id": "66109401617",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Lyrith迷宮リリス.ユメミド.0/EZ.json"
+  },
+  {
+    "id": "66109402755",
+    "name": "HD.json",
+    "path": "Phigros/charts/Lyrith迷宮リリス.ユメミド.0/HD.json"
+  },
+  {
+    "id": "66109455311",
+    "name": "IN.json",
+    "path": "Phigros/charts/Lyrith迷宮リリス.ユメミド.0/IN.json"
+  },
+  {
+    "id": "66109387124",
+    "name": "EZ.json",
+    "path": "Phigros/charts/MARENOL.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66109387881",
+    "name": "HD.json",
+    "path": "Phigros/charts/MARENOL.LeaF.0/HD.json"
+  },
+  {
+    "id": "66109390113",
+    "name": "IN.json",
+    "path": "Phigros/charts/MARENOL.LeaF.0/IN.json"
+  },
+  {
+    "id": "66109263096",
+    "name": "EZ.json",
+    "path": "Phigros/charts/MOBILYS.Dachs.0/EZ.json"
+  },
+  {
+    "id": "66109267869",
+    "name": "HD.json",
+    "path": "Phigros/charts/MOBILYS.Dachs.0/HD.json"
+  },
+  {
+    "id": "66109271428",
+    "name": "IN.json",
+    "path": "Phigros/charts/MOBILYS.Dachs.0/IN.json"
+  },
+  {
+    "id": "66109396998",
+    "name": "EZ.json",
+    "path": "Phigros/charts/MagentaPotion.EmoCo.0/EZ.json"
+  },
+  {
+    "id": "66109397640",
+    "name": "HD.json",
+    "path": "Phigros/charts/MagentaPotion.EmoCo.0/HD.json"
+  },
+  {
+    "id": "66109398746",
+    "name": "IN.json",
+    "path": "Phigros/charts/MagentaPotion.EmoCo.0/IN.json"
+  },
+  {
+    "id": "66109390664",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ManifoldHypothesis.cybermisofeattigerlily.0/EZ.json"
+  },
+  {
+    "id": "66109392544",
+    "name": "HD.json",
+    "path": "Phigros/charts/ManifoldHypothesis.cybermisofeattigerlily.0/HD.json"
+  },
+  {
+    "id": "66109393350",
+    "name": "IN.json",
+    "path": "Phigros/charts/ManifoldHypothesis.cybermisofeattigerlily.0/IN.json"
+  },
+  {
+    "id": "66109335101",
+    "name": "AT.json",
+    "path": "Phigros/charts/Message.くるぶっこちゃん.0/AT.json"
+  },
+  {
+    "id": "66109335585",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Message.くるぶっこちゃん.0/EZ.json"
+  },
+  {
+    "id": "66109337562",
+    "name": "HD.json",
+    "path": "Phigros/charts/Message.くるぶっこちゃん.0/HD.json"
+  },
+  {
+    "id": "66109338086",
+    "name": "IN.json",
+    "path": "Phigros/charts/Message.くるぶっこちゃん.0/IN.json"
+  },
+  {
+    "id": "66109339995",
+    "name": "SP.json",
+    "path": "Phigros/charts/Message.くるぶっこちゃん.0/SP.json"
+  },
+  {
+    "id": "66109274226",
+    "name": "EZ.json",
+    "path": "Phigros/charts/MiracleForestVIPMix.Rinthlive.0/EZ.json"
+  },
+  {
+    "id": "66109277888",
+    "name": "HD.json",
+    "path": "Phigros/charts/MiracleForestVIPMix.Rinthlive.0/HD.json"
+  },
+  {
+    "id": "66109280323",
+    "name": "IN.json",
+    "path": "Phigros/charts/MiracleForestVIPMix.Rinthlive.0/IN.json"
+  },
+  {
+    "id": "66109035208",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NOONEYESMAN.MYUKKE.0/EZ.json"
+  },
+  {
+    "id": "66109035992",
+    "name": "HD.json",
+    "path": "Phigros/charts/NOONEYESMAN.MYUKKE.0/HD.json"
+  },
+  {
+    "id": "66109074195",
+    "name": "IN.json",
+    "path": "Phigros/charts/NOONEYESMAN.MYUKKE.0/IN.json"
+  },
+  {
+    "id": "66108899620",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NOx.Juggernaut.0/EZ.json"
+  },
+  {
+    "id": "66108970376",
+    "name": "HD.json",
+    "path": "Phigros/charts/NOx.Juggernaut.0/HD.json"
+  },
+  {
+    "id": "66109021108",
+    "name": "IN.json",
+    "path": "Phigros/charts/NOx.Juggernaut.0/IN.json"
+  },
+  {
+    "id": "66108819946",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NWAD.Knighthood.0/EZ.json"
+  },
+  {
+    "id": "66108852298",
+    "name": "HD.json",
+    "path": "Phigros/charts/NWAD.Knighthood.0/HD.json"
+  },
+  {
+    "id": "66108985483",
+    "name": "IN.json",
+    "path": "Phigros/charts/NWAD.Knighthood.0/IN.json"
+  },
+  {
+    "id": "66108808803",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NYA.FLuoRiTe姜米條.0/EZ.json"
+  },
+  {
+    "id": "66108812570",
+    "name": "HD.json",
+    "path": "Phigros/charts/NYA.FLuoRiTe姜米條.0/HD.json"
+  },
+  {
+    "id": "66108816163",
+    "name": "IN.json",
+    "path": "Phigros/charts/NYA.FLuoRiTe姜米條.0/IN.json"
+  },
+  {
+    "id": "66109209645",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NextTime.SaMZIng.0/EZ.json"
+  },
+  {
+    "id": "66109212590",
+    "name": "HD.json",
+    "path": "Phigros/charts/NextTime.SaMZIng.0/HD.json"
+  },
+  {
+    "id": "66109215241",
+    "name": "IN.json",
+    "path": "Phigros/charts/NextTime.SaMZIng.0/IN.json"
+  },
+  {
+    "id": "66109192527",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Nhelv.Silentroom.0/EZ.json"
+  },
+  {
+    "id": "66109227252",
+    "name": "HD.json",
+    "path": "Phigros/charts/Nhelv.Silentroom.0/HD.json"
+  },
+  {
+    "id": "66109280977",
+    "name": "IN.json",
+    "path": "Phigros/charts/Nhelv.Silentroom.0/IN.json"
+  },
+  {
+    "id": "66109123317",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NickofTime.P4koo.0/EZ.json"
+  },
+  {
+    "id": "66109155027",
+    "name": "HD.json",
+    "path": "Phigros/charts/NickofTime.P4koo.0/HD.json"
+  },
+  {
+    "id": "66109199870",
+    "name": "IN.json",
+    "path": "Phigros/charts/NickofTime.P4koo.0/IN.json"
+  },
+  {
+    "id": "66109083928",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NightTheater.わかどり.0/EZ.json"
+  },
+  {
+    "id": "66109139482",
+    "name": "HD.json",
+    "path": "Phigros/charts/NightTheater.わかどり.0/HD.json"
+  },
+  {
+    "id": "66109159310",
+    "name": "IN.json",
+    "path": "Phigros/charts/NightTheater.わかどり.0/IN.json"
+  },
+  {
+    "id": "66109054779",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NonMelodicRagezMUGEdit.Normal1zer.0/EZ.json"
+  },
+  {
+    "id": "66109060563",
+    "name": "HD.json",
+    "path": "Phigros/charts/NonMelodicRagezMUGEdit.Normal1zer.0/HD.json"
+  },
+  {
+    "id": "66109062152",
+    "name": "IN.json",
+    "path": "Phigros/charts/NonMelodicRagezMUGEdit.Normal1zer.0/IN.json"
+  },
+  {
+    "id": "66109030380",
+    "name": "EZ.json",
+    "path": "Phigros/charts/NowIsTheTimeDoIt.RoyMikelate.0/EZ.json"
+  },
+  {
+    "id": "66109030442",
+    "name": "HD.json",
+    "path": "Phigros/charts/NowIsTheTimeDoIt.RoyMikelate.0/HD.json"
+  },
+  {
+    "id": "66109115944",
+    "name": "IN.json",
+    "path": "Phigros/charts/NowIsTheTimeDoIt.RoyMikelate.0/IN.json"
+  },
+  {
+    "id": "66108797331",
+    "name": "EZ.json",
+    "path": "Phigros/charts/OnAndOn.ETIAfeatJenga.0/EZ.json"
+  },
+  {
+    "id": "66108800969",
+    "name": "HD.json",
+    "path": "Phigros/charts/OnAndOn.ETIAfeatJenga.0/HD.json"
+  },
+  {
+    "id": "66108805189",
+    "name": "IN.json",
+    "path": "Phigros/charts/OnAndOn.ETIAfeatJenga.0/IN.json"
+  },
+  {
+    "id": "66108706986",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Originally.SNKSMizku.0/EZ.json"
+  },
+  {
+    "id": "66108707835",
+    "name": "HD.json",
+    "path": "Phigros/charts/Originally.SNKSMizku.0/HD.json"
+  },
+  {
+    "id": "66108710241",
+    "name": "IN.json",
+    "path": "Phigros/charts/Originally.SNKSMizku.0/IN.json"
+  },
+  {
+    "id": "66108700151",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Orthodox.tokiwa.0/EZ.json"
+  },
+  {
+    "id": "66108702737",
+    "name": "HD.json",
+    "path": "Phigros/charts/Orthodox.tokiwa.0/HD.json"
+  },
+  {
+    "id": "66108703526",
+    "name": "IN.json",
+    "path": "Phigros/charts/Orthodox.tokiwa.0/IN.json"
+  },
+  {
+    "id": "66108684187",
+    "name": "AT.json",
+    "path": "Phigros/charts/PANICPARADISE.DJSHIONY.0/AT.json"
+  },
+  {
+    "id": "66108688142",
+    "name": "EZ.json",
+    "path": "Phigros/charts/PANICPARADISE.DJSHIONY.0/EZ.json"
+  },
+  {
+    "id": "66108691897",
+    "name": "HD.json",
+    "path": "Phigros/charts/PANICPARADISE.DJSHIONY.0/HD.json"
+  },
+  {
+    "id": "66108692311",
+    "name": "IN.json",
+    "path": "Phigros/charts/PANICPARADISE.DJSHIONY.0/IN.json"
+  },
+  {
+    "id": "66108537169",
+    "name": "AT.json",
+    "path": "Phigros/charts/PRAGMATISMRESURRECTION.Laur.0/AT.json"
+  },
+  {
+    "id": "66108539539",
+    "name": "EZ.json",
+    "path": "Phigros/charts/PRAGMATISMRESURRECTION.Laur.0/EZ.json"
+  },
+  {
+    "id": "66108540515",
+    "name": "HD.json",
+    "path": "Phigros/charts/PRAGMATISMRESURRECTION.Laur.0/HD.json"
+  },
+  {
+    "id": "66108545850",
+    "name": "IN.json",
+    "path": "Phigros/charts/PRAGMATISMRESURRECTION.Laur.0/IN.json"
+  },
+  {
+    "id": "66108531383",
+    "name": "EZ.json",
+    "path": "Phigros/charts/PRAW.Bluewind.0/EZ.json"
+  },
+  {
+    "id": "66108533215",
+    "name": "HD.json",
+    "path": "Phigros/charts/PRAW.Bluewind.0/HD.json"
+  },
+  {
+    "id": "66108533942",
+    "name": "IN.json",
+    "path": "Phigros/charts/PRAW.Bluewind.0/IN.json"
+  },
+  {
+    "id": "66108695969",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Palescreen.WyvernPfeatMadol.0/EZ.json"
+  },
+  {
+    "id": "66108696529",
+    "name": "HD.json",
+    "path": "Phigros/charts/Palescreen.WyvernPfeatMadol.0/HD.json"
+  },
+  {
+    "id": "66108699391",
+    "name": "IN.json",
+    "path": "Phigros/charts/Palescreen.WyvernPfeatMadol.0/IN.json"
+  },
+  {
+    "id": "66108674163",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ParallelRetrogressionGameVer.Tetrajectory.0/EZ.json"
+  },
+  {
+    "id": "66108677190",
+    "name": "HD.json",
+    "path": "Phigros/charts/ParallelRetrogressionGameVer.Tetrajectory.0/HD.json"
+  },
+  {
+    "id": "66108680537",
+    "name": "IN.json",
+    "path": "Phigros/charts/ParallelRetrogressionGameVer.Tetrajectory.0/IN.json"
+  },
+  {
+    "id": "66108584707",
+    "name": "AT.json",
+    "path": "Phigros/charts/Petrichor.voidMournfinale.0/AT.json"
+  },
+  {
+    "id": "66108588593",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Petrichor.voidMournfinale.0/EZ.json"
+  },
+  {
+    "id": "66108588689",
+    "name": "HD.json",
+    "path": "Phigros/charts/Petrichor.voidMournfinale.0/HD.json"
+  },
+  {
+    "id": "66108592464",
+    "name": "IN.json",
+    "path": "Phigros/charts/Petrichor.voidMournfinale.0/IN.json"
+  },
+  {
+    "id": "66108562146",
+    "name": "EZ.json",
+    "path": "Phigros/charts/PixelRebelz.Normal1zer.0/EZ.json"
+  },
+  {
+    "id": "66108564869",
+    "name": "HD.json",
+    "path": "Phigros/charts/PixelRebelz.Normal1zer.0/HD.json"
+  },
+  {
+    "id": "66108555960",
+    "name": "EZ.json",
+    "path": "Phigros/charts/PoisonANDORAffection.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66108559680",
+    "name": "HD.json",
+    "path": "Phigros/charts/PoisonANDORAffection.LeaF.0/HD.json"
+  },
+  {
+    "id": "66108561671",
+    "name": "IN.json",
+    "path": "Phigros/charts/PoisonANDORAffection.LeaF.0/IN.json"
+  },
+  {
+    "id": "66108551346",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Pontdessouvenirs.VeetaCrushvsitsufeatitsu.0/EZ.json"
+  },
+  {
+    "id": "66108554492",
+    "name": "HD.json",
+    "path": "Phigros/charts/Pontdessouvenirs.VeetaCrushvsitsufeatitsu.0/HD.json"
+  },
+  {
+    "id": "66108556757",
+    "name": "IN.json",
+    "path": "Phigros/charts/Pontdessouvenirs.VeetaCrushvsitsufeatitsu.0/IN.json"
+  },
+  {
+    "id": "66108547605",
+    "name": "AT.json",
+    "path": "Phigros/charts/Poseidon.1112vsStar.0/AT.json"
+  },
+  {
+    "id": "66108546707",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Poseidon.1112vsStar.0/EZ.json"
+  },
+  {
+    "id": "66108550057",
+    "name": "HD.json",
+    "path": "Phigros/charts/Poseidon.1112vsStar.0/HD.json"
+  },
+  {
+    "id": "66108551103",
+    "name": "IN.json",
+    "path": "Phigros/charts/Poseidon.1112vsStar.0/IN.json"
+  },
+  {
+    "id": "66108526491",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Protoflicker.Silentroom.0/EZ.json"
+  },
+  {
+    "id": "66108527961",
+    "name": "HD.json",
+    "path": "Phigros/charts/Protoflicker.Silentroom.0/HD.json"
+  },
+  {
+    "id": "66108528675",
+    "name": "IN.json",
+    "path": "Phigros/charts/Protoflicker.Silentroom.0/IN.json"
+  },
+  {
+    "id": "66108513732",
+    "name": "AT.json",
+    "path": "Phigros/charts/QZKagoRequiem.tpazolite.0/AT.json"
+  },
+  {
+    "id": "66108514642",
+    "name": "EZ.json",
+    "path": "Phigros/charts/QZKagoRequiem.tpazolite.0/EZ.json"
+  },
+  {
+    "id": "66108516972",
+    "name": "HD.json",
+    "path": "Phigros/charts/QZKagoRequiem.tpazolite.0/HD.json"
+  },
+  {
+    "id": "66108518107",
+    "name": "IN.json",
+    "path": "Phigros/charts/QZKagoRequiem.tpazolite.0/IN.json"
+  },
+  {
+    "id": "66108521837",
+    "name": "EZ.json",
+    "path": "Phigros/charts/QuantumHyperspace.D_AAN.0/EZ.json"
+  },
+  {
+    "id": "66108523358",
+    "name": "HD.json",
+    "path": "Phigros/charts/QuantumHyperspace.D_AAN.0/HD.json"
+  },
+  {
+    "id": "66108523371",
+    "name": "IN.json",
+    "path": "Phigros/charts/QuantumHyperspace.D_AAN.0/IN.json"
+  },
+  {
+    "id": "66108430159",
+    "name": "EZ.json",
+    "path": "Phigros/charts/RESSiSTANCE.ぐるたみん.0/EZ.json"
+  },
+  {
+    "id": "66108431767",
+    "name": "HD.json",
+    "path": "Phigros/charts/RESSiSTANCE.ぐるたみん.0/HD.json"
+  },
+  {
+    "id": "66108433941",
+    "name": "IN.json",
+    "path": "Phigros/charts/RESSiSTANCE.ぐるたみん.0/IN.json"
+  },
+  {
+    "id": "66108412667",
+    "name": "EZ.json",
+    "path": "Phigros/charts/RIPPER.Friedwav.0/EZ.json"
+  },
+  {
+    "id": "66108410470",
+    "name": "HD.json",
+    "path": "Phigros/charts/RIPPER.Friedwav.0/HD.json"
+  },
+  {
+    "id": "66108412768",
+    "name": "IN.json",
+    "path": "Phigros/charts/RIPPER.Friedwav.0/IN.json"
+  },
+  {
+    "id": "66108507882",
+    "name": "AT.json",
+    "path": "Phigros/charts/Radiance.Nhato.0/AT.json"
+  },
+  {
+    "id": "66108507837",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Radiance.Nhato.0/EZ.json"
+  },
+  {
+    "id": "66108510747",
+    "name": "HD.json",
+    "path": "Phigros/charts/Radiance.Nhato.0/HD.json"
+  },
+  {
+    "id": "66108513235",
+    "name": "IN.json",
+    "path": "Phigros/charts/Radiance.Nhato.0/IN.json"
+  },
+  {
+    "id": "66108503227",
+    "name": "EZ.json",
+    "path": "Phigros/charts/RainyHeart.BelieverInYou阿卡姆巫师.0/EZ.json"
+  },
+  {
+    "id": "66108503540",
+    "name": "HD.json",
+    "path": "Phigros/charts/RainyHeart.BelieverInYou阿卡姆巫师.0/HD.json"
+  },
+  {
+    "id": "66108505485",
+    "name": "IN.json",
+    "path": "Phigros/charts/RainyHeart.BelieverInYou阿卡姆巫师.0/IN.json"
+  },
+  {
+    "id": "66108498013",
+    "name": "EZ.json",
+    "path": "Phigros/charts/RainySeason.AbyssIdols.0/EZ.json"
+  },
+  {
+    "id": "66108498427",
+    "name": "HD.json",
+    "path": "Phigros/charts/RainySeason.AbyssIdols.0/HD.json"
+  },
+  {
+    "id": "66108501961",
+    "name": "IN.json",
+    "path": "Phigros/charts/RainySeason.AbyssIdols.0/IN.json"
+  },
+  {
+    "id": "66108491807",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Ramification.rareguyReina.0/EZ.json"
+  },
+  {
+    "id": "66108493413",
+    "name": "HD.json",
+    "path": "Phigros/charts/Ramification.rareguyReina.0/HD.json"
+  },
+  {
+    "id": "66108498629",
+    "name": "IN.json",
+    "path": "Phigros/charts/Ramification.rareguyReina.0/IN.json"
+  },
+  {
+    "id": "66108487964",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.0/EZ.json"
+  },
+  {
+    "id": "66108488422",
+    "name": "HD.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.0/HD.json"
+  },
+  {
+    "id": "66108491248",
+    "name": "IN.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.0/IN.json"
+  },
+  {
+    "id": "66108482865",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.1/EZ.json"
+  },
+  {
+    "id": "66108482864",
+    "name": "HD.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.1/HD.json"
+  },
+  {
+    "id": "66108487357",
+    "name": "IN.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.1/IN.json"
+  },
+  {
+    "id": "66108477927",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.2/EZ.json"
+  },
+  {
+    "id": "66108478237",
+    "name": "HD.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.2/HD.json"
+  },
+  {
+    "id": "66108482591",
+    "name": "IN.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.2/IN.json"
+  },
+  {
+    "id": "66108471009",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.3/EZ.json"
+  },
+  {
+    "id": "66108471483",
+    "name": "HD.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.3/HD.json"
+  },
+  {
+    "id": "66108477445",
+    "name": "IN.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.3/IN.json"
+  },
+  {
+    "id": "66108466238",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.4/EZ.json"
+  },
+  {
+    "id": "66108467007",
+    "name": "HD.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.4/HD.json"
+  },
+  {
+    "id": "66108470867",
+    "name": "IN.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.4/IN.json"
+  },
+  {
+    "id": "66108460424",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.5/EZ.json"
+  },
+  {
+    "id": "66108461305",
+    "name": "HD.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.5/HD.json"
+  },
+  {
+    "id": "66108466078",
+    "name": "IN.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.5/IN.json"
+  },
+  {
+    "id": "66108456002",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.6/EZ.json"
+  },
+  {
+    "id": "66108457074",
+    "name": "HD.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.6/HD.json"
+  },
+  {
+    "id": "66108460711",
+    "name": "IN.json",
+    "path": "Phigros/charts/Random.SobremSilentroom.6/IN.json"
+  },
+  {
+    "id": "66108442997",
+    "name": "AT.json",
+    "path": "Phigros/charts/ReEndofaDream.umavsモリモリあつし.0/AT.json"
+  },
+  {
+    "id": "66108442667",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ReEndofaDream.umavsモリモリあつし.0/EZ.json"
+  },
+  {
+    "id": "66108445029",
+    "name": "HD.json",
+    "path": "Phigros/charts/ReEndofaDream.umavsモリモリあつし.0/HD.json"
+  },
+  {
+    "id": "66108446778",
+    "name": "IN.json",
+    "path": "Phigros/charts/ReEndofaDream.umavsモリモリあつし.0/IN.json"
+  },
+  {
+    "id": "66108418221",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Re_NascencePsystyleVer.Rinth_live.0/EZ.json"
+  },
+  {
+    "id": "66108419121",
+    "name": "HD.json",
+    "path": "Phigros/charts/Re_NascencePsystyleVer.Rinth_live.0/HD.json"
+  },
+  {
+    "id": "66108419808",
+    "name": "IN.json",
+    "path": "Phigros/charts/Re_NascencePsystyleVer.Rinth_live.0/IN.json"
+  },
+  {
+    "id": "66108451838",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Realms.HinkikAHimitsu.0/EZ.json"
+  },
+  {
+    "id": "66108453669",
+    "name": "HD.json",
+    "path": "Phigros/charts/Realms.HinkikAHimitsu.0/HD.json"
+  },
+  {
+    "id": "66108456327",
+    "name": "IN.json",
+    "path": "Phigros/charts/Realms.HinkikAHimitsu.0/IN.json"
+  },
+  {
+    "id": "66108447237",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Rebirth.ああああ.0/EZ.json"
+  },
+  {
+    "id": "66108449773",
+    "name": "HD.json",
+    "path": "Phigros/charts/Rebirth.ああああ.0/HD.json"
+  },
+  {
+    "id": "66108452468",
+    "name": "IN.json",
+    "path": "Phigros/charts/Rebirth.ああああ.0/IN.json"
+  },
+  {
+    "id": "66108437861",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Reimei.影虎.0/EZ.json"
+  },
+  {
+    "id": "66108438372",
+    "name": "HD.json",
+    "path": "Phigros/charts/Reimei.影虎.0/HD.json"
+  },
+  {
+    "id": "66108441717",
+    "name": "IN.json",
+    "path": "Phigros/charts/Reimei.影虎.0/IN.json"
+  },
+  {
+    "id": "66108435255",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Resolver.Gomadare.0/EZ.json"
+  },
+  {
+    "id": "66108435700",
+    "name": "HD.json",
+    "path": "Phigros/charts/Resolver.Gomadare.0/HD.json"
+  },
+  {
+    "id": "66108437552",
+    "name": "IN.json",
+    "path": "Phigros/charts/Resolver.Gomadare.0/IN.json"
+  },
+  {
+    "id": "66108425981",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Retribution.nmyKryexe.0/EZ.json"
+  },
+  {
+    "id": "66108426674",
+    "name": "HD.json",
+    "path": "Phigros/charts/Retribution.nmyKryexe.0/HD.json"
+  },
+  {
+    "id": "66108432128",
+    "name": "IN.json",
+    "path": "Phigros/charts/Retribution.nmyKryexe.0/IN.json"
+  },
+  {
+    "id": "66108422289",
+    "name": "EZ.json",
+    "path": "Phigros/charts/RetributionCycleofRedemption.ArdolfvsDaily天利.0/EZ.json"
+  },
+  {
+    "id": "66108423279",
+    "name": "HD.json",
+    "path": "Phigros/charts/RetributionCycleofRedemption.ArdolfvsDaily天利.0/HD.json"
+  },
+  {
+    "id": "66108424594",
+    "name": "IN.json",
+    "path": "Phigros/charts/RetributionCycleofRedemption.ArdolfvsDaily天利.0/IN.json"
+  },
+  {
+    "id": "66108402955",
+    "name": "AT.json",
+    "path": "Phigros/charts/Rrharil.TeamGrimoire.0/AT.json"
+  },
+  {
+    "id": "66108403187",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Rrharil.TeamGrimoire.0/EZ.json"
+  },
+  {
+    "id": "66108403445",
+    "name": "HD.json",
+    "path": "Phigros/charts/Rrharil.TeamGrimoire.0/HD.json"
+  },
+  {
+    "id": "66108401006",
+    "name": "EZ.json",
+    "path": "Phigros/charts/RubbishSorting.CtymaxvsNceS.0/EZ.json"
+  },
+  {
+    "id": "66108401025",
+    "name": "HD.json",
+    "path": "Phigros/charts/RubbishSorting.CtymaxvsNceS.0/HD.json"
+  },
+  {
+    "id": "66108401378",
+    "name": "IN.json",
+    "path": "Phigros/charts/RubbishSorting.CtymaxvsNceS.0/IN.json"
+  },
+  {
+    "id": "66108397671",
+    "name": "AT.json",
+    "path": "Phigros/charts/SATELLITE.かめりあ.0/AT.json"
+  },
+  {
+    "id": "66108398746",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SATELLITE.かめりあ.0/EZ.json"
+  },
+  {
+    "id": "66108398681",
+    "name": "HD.json",
+    "path": "Phigros/charts/SATELLITE.かめりあ.0/HD.json"
+  },
+  {
+    "id": "66108399250",
+    "name": "IN.json",
+    "path": "Phigros/charts/SATELLITE.かめりあ.0/IN.json"
+  },
+  {
+    "id": "66108365653",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SIGMA.Kryexe.0/EZ.json"
+  },
+  {
+    "id": "66108367865",
+    "name": "HD.json",
+    "path": "Phigros/charts/SIGMA.Kryexe.0/HD.json"
+  },
+  {
+    "id": "66108368937",
+    "name": "IN.json",
+    "path": "Phigros/charts/SIGMA.Kryexe.0/IN.json"
+  },
+  {
+    "id": "66108262302",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SURREALISM.Itsuki.0/EZ.json"
+  },
+  {
+    "id": "66108264175",
+    "name": "HD.json",
+    "path": "Phigros/charts/SURREALISM.Itsuki.0/HD.json"
+  },
+  {
+    "id": "66108264590",
+    "name": "IN.json",
+    "path": "Phigros/charts/SURREALISM.Itsuki.0/IN.json"
+  },
+  {
+    "id": "66108394023",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Schadenfreude.ZxNX.0/EZ.json"
+  },
+  {
+    "id": "66108395991",
+    "name": "HD.json",
+    "path": "Phigros/charts/Schadenfreude.ZxNX.0/HD.json"
+  },
+  {
+    "id": "66108395698",
+    "name": "IN.json",
+    "path": "Phigros/charts/Schadenfreude.ZxNX.0/IN.json"
+  },
+  {
+    "id": "66108385185",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SecretIllumination.Yooh.0/EZ.json"
+  },
+  {
+    "id": "66108390551",
+    "name": "HD.json",
+    "path": "Phigros/charts/SecretIllumination.Yooh.0/HD.json"
+  },
+  {
+    "id": "66108382732",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Sein.朔Apo11oprogramvsお月さま交響曲ftkuroa荒巻.0/EZ.json"
+  },
+  {
+    "id": "66108382936",
+    "name": "HD.json",
+    "path": "Phigros/charts/Sein.朔Apo11oprogramvsお月さま交響曲ftkuroa荒巻.0/HD.json"
+  },
+  {
+    "id": "66108384421",
+    "name": "IN.json",
+    "path": "Phigros/charts/Sein.朔Apo11oprogramvsお月さま交響曲ftkuroa荒巻.0/IN.json"
+  },
+  {
+    "id": "66108378422",
+    "name": "AT.json",
+    "path": "Phigros/charts/Shadow.SumaiLightvs姜米條.0/AT.json"
+  },
+  {
+    "id": "66108379279",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Shadow.SumaiLightvs姜米條.0/EZ.json"
+  },
+  {
+    "id": "66108379999",
+    "name": "HD.json",
+    "path": "Phigros/charts/Shadow.SumaiLightvs姜米條.0/HD.json"
+  },
+  {
+    "id": "66108381100",
+    "name": "IN.json",
+    "path": "Phigros/charts/Shadow.SumaiLightvs姜米條.0/IN.json"
+  },
+  {
+    "id": "66108374588",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Shelter.MeatyRabbitNceS.0/EZ.json"
+  },
+  {
+    "id": "66108376579",
+    "name": "HD.json",
+    "path": "Phigros/charts/Shelter.MeatyRabbitNceS.0/HD.json"
+  },
+  {
+    "id": "66108377031",
+    "name": "IN.json",
+    "path": "Phigros/charts/Shelter.MeatyRabbitNceS.0/IN.json"
+  },
+  {
+    "id": "66108370618",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ShineAfter.ADeanJocularACE.0/EZ.json"
+  },
+  {
+    "id": "66108371432",
+    "name": "HD.json",
+    "path": "Phigros/charts/ShineAfter.ADeanJocularACE.0/HD.json"
+  },
+  {
+    "id": "66108373466",
+    "name": "IN.json",
+    "path": "Phigros/charts/ShineAfter.ADeanJocularACE.0/IN.json"
+  },
+  {
+    "id": "66108357982",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SilenceisGoldenSpeechisGolden.NIWASHI.0/EZ.json"
+  },
+  {
+    "id": "66108361674",
+    "name": "HD.json",
+    "path": "Phigros/charts/SilenceisGoldenSpeechisGolden.NIWASHI.0/HD.json"
+  },
+  {
+    "id": "66108363523",
+    "name": "IN.json",
+    "path": "Phigros/charts/SilenceisGoldenSpeechisGolden.NIWASHI.0/IN.json"
+  },
+  {
+    "id": "66108301257",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SnowDance.悠叶いのり.0/EZ.json"
+  },
+  {
+    "id": "66108303020",
+    "name": "HD.json",
+    "path": "Phigros/charts/SnowDance.悠叶いのり.0/HD.json"
+  },
+  {
+    "id": "66108303504",
+    "name": "IN.json",
+    "path": "Phigros/charts/SnowDance.悠叶いのり.0/IN.json"
+  },
+  {
+    "id": "66108299101",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SnowDesert.WyvernP.0/EZ.json"
+  },
+  {
+    "id": "66108300634",
+    "name": "HD.json",
+    "path": "Phigros/charts/SnowDesert.WyvernP.0/HD.json"
+  },
+  {
+    "id": "66108301141",
+    "name": "IN.json",
+    "path": "Phigros/charts/SnowDesert.WyvernP.0/IN.json"
+  },
+  {
+    "id": "66108295991",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SolaggyfeatUzumaki.ShrimpCatsはぁち後藤涼輔.0/EZ.json"
+  },
+  {
+    "id": "66108297884",
+    "name": "HD.json",
+    "path": "Phigros/charts/SolaggyfeatUzumaki.ShrimpCatsはぁち後藤涼輔.0/HD.json"
+  },
+  {
+    "id": "66108298346",
+    "name": "IN.json",
+    "path": "Phigros/charts/SolaggyfeatUzumaki.ShrimpCatsはぁち後藤涼輔.0/IN.json"
+  },
+  {
+    "id": "66108292152",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SparkleNewLife.rider.0/EZ.json"
+  },
+  {
+    "id": "66108295048",
+    "name": "HD.json",
+    "path": "Phigros/charts/SparkleNewLife.rider.0/HD.json"
+  },
+  {
+    "id": "66108295620",
+    "name": "IN.json",
+    "path": "Phigros/charts/SparkleNewLife.rider.0/IN.json"
+  },
+  {
+    "id": "66108288290",
+    "name": "AT.json",
+    "path": "Phigros/charts/Spasmodic.姜米條颶風元力上人.0/AT.json"
+  },
+  {
+    "id": "66108288801",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Spasmodic.姜米條颶風元力上人.0/EZ.json"
+  },
+  {
+    "id": "66108290654",
+    "name": "HD.json",
+    "path": "Phigros/charts/Spasmodic.姜米條颶風元力上人.0/HD.json"
+  },
+  {
+    "id": "66108291797",
+    "name": "IN.json",
+    "path": "Phigros/charts/Spasmodic.姜米條颶風元力上人.0/IN.json"
+  },
+  {
+    "id": "66108284366",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SpeedUp.DarTokki.0/EZ.json"
+  },
+  {
+    "id": "66108285312",
+    "name": "HD.json",
+    "path": "Phigros/charts/SpeedUp.DarTokki.0/HD.json"
+  },
+  {
+    "id": "66108287189",
+    "name": "IN.json",
+    "path": "Phigros/charts/SpeedUp.DarTokki.0/IN.json"
+  },
+  {
+    "id": "66108280181",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Spotlight.Ardolf.0/EZ.json"
+  },
+  {
+    "id": "66108281157",
+    "name": "HD.json",
+    "path": "Phigros/charts/Spotlight.Ardolf.0/HD.json"
+  },
+  {
+    "id": "66108284600",
+    "name": "IN.json",
+    "path": "Phigros/charts/Spotlight.Ardolf.0/IN.json"
+  },
+  {
+    "id": "66108272946",
+    "name": "AT.json",
+    "path": "Phigros/charts/StardustRAY.kanonevsBlackY.0/AT.json"
+  },
+  {
+    "id": "66108272561",
+    "name": "EZ.json",
+    "path": "Phigros/charts/StardustRAY.kanonevsBlackY.0/EZ.json"
+  },
+  {
+    "id": "66108274163",
+    "name": "HD.json",
+    "path": "Phigros/charts/StardustRAY.kanonevsBlackY.0/HD.json"
+  },
+  {
+    "id": "66108275757",
+    "name": "IN.json",
+    "path": "Phigros/charts/StardustRAY.kanonevsBlackY.0/IN.json"
+  },
+  {
+    "id": "66108275740",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Starduster.Quree.0/EZ.json"
+  },
+  {
+    "id": "66108276748",
+    "name": "HD.json",
+    "path": "Phigros/charts/Starduster.Quree.0/HD.json"
+  },
+  {
+    "id": "66108280014",
+    "name": "IN.json",
+    "path": "Phigros/charts/Starduster.Quree.0/IN.json"
+  },
+  {
+    "id": "66108268600",
+    "name": "AT.json",
+    "path": "Phigros/charts/Stasis.Maozon.0/AT.json"
+  },
+  {
+    "id": "66108270443",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Stasis.Maozon.0/EZ.json"
+  },
+  {
+    "id": "66108270442",
+    "name": "HD.json",
+    "path": "Phigros/charts/Stasis.Maozon.0/HD.json"
+  },
+  {
+    "id": "66108271542",
+    "name": "IN.json",
+    "path": "Phigros/charts/Stasis.Maozon.0/IN.json"
+  },
+  {
+    "id": "66108266915",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SultanRage.MonstDeath.0/EZ.json"
+  },
+  {
+    "id": "66108266946",
+    "name": "HD.json",
+    "path": "Phigros/charts/SultanRage.MonstDeath.0/HD.json"
+  },
+  {
+    "id": "66108268504",
+    "name": "IN.json",
+    "path": "Phigros/charts/SultanRage.MonstDeath.0/IN.json"
+  },
+  {
+    "id": "66108260437",
+    "name": "EZ.json",
+    "path": "Phigros/charts/SwingSkipDrop.ミハイル.0/EZ.json"
+  },
+  {
+    "id": "66108260736",
+    "name": "HD.json",
+    "path": "Phigros/charts/SwingSkipDrop.ミハイル.0/HD.json"
+  },
+  {
+    "id": "66108262468",
+    "name": "IN.json",
+    "path": "Phigros/charts/SwingSkipDrop.ミハイル.0/IN.json"
+  },
+  {
+    "id": "66108256156",
+    "name": "AT.json",
+    "path": "Phigros/charts/TECHNOPOLIS2085.PRASTIKDANCEFLOOR.0/AT.json"
+  },
+  {
+    "id": "66108256004",
+    "name": "EZ.json",
+    "path": "Phigros/charts/TECHNOPOLIS2085.PRASTIKDANCEFLOOR.0/EZ.json"
+  },
+  {
+    "id": "66108258544",
+    "name": "HD.json",
+    "path": "Phigros/charts/TECHNOPOLIS2085.PRASTIKDANCEFLOOR.0/HD.json"
+  },
+  {
+    "id": "66108258740",
+    "name": "IN.json",
+    "path": "Phigros/charts/TECHNOPOLIS2085.PRASTIKDANCEFLOOR.0/IN.json"
+  },
+  {
+    "id": "66108251029",
+    "name": "EZ.json",
+    "path": "Phigros/charts/TemporalShifting.LureRabbitVC.0/EZ.json"
+  },
+  {
+    "id": "66108253765",
+    "name": "HD.json",
+    "path": "Phigros/charts/TemporalShifting.LureRabbitVC.0/HD.json"
+  },
+  {
+    "id": "66108253947",
+    "name": "IN.json",
+    "path": "Phigros/charts/TemporalShifting.LureRabbitVC.0/IN.json"
+  },
+  {
+    "id": "66108248184",
+    "name": "HD.json",
+    "path": "Phigros/charts/TheChariotREVIIVAL.Attoclef.0/HD.json"
+  },
+  {
+    "id": "66108251061",
+    "name": "IN.json",
+    "path": "Phigros/charts/TheChariotREVIIVAL.Attoclef.0/IN.json"
+  },
+  {
+    "id": "66108240528",
+    "name": "EZ.json",
+    "path": "Phigros/charts/TheMountainEater.PaulBazooka.0/EZ.json"
+  },
+  {
+    "id": "66108241923",
+    "name": "HD.json",
+    "path": "Phigros/charts/TheMountainEater.PaulBazooka.0/HD.json"
+  },
+  {
+    "id": "66108242686",
+    "name": "IN.json",
+    "path": "Phigros/charts/TheMountainEater.PaulBazooka.0/IN.json"
+  },
+  {
+    "id": "66108237272",
+    "name": "EZ.json",
+    "path": "Phigros/charts/TheWholeRest.KIVΛ.0/EZ.json"
+  },
+  {
+    "id": "66108238318",
+    "name": "HD.json",
+    "path": "Phigros/charts/TheWholeRest.KIVΛ.0/HD.json"
+  },
+  {
+    "id": "66108239833",
+    "name": "IN.json",
+    "path": "Phigros/charts/TheWholeRest.KIVΛ.0/IN.json"
+  },
+  {
+    "id": "66108233523",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Thrashforce.KAHvsE0ri4.0/EZ.json"
+  },
+  {
+    "id": "66108234151",
+    "name": "HD.json",
+    "path": "Phigros/charts/Thrashforce.KAHvsE0ri4.0/HD.json"
+  },
+  {
+    "id": "66108236179",
+    "name": "IN.json",
+    "path": "Phigros/charts/Thrashforce.KAHvsE0ri4.0/IN.json"
+  },
+  {
+    "id": "66108228567",
+    "name": "EZ.json",
+    "path": "Phigros/charts/TimetoNightSkyfeatLeeYuJin.HyuNKLYDIX.0/EZ.json"
+  },
+  {
+    "id": "66108230727",
+    "name": "HD.json",
+    "path": "Phigros/charts/TimetoNightSkyfeatLeeYuJin.HyuNKLYDIX.0/HD.json"
+  },
+  {
+    "id": "66108231511",
+    "name": "IN.json",
+    "path": "Phigros/charts/TimetoNightSkyfeatLeeYuJin.HyuNKLYDIX.0/IN.json"
+  },
+  {
+    "id": "66108225758",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Trane.MALVA.0/EZ.json"
+  },
+  {
+    "id": "66108226873",
+    "name": "HD.json",
+    "path": "Phigros/charts/Trane.MALVA.0/HD.json"
+  },
+  {
+    "id": "66108228205",
+    "name": "IN.json",
+    "path": "Phigros/charts/Trane.MALVA.0/IN.json"
+  },
+  {
+    "id": "66108221078",
+    "name": "EZ.json",
+    "path": "Phigros/charts/TriumphRegret.typeMARS.0/EZ.json"
+  },
+  {
+    "id": "66108223576",
+    "name": "HD.json",
+    "path": "Phigros/charts/TriumphRegret.typeMARS.0/HD.json"
+  },
+  {
+    "id": "66108224457",
+    "name": "IN.json",
+    "path": "Phigros/charts/TriumphRegret.typeMARS.0/IN.json"
+  },
+  {
+    "id": "66108217337",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Trojan.litmus.0/EZ.json"
+  },
+  {
+    "id": "66108218630",
+    "name": "HD.json",
+    "path": "Phigros/charts/Trojan.litmus.0/HD.json"
+  },
+  {
+    "id": "66108220322",
+    "name": "IN.json",
+    "path": "Phigros/charts/Trojan.litmus.0/IN.json"
+  },
+  {
+    "id": "66108213391",
+    "name": "EZ.json",
+    "path": "Phigros/charts/TrueHomeTrueWorldRework.816ThreeNumbers.0/EZ.json"
+  },
+  {
+    "id": "66108214576",
+    "name": "HD.json",
+    "path": "Phigros/charts/TrueHomeTrueWorldRework.816ThreeNumbers.0/HD.json"
+  },
+  {
+    "id": "66108215785",
+    "name": "IN.json",
+    "path": "Phigros/charts/TrueHomeTrueWorldRework.816ThreeNumbers.0/IN.json"
+  },
+  {
+    "id": "66108210526",
+    "name": "EZ.json",
+    "path": "Phigros/charts/UnorthodoxThoughts.Joulez.0/EZ.json"
+  },
+  {
+    "id": "66108211360",
+    "name": "HD.json",
+    "path": "Phigros/charts/UnorthodoxThoughts.Joulez.0/HD.json"
+  },
+  {
+    "id": "66108212254",
+    "name": "IN.json",
+    "path": "Phigros/charts/UnorthodoxThoughts.Joulez.0/IN.json"
+  },
+  {
+    "id": "66108207315",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Upshift.Iriss-Frantzz.0/EZ.json"
+  },
+  {
+    "id": "66108208370",
+    "name": "HD.json",
+    "path": "Phigros/charts/Upshift.Iriss-Frantzz.0/HD.json"
+  },
+  {
+    "id": "66108209543",
+    "name": "IN.json",
+    "path": "Phigros/charts/Upshift.Iriss-Frantzz.0/IN.json"
+  },
+  {
+    "id": "66108156264",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Verruckt.Raimukun.0/EZ.json"
+  },
+  {
+    "id": "66108160052",
+    "name": "HD.json",
+    "path": "Phigros/charts/Verruckt.Raimukun.0/HD.json"
+  },
+  {
+    "id": "66108164733",
+    "name": "IN.json",
+    "path": "Phigros/charts/Verruckt.Raimukun.0/IN.json"
+  },
+  {
+    "id": "66108107811",
+    "name": "EZ.json",
+    "path": "Phigros/charts/WATER.A39沙包P.0/EZ.json"
+  },
+  {
+    "id": "66108109301",
+    "name": "HD.json",
+    "path": "Phigros/charts/WATER.A39沙包P.0/HD.json"
+  },
+  {
+    "id": "66108109716",
+    "name": "IN.json",
+    "path": "Phigros/charts/WATER.A39沙包P.0/IN.json"
+  },
+  {
+    "id": "66108105630",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Wavetapper.Frums.0/EZ.json"
+  },
+  {
+    "id": "66108106017",
+    "name": "HD.json",
+    "path": "Phigros/charts/Wavetapper.Frums.0/HD.json"
+  },
+  {
+    "id": "66108107155",
+    "name": "IN.json",
+    "path": "Phigros/charts/Wavetapper.Frums.0/IN.json"
+  },
+  {
+    "id": "66108103206",
+    "name": "AT.json",
+    "path": "Phigros/charts/WhatdoyouwantmorethanaHappyending.Apo11oHALOprogramft安月名莉子大瀬良あい.0/AT.json"
+  },
+  {
+    "id": "66108102841",
+    "name": "EZ.json",
+    "path": "Phigros/charts/WhatdoyouwantmorethanaHappyending.Apo11oHALOprogramft安月名莉子大瀬良あい.0/EZ.json"
+  },
+  {
+    "id": "66108104532",
+    "name": "HD.json",
+    "path": "Phigros/charts/WhatdoyouwantmorethanaHappyending.Apo11oHALOprogramft安月名莉子大瀬良あい.0/HD.json"
+  },
+  {
+    "id": "66108104923",
+    "name": "IN.json",
+    "path": "Phigros/charts/WhatdoyouwantmorethanaHappyending.Apo11oHALOprogramft安月名莉子大瀬良あい.0/IN.json"
+  },
+  {
+    "id": "66108098429",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Wintercube.CtymaxfeatNceS.0/EZ.json"
+  },
+  {
+    "id": "66108100260",
+    "name": "HD.json",
+    "path": "Phigros/charts/Wintercube.CtymaxfeatNceS.0/HD.json"
+  },
+  {
+    "id": "66108100249",
+    "name": "IN.json",
+    "path": "Phigros/charts/Wintercube.CtymaxfeatNceS.0/IN.json"
+  },
+  {
+    "id": "66108093916",
+    "name": "EZ.json",
+    "path": "Phigros/charts/WithYou.Cashew.0/EZ.json"
+  },
+  {
+    "id": "66108096072",
+    "name": "HD.json",
+    "path": "Phigros/charts/WithYou.Cashew.0/HD.json"
+  },
+  {
+    "id": "66108098092",
+    "name": "IN.json",
+    "path": "Phigros/charts/WithYou.Cashew.0/IN.json"
+  },
+  {
+    "id": "66107941180",
+    "name": "EZ.json",
+    "path": "Phigros/charts/XING.ginkiha.0/EZ.json"
+  },
+  {
+    "id": "66107943349",
+    "name": "HD.json",
+    "path": "Phigros/charts/XING.ginkiha.0/HD.json"
+  },
+  {
+    "id": "66108009165",
+    "name": "IN.json",
+    "path": "Phigros/charts/XING.ginkiha.0/IN.json"
+  },
+  {
+    "id": "66108091098",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Xenolith.Tatsh.0/EZ.json"
+  },
+  {
+    "id": "66108089705",
+    "name": "HD.json",
+    "path": "Phigros/charts/Xenolith.Tatsh.0/HD.json"
+  },
+  {
+    "id": "66108120697",
+    "name": "IN.json",
+    "path": "Phigros/charts/Xenolith.Tatsh.0/IN.json"
+  },
+  {
+    "id": "66108055273",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Xenophobia.XinG.0/EZ.json"
+  },
+  {
+    "id": "66108051364",
+    "name": "HD.json",
+    "path": "Phigros/charts/Xenophobia.XinG.0/HD.json"
+  },
+  {
+    "id": "66108081853",
+    "name": "IN.json",
+    "path": "Phigros/charts/Xenophobia.XinG.0/IN.json"
+  },
+  {
+    "id": "66107978488",
+    "name": "EZ.json",
+    "path": "Phigros/charts/Xepion.Acotto.0/EZ.json"
+  },
+  {
+    "id": "66108013050",
+    "name": "HD.json",
+    "path": "Phigros/charts/Xepion.Acotto.0/HD.json"
+  },
+  {
+    "id": "66108055342",
+    "name": "IN.json",
+    "path": "Phigros/charts/Xepion.Acotto.0/IN.json"
+  },
+  {
+    "id": "66107934067",
+    "name": "AT.json",
+    "path": "Phigros/charts/YouaretheMiserable.tpazolite.0/AT.json"
+  },
+  {
+    "id": "66107931193",
+    "name": "EZ.json",
+    "path": "Phigros/charts/YouaretheMiserable.tpazolite.0/EZ.json"
+  },
+  {
+    "id": "66107941878",
+    "name": "HD.json",
+    "path": "Phigros/charts/YouaretheMiserable.tpazolite.0/HD.json"
+  },
+  {
+    "id": "66107989349",
+    "name": "IN.json",
+    "path": "Phigros/charts/YouaretheMiserable.tpazolite.0/IN.json"
+  },
+  {
+    "id": "66112635130",
+    "name": "EZ.json",
+    "path": "Phigros/charts/atruthseekerCommunicationwithUtopiawillbelost.kuro.0/EZ.json"
+  },
+  {
+    "id": "66112638175",
+    "name": "HD.json",
+    "path": "Phigros/charts/atruthseekerCommunicationwithUtopiawillbelost.kuro.0/HD.json"
+  },
+  {
+    "id": "66112665548",
+    "name": "IN.json",
+    "path": "Phigros/charts/atruthseekerCommunicationwithUtopiawillbelost.kuro.0/IN.json"
+  },
+  {
+    "id": "66112416874",
+    "name": "EZ.json",
+    "path": "Phigros/charts/bye.DingerBox.0/EZ.json"
+  },
+  {
+    "id": "66112416695",
+    "name": "HD.json",
+    "path": "Phigros/charts/bye.DingerBox.0/HD.json"
+  },
+  {
+    "id": "66112442550",
+    "name": "IN.json",
+    "path": "Phigros/charts/bye.DingerBox.0/IN.json"
+  },
+  {
+    "id": "66112139588",
+    "name": "EZ.json",
+    "path": "Phigros/charts/cryout.JuE.0/EZ.json"
+  },
+  {
+    "id": "66112147363",
+    "name": "HD.json",
+    "path": "Phigros/charts/cryout.JuE.0/HD.json"
+  },
+  {
+    "id": "66112151770",
+    "name": "IN.json",
+    "path": "Phigros/charts/cryout.JuE.0/IN.json"
+  },
+  {
+    "id": "66112128688",
+    "name": "EZ.json",
+    "path": "Phigros/charts/csqn.Aoi.0/EZ.json"
+  },
+  {
+    "id": "66112136788",
+    "name": "HD.json",
+    "path": "Phigros/charts/csqn.Aoi.0/HD.json"
+  },
+  {
+    "id": "66112150316",
+    "name": "IN.json",
+    "path": "Phigros/charts/csqn.Aoi.0/IN.json"
+  },
+  {
+    "id": "66112051844",
+    "name": "AT.json",
+    "path": "Phigros/charts/dBdoll.YUESTEVENuen.0/AT.json"
+  },
+  {
+    "id": "66112052268",
+    "name": "EZ.json",
+    "path": "Phigros/charts/dBdoll.YUESTEVENuen.0/EZ.json"
+  },
+  {
+    "id": "66112056977",
+    "name": "HD.json",
+    "path": "Phigros/charts/dBdoll.YUESTEVENuen.0/HD.json"
+  },
+  {
+    "id": "66112062389",
+    "name": "IN.json",
+    "path": "Phigros/charts/dBdoll.YUESTEVENuen.0/IN.json"
+  },
+  {
+    "id": "66111735980",
+    "name": "EZ.json",
+    "path": "Phigros/charts/energytrixxx.KAH.0/EZ.json"
+  },
+  {
+    "id": "66111734570",
+    "name": "HD.json",
+    "path": "Phigros/charts/energytrixxx.KAH.0/HD.json"
+  },
+  {
+    "id": "66111745211",
+    "name": "IN.json",
+    "path": "Phigros/charts/energytrixxx.KAH.0/IN.json"
+  },
+  {
+    "id": "66111033139",
+    "name": "EZ.json",
+    "path": "Phigros/charts/iLArtifact.Link0.0/EZ.json"
+  },
+  {
+    "id": "66111046031",
+    "name": "HD.json",
+    "path": "Phigros/charts/iLArtifact.Link0.0/HD.json"
+  },
+  {
+    "id": "66111067233",
+    "name": "IN.json",
+    "path": "Phigros/charts/iLArtifact.Link0.0/IN.json"
+  },
+  {
+    "id": "66110791137",
+    "name": "EZ.json",
+    "path": "Phigros/charts/inferior.姜米條.0/EZ.json"
+  },
+  {
+    "id": "66110806159",
+    "name": "HD.json",
+    "path": "Phigros/charts/inferior.姜米條.0/HD.json"
+  },
+  {
+    "id": "66110814806",
+    "name": "IN.json",
+    "path": "Phigros/charts/inferior.姜米條.0/IN.json"
+  },
+  {
+    "id": "66109717664",
+    "name": "EZ.json",
+    "path": "Phigros/charts/lifeflashesbeforeweebeyes.BilliumMoto.0/EZ.json"
+  },
+  {
+    "id": "66109753231",
+    "name": "HD.json",
+    "path": "Phigros/charts/lifeflashesbeforeweebeyes.BilliumMoto.0/HD.json"
+  },
+  {
+    "id": "66109788885",
+    "name": "IN.json",
+    "path": "Phigros/charts/lifeflashesbeforeweebeyes.BilliumMoto.0/IN.json"
+  },
+  {
+    "id": "66109379491",
+    "name": "EZ.json",
+    "path": "Phigros/charts/mechanted.rareguy.0/EZ.json"
+  },
+  {
+    "id": "66109371492",
+    "name": "HD.json",
+    "path": "Phigros/charts/mechanted.rareguy.0/HD.json"
+  },
+  {
+    "id": "66109420219",
+    "name": "IN.json",
+    "path": "Phigros/charts/mechanted.rareguy.0/IN.json"
+  },
+  {
+    "id": "66109324274",
+    "name": "EZ.json",
+    "path": "Phigros/charts/microwav.dandeless.0/EZ.json"
+  },
+  {
+    "id": "66109324349",
+    "name": "HD.json",
+    "path": "Phigros/charts/microwav.dandeless.0/HD.json"
+  },
+  {
+    "id": "66109363081",
+    "name": "IN.json",
+    "path": "Phigros/charts/microwav.dandeless.0/IN.json"
+  },
+  {
+    "id": "66109245848",
+    "name": "EZ.json",
+    "path": "Phigros/charts/modulus.PTB10.0/EZ.json"
+  },
+  {
+    "id": "66109252058",
+    "name": "HD.json",
+    "path": "Phigros/charts/modulus.PTB10.0/HD.json"
+  },
+  {
+    "id": "66109323474",
+    "name": "IN.json",
+    "path": "Phigros/charts/modulus.PTB10.0/IN.json"
+  },
+  {
+    "id": "66108885277",
+    "name": "EZ.json",
+    "path": "Phigros/charts/opia.rN.0/EZ.json"
+  },
+  {
+    "id": "66108780272",
+    "name": "HD.json",
+    "path": "Phigros/charts/opia.rN.0/HD.json"
+  },
+  {
+    "id": "66108888546",
+    "name": "IN.json",
+    "path": "Phigros/charts/opia.rN.0/IN.json"
+  },
+  {
+    "id": "66108658182",
+    "name": "EZ.json",
+    "path": "Phigros/charts/parsey.siqlo.0/EZ.json"
+  },
+  {
+    "id": "66108678557",
+    "name": "HD.json",
+    "path": "Phigros/charts/parsey.siqlo.0/HD.json"
+  },
+  {
+    "id": "66108707986",
+    "name": "IN.json",
+    "path": "Phigros/charts/parsey.siqlo.0/IN.json"
+  },
+  {
+    "id": "66108358280",
+    "name": "AT.json",
+    "path": "Phigros/charts/slips.rintarosoma.0/AT.json"
+  },
+  {
+    "id": "66108338242",
+    "name": "EZ.json",
+    "path": "Phigros/charts/slips.rintarosoma.0/EZ.json"
+  },
+  {
+    "id": "66108346271",
+    "name": "HD.json",
+    "path": "Phigros/charts/slips.rintarosoma.0/HD.json"
+  },
+  {
+    "id": "66108387906",
+    "name": "IN.json",
+    "path": "Phigros/charts/slips.rintarosoma.0/IN.json"
+  },
+  {
+    "id": "66108199171",
+    "name": "EZ.json",
+    "path": "Phigros/charts/valorstarcross.LundyvsWyvren.0/EZ.json"
+  },
+  {
+    "id": "66108200487",
+    "name": "HD.json",
+    "path": "Phigros/charts/valorstarcross.LundyvsWyvren.0/HD.json"
+  },
+  {
+    "id": "66108262867",
+    "name": "IN.json",
+    "path": "Phigros/charts/valorstarcross.LundyvsWyvren.0/IN.json"
+  },
+  {
+    "id": "66108163350",
+    "name": "AT.json",
+    "path": "Phigros/charts/volcanic.DETROakaルゼ.0/AT.json"
+  },
+  {
+    "id": "66108124460",
+    "name": "EZ.json",
+    "path": "Phigros/charts/volcanic.DETROakaルゼ.0/EZ.json"
+  },
+  {
+    "id": "66108144436",
+    "name": "HD.json",
+    "path": "Phigros/charts/volcanic.DETROakaルゼ.0/HD.json"
+  },
+  {
+    "id": "66108159094",
+    "name": "IN.json",
+    "path": "Phigros/charts/volcanic.DETROakaルゼ.0/IN.json"
+  },
+  {
+    "id": "66107830803",
+    "name": "EZ.json",
+    "path": "Phigros/charts/いざ参ります.Uskefeat棗いつき.0/EZ.json"
+  },
+  {
+    "id": "66107867540",
+    "name": "HD.json",
+    "path": "Phigros/charts/いざ参ります.Uskefeat棗いつき.0/HD.json"
+  },
+  {
+    "id": "66107894594",
+    "name": "IN.json",
+    "path": "Phigros/charts/いざ参ります.Uskefeat棗いつき.0/IN.json"
+  },
+  {
+    "id": "66107819858",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ぱぴぷぴぷぴぱ.ころねぽちWith立秋.0/EZ.json"
+  },
+  {
+    "id": "66107845418",
+    "name": "HD.json",
+    "path": "Phigros/charts/ぱぴぷぴぷぴぱ.ころねぽちWith立秋.0/HD.json"
+  },
+  {
+    "id": "66107890052",
+    "name": "IN.json",
+    "path": "Phigros/charts/ぱぴぷぴぷぴぱ.ころねぽちWith立秋.0/IN.json"
+  },
+  {
+    "id": "66107770396",
+    "name": "AT.json",
+    "path": "Phigros/charts/もぺもぺ.LeaF.0/AT.json"
+  },
+  {
+    "id": "66107783734",
+    "name": "EZ.json",
+    "path": "Phigros/charts/もぺもぺ.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66107807647",
+    "name": "HD.json",
+    "path": "Phigros/charts/もぺもぺ.LeaF.0/HD.json"
+  },
+  {
+    "id": "66107804376",
+    "name": "IN.json",
+    "path": "Phigros/charts/もぺもぺ.LeaF.0/IN.json"
+  },
+  {
+    "id": "66107746760",
+    "name": "EZ.json",
+    "path": "Phigros/charts/アンビバレンス.すりぃ相沢.0/EZ.json"
+  },
+  {
+    "id": "66107776480",
+    "name": "HD.json",
+    "path": "Phigros/charts/アンビバレンス.すりぃ相沢.0/HD.json"
+  },
+  {
+    "id": "66107769143",
+    "name": "IN.json",
+    "path": "Phigros/charts/アンビバレンス.すりぃ相沢.0/IN.json"
+  },
+  {
+    "id": "66107688692",
+    "name": "EZ.json",
+    "path": "Phigros/charts/インフェルノシティ.Ponchifeatはぁち.0/EZ.json"
+  },
+  {
+    "id": "66107694716",
+    "name": "HD.json",
+    "path": "Phigros/charts/インフェルノシティ.Ponchifeatはぁち.0/HD.json"
+  },
+  {
+    "id": "66107725317",
+    "name": "IN.json",
+    "path": "Phigros/charts/インフェルノシティ.Ponchifeatはぁち.0/IN.json"
+  },
+  {
+    "id": "66107645137",
+    "name": "EZ.json",
+    "path": "Phigros/charts/インマイマインド.レシオP.0/EZ.json"
+  },
+  {
+    "id": "66107630354",
+    "name": "HD.json",
+    "path": "Phigros/charts/インマイマインド.レシオP.0/HD.json"
+  },
+  {
+    "id": "66107659133",
+    "name": "IN.json",
+    "path": "Phigros/charts/インマイマインド.レシオP.0/IN.json"
+  },
+  {
+    "id": "66107610248",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ジングルベルJingleBell.A39沙包P.0/EZ.json"
+  },
+  {
+    "id": "66107616936",
+    "name": "HD.json",
+    "path": "Phigros/charts/ジングルベルJingleBell.A39沙包P.0/HD.json"
+  },
+  {
+    "id": "66107698546",
+    "name": "IN.json",
+    "path": "Phigros/charts/ジングルベルJingleBell.A39沙包P.0/IN.json"
+  },
+  {
+    "id": "66107571743",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ストレイソウルアラウンド.みーに.0/EZ.json"
+  },
+  {
+    "id": "66107562513",
+    "name": "HD.json",
+    "path": "Phigros/charts/ストレイソウルアラウンド.みーに.0/HD.json"
+  },
+  {
+    "id": "66107601753",
+    "name": "IN.json",
+    "path": "Phigros/charts/ストレイソウルアラウンド.みーに.0/IN.json"
+  },
+  {
+    "id": "66107486274",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ニライカナイNiraicA_naiMix.roopfromSTR.0/EZ.json"
+  },
+  {
+    "id": "66107527881",
+    "name": "HD.json",
+    "path": "Phigros/charts/ニライカナイNiraicA_naiMix.roopfromSTR.0/HD.json"
+  },
+  {
+    "id": "66107538912",
+    "name": "IN.json",
+    "path": "Phigros/charts/ニライカナイNiraicA_naiMix.roopfromSTR.0/IN.json"
+  },
+  {
+    "id": "66107464625",
+    "name": "AT.json",
+    "path": "Phigros/charts/ハテ.rNFrums.0/AT.json"
+  },
+  {
+    "id": "66107461185",
+    "name": "EZ.json",
+    "path": "Phigros/charts/ハテ.rNFrums.0/EZ.json"
+  },
+  {
+    "id": "66107481617",
+    "name": "HD.json",
+    "path": "Phigros/charts/ハテ.rNFrums.0/HD.json"
+  },
+  {
+    "id": "66107518439",
+    "name": "IN.json",
+    "path": "Phigros/charts/ハテ.rNFrums.0/IN.json"
+  },
+  {
+    "id": "66107403621",
+    "name": "EZ.json",
+    "path": "Phigros/charts/万吨匿名信.闫东炜.0/EZ.json"
+  },
+  {
+    "id": "66107401844",
+    "name": "HD.json",
+    "path": "Phigros/charts/万吨匿名信.闫东炜.0/HD.json"
+  },
+  {
+    "id": "66107434172",
+    "name": "IN.json",
+    "path": "Phigros/charts/万吨匿名信.闫东炜.0/IN.json"
+  },
+  {
+    "id": "66107364253",
+    "name": "EZ.json",
+    "path": "Phigros/charts/下一秒.BobHouSherlock卓智媛feat兰音Reine.0/EZ.json"
+  },
+  {
+    "id": "66107368839",
+    "name": "HD.json",
+    "path": "Phigros/charts/下一秒.BobHouSherlock卓智媛feat兰音Reine.0/HD.json"
+  },
+  {
+    "id": "66107427702",
+    "name": "IN.json",
+    "path": "Phigros/charts/下一秒.BobHouSherlock卓智媛feat兰音Reine.0/IN.json"
+  },
+  {
+    "id": "66107280044",
+    "name": "EZ.json",
+    "path": "Phigros/charts/亂舞.NekockLK.0/EZ.json"
+  },
+  {
+    "id": "66107319876",
+    "name": "HD.json",
+    "path": "Phigros/charts/亂舞.NekockLK.0/HD.json"
+  },
+  {
+    "id": "66107327243",
+    "name": "IN.json",
+    "path": "Phigros/charts/亂舞.NekockLK.0/IN.json"
+  },
+  {
+    "id": "66107248081",
+    "name": "EZ.json",
+    "path": "Phigros/charts/云女孩.符白牙SiYFics.0/EZ.json"
+  },
+  {
+    "id": "66107273231",
+    "name": "HD.json",
+    "path": "Phigros/charts/云女孩.符白牙SiYFics.0/HD.json"
+  },
+  {
+    "id": "66107332366",
+    "name": "IN.json",
+    "path": "Phigros/charts/云女孩.符白牙SiYFics.0/IN.json"
+  },
+  {
+    "id": "66107223855",
+    "name": "EZ.json",
+    "path": "Phigros/charts/今天不是明天.PIKASONICfeat兰音Reine.0/EZ.json"
+  },
+  {
+    "id": "66107226594",
+    "name": "HD.json",
+    "path": "Phigros/charts/今天不是明天.PIKASONICfeat兰音Reine.0/HD.json"
+  },
+  {
+    "id": "66107249662",
+    "name": "IN.json",
+    "path": "Phigros/charts/今天不是明天.PIKASONICfeat兰音Reine.0/IN.json"
+  },
+  {
+    "id": "66107173703",
+    "name": "EZ.json",
+    "path": "Phigros/charts/光.姜米條.0/EZ.json"
+  },
+  {
+    "id": "66107197237",
+    "name": "HD.json",
+    "path": "Phigros/charts/光.姜米條.0/HD.json"
+  },
+  {
+    "id": "66107196049",
+    "name": "IN.json",
+    "path": "Phigros/charts/光.姜米條.0/IN.json"
+  },
+  {
+    "id": "66107147966",
+    "name": "EZ.json",
+    "path": "Phigros/charts/千紫万紅.r0yvsWABI.0/EZ.json"
+  },
+  {
+    "id": "66107148173",
+    "name": "HD.json",
+    "path": "Phigros/charts/千紫万紅.r0yvsWABI.0/HD.json"
+  },
+  {
+    "id": "66107203533",
+    "name": "IN.json",
+    "path": "Phigros/charts/千紫万紅.r0yvsWABI.0/IN.json"
+  },
+  {
+    "id": "66107118002",
+    "name": "EZ.json",
+    "path": "Phigros/charts/双重间谍DoubleAgent.WAVAV.0/EZ.json"
+  },
+  {
+    "id": "66107111112",
+    "name": "HD.json",
+    "path": "Phigros/charts/双重间谍DoubleAgent.WAVAV.0/HD.json"
+  },
+  {
+    "id": "66107162668",
+    "name": "IN.json",
+    "path": "Phigros/charts/双重间谍DoubleAgent.WAVAV.0/IN.json"
+  },
+  {
+    "id": "66107091012",
+    "name": "EZ.json",
+    "path": "Phigros/charts/君往何处QuoVadis.M2U.0/EZ.json"
+  },
+  {
+    "id": "66107093046",
+    "name": "HD.json",
+    "path": "Phigros/charts/君往何处QuoVadis.M2U.0/HD.json"
+  },
+  {
+    "id": "66107107166",
+    "name": "IN.json",
+    "path": "Phigros/charts/君往何处QuoVadis.M2U.0/IN.json"
+  },
+  {
+    "id": "66107050138",
+    "name": "EZ.json",
+    "path": "Phigros/charts/夢の降る日に.seatrus.0/EZ.json"
+  },
+  {
+    "id": "66107066347",
+    "name": "HD.json",
+    "path": "Phigros/charts/夢の降る日に.seatrus.0/HD.json"
+  },
+  {
+    "id": "66107062176",
+    "name": "IN.json",
+    "path": "Phigros/charts/夢の降る日に.seatrus.0/IN.json"
+  },
+  {
+    "id": "66107019782",
+    "name": "EZ.json",
+    "path": "Phigros/charts/大和撫子WildDances.adapatorvsDRIVE.0/EZ.json"
+  },
+  {
+    "id": "66107003880",
+    "name": "HD.json",
+    "path": "Phigros/charts/大和撫子WildDances.adapatorvsDRIVE.0/HD.json"
+  },
+  {
+    "id": "66107020678",
+    "name": "IN.json",
+    "path": "Phigros/charts/大和撫子WildDances.adapatorvsDRIVE.0/IN.json"
+  },
+  {
+    "id": "66106978292",
+    "name": "EZ.json",
+    "path": "Phigros/charts/宇宙残骸少女CosmicDustyGirl.辻原一郎.0/EZ.json"
+  },
+  {
+    "id": "66106977654",
+    "name": "HD.json",
+    "path": "Phigros/charts/宇宙残骸少女CosmicDustyGirl.辻原一郎.0/HD.json"
+  },
+  {
+    "id": "66106976527",
+    "name": "IN.json",
+    "path": "Phigros/charts/宇宙残骸少女CosmicDustyGirl.辻原一郎.0/IN.json"
+  },
+  {
+    "id": "66106925750",
+    "name": "EZ.json",
+    "path": "Phigros/charts/尊師TheGuru.rider.0/EZ.json"
+  },
+  {
+    "id": "66106929686",
+    "name": "HD.json",
+    "path": "Phigros/charts/尊師TheGuru.rider.0/HD.json"
+  },
+  {
+    "id": "66106943466",
+    "name": "IN.json",
+    "path": "Phigros/charts/尊師TheGuru.rider.0/IN.json"
+  },
+  {
+    "id": "66106867886",
+    "name": "AT.json",
+    "path": "Phigros/charts/幻影鬼魅PLEASE.R300K.0/AT.json"
+  },
+  {
+    "id": "66106886355",
+    "name": "EZ.json",
+    "path": "Phigros/charts/幻影鬼魅PLEASE.R300K.0/EZ.json"
+  },
+  {
+    "id": "66106898135",
+    "name": "HD.json",
+    "path": "Phigros/charts/幻影鬼魅PLEASE.R300K.0/HD.json"
+  },
+  {
+    "id": "66106908361",
+    "name": "IN.json",
+    "path": "Phigros/charts/幻影鬼魅PLEASE.R300K.0/IN.json"
+  },
+  {
+    "id": "66106817530",
+    "name": "EZ.json",
+    "path": "Phigros/charts/幽世桔梗.Capchiifeatまるもこ.0/EZ.json"
+  },
+  {
+    "id": "66106839775",
+    "name": "HD.json",
+    "path": "Phigros/charts/幽世桔梗.Capchiifeatまるもこ.0/HD.json"
+  },
+  {
+    "id": "66106855006",
+    "name": "IN.json",
+    "path": "Phigros/charts/幽世桔梗.Capchiifeatまるもこ.0/IN.json"
+  },
+  {
+    "id": "66106788315",
+    "name": "EZ.json",
+    "path": "Phigros/charts/开心病.闫东炜.0/EZ.json"
+  },
+  {
+    "id": "66106806168",
+    "name": "HD.json",
+    "path": "Phigros/charts/开心病.闫东炜.0/HD.json"
+  },
+  {
+    "id": "66106800352",
+    "name": "IN.json",
+    "path": "Phigros/charts/开心病.闫东炜.0/IN.json"
+  },
+  {
+    "id": "66106752547",
+    "name": "EZ.json",
+    "path": "Phigros/charts/彩.MisoilePunch.0/EZ.json"
+  },
+  {
+    "id": "66106758033",
+    "name": "HD.json",
+    "path": "Phigros/charts/彩.MisoilePunch.0/HD.json"
+  },
+  {
+    "id": "66106769290",
+    "name": "IN.json",
+    "path": "Phigros/charts/彩.MisoilePunch.0/IN.json"
+  },
+  {
+    "id": "66106704068",
+    "name": "EZ.json",
+    "path": "Phigros/charts/彼方へ名もなき海辺より.打打だいず&月乃.0/EZ.json"
+  },
+  {
+    "id": "66106710873",
+    "name": "HD.json",
+    "path": "Phigros/charts/彼方へ名もなき海辺より.打打だいず&月乃.0/HD.json"
+  },
+  {
+    "id": "66106717936",
+    "name": "IN.json",
+    "path": "Phigros/charts/彼方へ名もなき海辺より.打打だいず&月乃.0/IN.json"
+  },
+  {
+    "id": "66106665247",
+    "name": "EZ.json",
+    "path": "Phigros/charts/心の記憶.A39沙包P.0/EZ.json"
+  },
+  {
+    "id": "66106671356",
+    "name": "HD.json",
+    "path": "Phigros/charts/心の記憶.A39沙包P.0/HD.json"
+  },
+  {
+    "id": "66106685124",
+    "name": "IN.json",
+    "path": "Phigros/charts/心の記憶.A39沙包P.0/IN.json"
+  },
+  {
+    "id": "66106614430",
+    "name": "EZ.json",
+    "path": "Phigros/charts/心之所向.姜米條.0/EZ.json"
+  },
+  {
+    "id": "66106626592",
+    "name": "HD.json",
+    "path": "Phigros/charts/心之所向.姜米條.0/HD.json"
+  },
+  {
+    "id": "66106645967",
+    "name": "IN.json",
+    "path": "Phigros/charts/心之所向.姜米條.0/IN.json"
+  },
+  {
+    "id": "66106576469",
+    "name": "EZ.json",
+    "path": "Phigros/charts/明鏡烈火.MUEvsRekuMochizuki.0/EZ.json"
+  },
+  {
+    "id": "66106598836",
+    "name": "HD.json",
+    "path": "Phigros/charts/明鏡烈火.MUEvsRekuMochizuki.0/HD.json"
+  },
+  {
+    "id": "66106607051",
+    "name": "IN.json",
+    "path": "Phigros/charts/明鏡烈火.MUEvsRekuMochizuki.0/IN.json"
+  },
+  {
+    "id": "66106550419",
+    "name": "EZ.json",
+    "path": "Phigros/charts/星拂云锦featkoi.S9ryne.0/EZ.json"
+  },
+  {
+    "id": "66106573592",
+    "name": "HD.json",
+    "path": "Phigros/charts/星拂云锦featkoi.S9ryne.0/HD.json"
+  },
+  {
+    "id": "66106591206",
+    "name": "IN.json",
+    "path": "Phigros/charts/星拂云锦featkoi.S9ryne.0/IN.json"
+  },
+  {
+    "id": "66106504216",
+    "name": "EZ.json",
+    "path": "Phigros/charts/暗夜苏醒REANIMATE.Warak.0/EZ.json"
+  },
+  {
+    "id": "66106519409",
+    "name": "HD.json",
+    "path": "Phigros/charts/暗夜苏醒REANIMATE.Warak.0/HD.json"
+  },
+  {
+    "id": "66106546890",
+    "name": "IN.json",
+    "path": "Phigros/charts/暗夜苏醒REANIMATE.Warak.0/IN.json"
+  },
+  {
+    "id": "66106486841",
+    "name": "EZ.json",
+    "path": "Phigros/charts/最高傑作.PYKAMIA.0/EZ.json"
+  },
+  {
+    "id": "66106490840",
+    "name": "HD.json",
+    "path": "Phigros/charts/最高傑作.PYKAMIA.0/HD.json"
+  },
+  {
+    "id": "66106532440",
+    "name": "IN.json",
+    "path": "Phigros/charts/最高傑作.PYKAMIA.0/IN.json"
+  },
+  {
+    "id": "66106424327",
+    "name": "EZ.json",
+    "path": "Phigros/charts/月下缭乱.月見静華vsLUNARiUM.0/EZ.json"
+  },
+  {
+    "id": "66106453019",
+    "name": "HD.json",
+    "path": "Phigros/charts/月下缭乱.月見静華vsLUNARiUM.0/HD.json"
+  },
+  {
+    "id": "66106467274",
+    "name": "IN.json",
+    "path": "Phigros/charts/月下缭乱.月見静華vsLUNARiUM.0/IN.json"
+  },
+  {
+    "id": "66106400340",
+    "name": "AT.json",
+    "path": "Phigros/charts/月詠に鳴る.Feryquitousfeat藍月なくる.0/AT.json"
+  },
+  {
+    "id": "66106403771",
+    "name": "EZ.json",
+    "path": "Phigros/charts/月詠に鳴る.Feryquitousfeat藍月なくる.0/EZ.json"
+  },
+  {
+    "id": "66106424260",
+    "name": "HD.json",
+    "path": "Phigros/charts/月詠に鳴る.Feryquitousfeat藍月なくる.0/HD.json"
+  },
+  {
+    "id": "66106456601",
+    "name": "IN.json",
+    "path": "Phigros/charts/月詠に鳴る.Feryquitousfeat藍月なくる.0/IN.json"
+  },
+  {
+    "id": "66106366139",
+    "name": "EZ.json",
+    "path": "Phigros/charts/望影の方舟Six.SeURa.0/EZ.json"
+  },
+  {
+    "id": "66106354775",
+    "name": "HD.json",
+    "path": "Phigros/charts/望影の方舟Six.SeURa.0/HD.json"
+  },
+  {
+    "id": "66106379901",
+    "name": "IN.json",
+    "path": "Phigros/charts/望影の方舟Six.SeURa.0/IN.json"
+  },
+  {
+    "id": "66106283369",
+    "name": "EZ.json",
+    "path": "Phigros/charts/桜樹街道.kozatosnow.0/EZ.json"
+  },
+  {
+    "id": "66106315427",
+    "name": "HD.json",
+    "path": "Phigros/charts/桜樹街道.kozatosnow.0/HD.json"
+  },
+  {
+    "id": "66106347833",
+    "name": "IN.json",
+    "path": "Phigros/charts/桜樹街道.kozatosnow.0/IN.json"
+  },
+  {
+    "id": "66106251550",
+    "name": "EZ.json",
+    "path": "Phigros/charts/混乱Confusion.OnlyMyBlackScore.0/EZ.json"
+  },
+  {
+    "id": "66106257430",
+    "name": "HD.json",
+    "path": "Phigros/charts/混乱Confusion.OnlyMyBlackScore.0/HD.json"
+  },
+  {
+    "id": "66106314870",
+    "name": "IN.json",
+    "path": "Phigros/charts/混乱Confusion.OnlyMyBlackScore.0/IN.json"
+  },
+  {
+    "id": "66106183910",
+    "name": "EZ.json",
+    "path": "Phigros/charts/游园地.椒盐菠萝.0/EZ.json"
+  },
+  {
+    "id": "66106215269",
+    "name": "HD.json",
+    "path": "Phigros/charts/游园地.椒盐菠萝.0/HD.json"
+  },
+  {
+    "id": "66106251105",
+    "name": "IN.json",
+    "path": "Phigros/charts/游园地.椒盐菠萝.0/IN.json"
+  },
+  {
+    "id": "66106147740",
+    "name": "AT.json",
+    "path": "Phigros/charts/狂喜蘭舞.LeaF.0/AT.json"
+  },
+  {
+    "id": "66106139155",
+    "name": "EZ.json",
+    "path": "Phigros/charts/狂喜蘭舞.LeaF.0/EZ.json"
+  },
+  {
+    "id": "66106153483",
+    "name": "HD.json",
+    "path": "Phigros/charts/狂喜蘭舞.LeaF.0/HD.json"
+  },
+  {
+    "id": "66106200725",
+    "name": "IN.json",
+    "path": "Phigros/charts/狂喜蘭舞.LeaF.0/IN.json"
+  },
+  {
+    "id": "66105960399",
+    "name": "AT.json",
+    "path": "Phigros/charts/玩具狂奏曲終焉.きくお.0/AT.json"
+  },
+  {
+    "id": "66106074702",
+    "name": "EZ.json",
+    "path": "Phigros/charts/玩具狂奏曲終焉.きくお.0/EZ.json"
+  },
+  {
+    "id": "66106082446",
+    "name": "HD.json",
+    "path": "Phigros/charts/玩具狂奏曲終焉.きくお.0/HD.json"
+  },
+  {
+    "id": "66106095042",
+    "name": "IN.json",
+    "path": "Phigros/charts/玩具狂奏曲終焉.きくお.0/IN.json"
+  },
+  {
+    "id": "66105913592",
+    "name": "EZ.json",
+    "path": "Phigros/charts/瓷岁.茶鸣拾贰律.0/EZ.json"
+  },
+  {
+    "id": "66105961714",
+    "name": "HD.json",
+    "path": "Phigros/charts/瓷岁.茶鸣拾贰律.0/HD.json"
+  },
+  {
+    "id": "66106013686",
+    "name": "IN.json",
+    "path": "Phigros/charts/瓷岁.茶鸣拾贰律.0/IN.json"
+  },
+  {
+    "id": "66105929169",
+    "name": "EZ.json",
+    "path": "Phigros/charts/白と黒のバケモノ.テヅカ.0/EZ.json"
+  },
+  {
+    "id": "66105886895",
+    "name": "HD.json",
+    "path": "Phigros/charts/白と黒のバケモノ.テヅカ.0/HD.json"
+  },
+  {
+    "id": "66105899937",
+    "name": "IN.json",
+    "path": "Phigros/charts/白と黒のバケモノ.テヅカ.0/IN.json"
+  },
+  {
+    "id": "66105854661",
+    "name": "EZ.json",
+    "path": "Phigros/charts/百鬼夜行.SaladSavior.0/EZ.json"
+  },
+  {
+    "id": "66105915502",
+    "name": "HD.json",
+    "path": "Phigros/charts/百鬼夜行.SaladSavior.0/HD.json"
+  },
+  {
+    "id": "66105874573",
+    "name": "IN.json",
+    "path": "Phigros/charts/百鬼夜行.SaladSavior.0/IN.json"
+  },
+  {
+    "id": "66105817308",
+    "name": "EZ.json",
+    "path": "Phigros/charts/盏茗.茶鸣拾贰律.0/EZ.json"
+  },
+  {
+    "id": "66105835584",
+    "name": "HD.json",
+    "path": "Phigros/charts/盏茗.茶鸣拾贰律.0/HD.json"
+  },
+  {
+    "id": "66105845824",
+    "name": "IN.json",
+    "path": "Phigros/charts/盏茗.茶鸣拾贰律.0/IN.json"
+  },
+  {
+    "id": "66105788477",
+    "name": "AT.json",
+    "path": "Phigros/charts/祈-我ら神祖と共に歩む者なり-.光吉猛修VS穴山大輔VSKaiVS水野健治VS大国奏音.0/AT.json"
+  },
+  {
+    "id": "66105805674",
+    "name": "EZ.json",
+    "path": "Phigros/charts/祈-我ら神祖と共に歩む者なり-.光吉猛修VS穴山大輔VSKaiVS水野健治VS大国奏音.0/EZ.json"
+  },
+  {
+    "id": "66105856257",
+    "name": "HD.json",
+    "path": "Phigros/charts/祈-我ら神祖と共に歩む者なり-.光吉猛修VS穴山大輔VSKaiVS水野健治VS大国奏音.0/HD.json"
+  },
+  {
+    "id": "66105855980",
+    "name": "IN.json",
+    "path": "Phigros/charts/祈-我ら神祖と共に歩む者なり-.光吉猛修VS穴山大輔VSKaiVS水野健治VS大国奏音.0/IN.json"
+  },
+  {
+    "id": "66105703183",
+    "name": "EZ.json",
+    "path": "Phigros/charts/神話.PicaM2U.0/EZ.json"
+  },
+  {
+    "id": "66105716164",
+    "name": "HD.json",
+    "path": "Phigros/charts/神話.PicaM2U.0/HD.json"
+  },
+  {
+    "id": "66105777226",
+    "name": "IN.json",
+    "path": "Phigros/charts/神話.PicaM2U.0/IN.json"
+  },
+  {
+    "id": "66105647975",
+    "name": "EZ.json",
+    "path": "Phigros/charts/聖夜讃歌.A39沙包P.0/EZ.json"
+  },
+  {
+    "id": "66105662174",
+    "name": "HD.json",
+    "path": "Phigros/charts/聖夜讃歌.A39沙包P.0/HD.json"
+  },
+  {
+    "id": "66105710522",
+    "name": "IN.json",
+    "path": "Phigros/charts/聖夜讃歌.A39沙包P.0/IN.json"
+  },
+  {
+    "id": "66105591903",
+    "name": "EZ.json",
+    "path": "Phigros/charts/華灯爱.闫东炜.0/EZ.json"
+  },
+  {
+    "id": "66105598642",
+    "name": "HD.json",
+    "path": "Phigros/charts/華灯爱.闫东炜.0/HD.json"
+  },
+  {
+    "id": "66105621731",
+    "name": "IN.json",
+    "path": "Phigros/charts/華灯爱.闫东炜.0/IN.json"
+  },
+  {
+    "id": "66105546898",
+    "name": "EZ.json",
+    "path": "Phigros/charts/萤火虫の怨.闫东炜.0/EZ.json"
+  },
+  {
+    "id": "66105563940",
+    "name": "HD.json",
+    "path": "Phigros/charts/萤火虫の怨.闫东炜.0/HD.json"
+  },
+  {
+    "id": "66105563948",
+    "name": "IN.json",
+    "path": "Phigros/charts/萤火虫の怨.闫东炜.0/IN.json"
+  },
+  {
+    "id": "66105526848",
+    "name": "EZ.json",
+    "path": "Phigros/charts/蝎虎天体Lacertid.CreamvsDaily天利.0/EZ.json"
+  },
+  {
+    "id": "66105497930",
+    "name": "HD.json",
+    "path": "Phigros/charts/蝎虎天体Lacertid.CreamvsDaily天利.0/HD.json"
+  },
+  {
+    "id": "66105504819",
+    "name": "IN.json",
+    "path": "Phigros/charts/蝎虎天体Lacertid.CreamvsDaily天利.0/IN.json"
+  },
+  {
+    "id": "66105473937",
+    "name": "EZ.json",
+    "path": "Phigros/charts/贝多芬祝福BeethovenBlessing.Nauts.0/EZ.json"
+  },
+  {
+    "id": "66105486306",
+    "name": "HD.json",
+    "path": "Phigros/charts/贝多芬祝福BeethovenBlessing.Nauts.0/HD.json"
+  },
+  {
+    "id": "66105526235",
+    "name": "IN.json",
+    "path": "Phigros/charts/贝多芬祝福BeethovenBlessing.Nauts.0/IN.json"
+  },
+  {
+    "id": "66105439435",
+    "name": "EZ.json",
+    "path": "Phigros/charts/重生.姜米條.0/EZ.json"
+  },
+  {
+    "id": "66105453361",
+    "name": "HD.json",
+    "path": "Phigros/charts/重生.姜米條.0/HD.json"
+  },
+  {
+    "id": "66105476575",
+    "name": "IN.json",
+    "path": "Phigros/charts/重生.姜米條.0/IN.json"
+  },
+  {
+    "id": "66105380886",
+    "name": "EZ.json",
+    "path": "Phigros/charts/雪降りメリクリ.A39.0/EZ.json"
+  },
+  {
+    "id": "66105420096",
+    "name": "HD.json",
+    "path": "Phigros/charts/雪降りメリクリ.A39.0/HD.json"
+  },
+  {
+    "id": "66105432674",
+    "name": "IN.json",
+    "path": "Phigros/charts/雪降りメリクリ.A39.0/IN.json"
+  },
+  {
+    "id": "66105326986",
+    "name": "AT.json",
+    "path": "Phigros/charts/雪降り雪が降っている.AiSSw夜輪ft結月ゆかり.0/AT.json"
+  },
+  {
+    "id": "66105331805",
+    "name": "EZ.json",
+    "path": "Phigros/charts/雪降り雪が降っている.AiSSw夜輪ft結月ゆかり.0/EZ.json"
+  },
+  {
+    "id": "66105350773",
+    "name": "HD.json",
+    "path": "Phigros/charts/雪降り雪が降っている.AiSSw夜輪ft結月ゆかり.0/HD.json"
+  },
+  {
+    "id": "66105379180",
+    "name": "IN.json",
+    "path": "Phigros/charts/雪降り雪が降っている.AiSSw夜輪ft結月ゆかり.0/IN.json"
+  },
+  {
+    "id": "66105300895",
+    "name": "EZ.json",
+    "path": "Phigros/charts/零號車輛.seatrus.0/EZ.json"
+  },
+  {
+    "id": "66105309329",
+    "name": "HD.json",
+    "path": "Phigros/charts/零號車輛.seatrus.0/HD.json"
+  },
+  {
+    "id": "66105318911",
+    "name": "IN.json",
+    "path": "Phigros/charts/零號車輛.seatrus.0/IN.json"
+  },
+  {
+    "id": "66105248536",
+    "name": "EZ.json",
+    "path": "Phigros/charts/青丘.BLACK0.0/EZ.json"
+  },
+  {
+    "id": "66105275631",
+    "name": "HD.json",
+    "path": "Phigros/charts/青丘.BLACK0.0/HD.json"
+  },
+  {
+    "id": "66105287955",
+    "name": "IN.json",
+    "path": "Phigros/charts/青丘.BLACK0.0/IN.json"
+  },
+  {
+    "id": "66105252529",
+    "name": "EZ.json",
+    "path": "Phigros/charts/青芽.茶鸣拾贰律.0/EZ.json"
+  },
+  {
+    "id": "66105215293",
+    "name": "HD.json",
+    "path": "Phigros/charts/青芽.茶鸣拾贰律.0/HD.json"
+  },
+  {
+    "id": "66105426503",
+    "name": "IN.json",
+    "path": "Phigros/charts/青芽.茶鸣拾贰律.0/IN.json"
+  },
+  {
+    "id": "66105201286",
+    "name": "AT.json",
+    "path": "Phigros/charts/风屿.闫东炜.0/AT.json"
+  },
+  {
+    "id": "66105183628",
+    "name": "EZ.json",
+    "path": "Phigros/charts/风屿.闫东炜.0/EZ.json"
+  },
+  {
+    "id": "66105195188",
+    "name": "HD.json",
+    "path": "Phigros/charts/风屿.闫东炜.0/HD.json"
+  },
+  {
+    "id": "66105196075",
+    "name": "IN.json",
+    "path": "Phigros/charts/风屿.闫东炜.0/IN.json"
+  },
+  {
+    "id": "66105176418",
+    "name": "EZ.json",
+    "path": "Phigros/charts/黄金之城GOLDTOWN.Memme.0/EZ.json"
+  },
+  {
+    "id": "66105176438",
+    "name": "HD.json",
+    "path": "Phigros/charts/黄金之城GOLDTOWN.Memme.0/HD.json"
+  },
+  {
+    "id": "66105183691",
+    "name": "IN.json",
+    "path": "Phigros/charts/黄金之城GOLDTOWN.Memme.0/IN.json"
+  },
+  {
+    "id": "66104974377",
+    "name": "conversion-validation.json",
+    "path": "Phigros/conversion-validation.json"
+  },
+  {
+    "id": "66104972605",
+    "name": "noise-index.json",
+    "path": "Phigros/noise-index.json"
+  },
+  {
+    "id": "66105147556",
+    "name": "AT.json",
+    "path": "Phigros/noise/Ametrine.GRYSCLMIssionary.0/AT.json"
+  },
+  {
+    "id": "66105154255",
+    "name": "EZ.json",
+    "path": "Phigros/noise/Ametrine.GRYSCLMIssionary.0/EZ.json"
+  },
+  {
+    "id": "66105161088",
+    "name": "HD.json",
+    "path": "Phigros/noise/Ametrine.GRYSCLMIssionary.0/HD.json"
+  },
+  {
+    "id": "66105164410",
+    "name": "IN.json",
+    "path": "Phigros/noise/Ametrine.GRYSCLMIssionary.0/IN.json"
+  },
+  {
+    "id": "66105141602",
+    "name": "AT.json",
+    "path": "Phigros/noise/DesultorySignals.technoplanet.0/AT.json"
+  },
+  {
+    "id": "66105140751",
+    "name": "EZ.json",
+    "path": "Phigros/noise/DesultorySignals.technoplanet.0/EZ.json"
+  },
+  {
+    "id": "66105143877",
+    "name": "HD.json",
+    "path": "Phigros/noise/DesultorySignals.technoplanet.0/HD.json"
+  },
+  {
+    "id": "66105150564",
+    "name": "IN.json",
+    "path": "Phigros/noise/DesultorySignals.technoplanet.0/IN.json"
+  },
+  {
+    "id": "66105130388",
+    "name": "AT.json",
+    "path": "Phigros/noise/LeaveAllBehind.rider.0/AT.json"
+  },
+  {
+    "id": "66105110314",
+    "name": "AT.json",
+    "path": "Phigros/noise/Message.くるぶっこちゃん.0/AT.json"
+  },
+  {
+    "id": "66105110882",
+    "name": "EZ.json",
+    "path": "Phigros/noise/Message.くるぶっこちゃん.0/EZ.json"
+  },
+  {
+    "id": "66105111838",
+    "name": "HD.json",
+    "path": "Phigros/noise/Message.くるぶっこちゃん.0/HD.json"
+  },
+  {
+    "id": "66105135018",
+    "name": "IN.json",
+    "path": "Phigros/noise/Message.くるぶっこちゃん.0/IN.json"
+  },
+  {
+    "id": "66105130342",
+    "name": "SP.json",
+    "path": "Phigros/noise/Message.くるぶっこちゃん.0/SP.json"
+  },
+  {
+    "id": "66105080846",
+    "name": "AT.json",
+    "path": "Phigros/noise/Petrichor.voidMournfinale.0/AT.json"
+  },
+  {
+    "id": "66105083330",
+    "name": "EZ.json",
+    "path": "Phigros/noise/Petrichor.voidMournfinale.0/EZ.json"
+  },
+  {
+    "id": "66105095252",
+    "name": "HD.json",
+    "path": "Phigros/noise/Petrichor.voidMournfinale.0/HD.json"
+  },
+  {
+    "id": "66105097345",
+    "name": "IN.json",
+    "path": "Phigros/noise/Petrichor.voidMournfinale.0/IN.json"
+  },
+  {
+    "id": "66105069141",
+    "name": "EZ.json",
+    "path": "Phigros/noise/TrueHomeTrueWorldRework.816ThreeNumbers.0/EZ.json"
+  },
+  {
+    "id": "66105071760",
+    "name": "HD.json",
+    "path": "Phigros/noise/TrueHomeTrueWorldRework.816ThreeNumbers.0/HD.json"
+  },
+  {
+    "id": "66105074604",
+    "name": "IN.json",
+    "path": "Phigros/noise/TrueHomeTrueWorldRework.816ThreeNumbers.0/IN.json"
+  },
+  {
+    "id": "66105051896",
+    "name": "AT.json",
+    "path": "Phigros/noise/ハテ.rNFrums.0/AT.json"
+  },
+  {
+    "id": "66105014590",
+    "name": "EZ.json",
+    "path": "Phigros/noise/ハテ.rNFrums.0/EZ.json"
+  },
+  {
+    "id": "66105054725",
+    "name": "HD.json",
+    "path": "Phigros/noise/ハテ.rNFrums.0/HD.json"
+  },
+  {
+    "id": "66105061591",
+    "name": "IN.json",
+    "path": "Phigros/noise/ハテ.rNFrums.0/IN.json"
+  },
+  {
+    "id": "66105023447",
+    "name": "source-catalog.json",
+    "path": "Phigros/source-catalog.json"
+  },
+  {
+    "id": "66104987744",
+    "name": "swordalt-catalog.json",
+    "path": "Phigros/swordalt-catalog.json"
+  }
+]

@@ -1,0 +1,17 @@
+PASS R6 regressions
+PASS real AppSettings.snapshot: 7 game switches/default/migration checks, 24 profile-specific root chart directories.
+PASS active-window separation and quiet linking; one held finger releases/restarts, parallel hold continues, later TAP dispatched on both backends.
+PASS R8 shared Phira session checks
+PASS R9 real-pixel menu checks
+PASS R10 crossing and final-APK calibration audit
+PASS R12 shared reader, entire script corpus {"charts":1057,"notes":677156,"failures":0,"noiseAreas":17782,"positionSamples":9513}
+PASS chart planner, 10 holds, startup catch-up, mixed chords, cancellation, release, edge fallback
+PASS core/planner/playback 11053 assertions
+PASS actual APK wiring: Phira prepares before retry, shared menu/cleanup, common service.play for both games, prepared Root ownership, native projection and pre-start clamp
+PASS actual APK parity: 19 Phira methods retain identical instructions after source/label/menu-adapter normalization; both Phigros routes enter the same engine
+Decoded: Desultory Signals / AT Lv.18; JSON chars 12494578
+Parsed: 2026 notes; noise 160
+PASS preflight
+{"crossingFix": "only one branch changed; all other planner instructions preserved", "removedLegacyClasses": ["assets/ChartTimingIndex", "root/FirstNoteBrowser", "capture/PhigrosStartGate", "capture/PhigrosControls", "capture/PhigrosHudProbe", "capture/SharedPhiraControls"], "legacyClassReferences": 0, "timeTableImportAndPlaybackCalls": 0, "activeCalibration": "RecognitionSettings + one RetryCalibration", "sharedSessionClock": "PhiraRestartClock (R8 parity audit)", "apk": "PhigrosScript_data1.0.9-r14.apk"}
+PASS 1080p landscape/portrait, bounded capture, padded RGBA rows and 216001 frames on a 60fps clock (host model).
+PASS final APK capture coordinator: real frame ingress, 60Hz timestamps, source updates and holds, two reusable buffers, exact-owner and foreground gates, disabled capture, cleanup and encoder failure.

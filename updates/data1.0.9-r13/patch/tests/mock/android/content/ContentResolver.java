@@ -1,0 +1,1 @@
+package android.content;public class ContentResolver{public java.io.InputStream openInputStream(android.net.Uri u)throws java.io.IOException{return new java.io.FileInputStream(new java.io.File(java.net.URI.create(u.toString())));}public android.database.Cursor query(android.net.Uri u,String[] p,String s,String[] a,String sort){return null;}}

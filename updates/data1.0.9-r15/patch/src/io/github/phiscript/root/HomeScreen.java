@@ -1,0 +1,202 @@
+package io.github.phiscript.root;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.provider.Settings;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.Switch;
+import android.widget.TextView;
+import io.github.phiscript.AppSettings;
+import io.github.phiscript.RuntimeState;
+import io.github.phiscript.assets.ChartLibrary;
+import io.github.phiscript.assets.PhiraLibrary;
+import io.github.phiscript.input.TouchService;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+/** One native home, one transport action. Reuses the Activity's live status/log fields. */
+public final class HomeScreen {
+    private static final int BG=UiDesign.BG,CARD=UiDesign.SURFACE,INK=UiDesign.INK,MUTED=UiDesign.MUTED,ACCENT=UiDesign.ACCENT;
+    private final Activity activity;
+    private final LinearLayout root;
+    private TextView badge,summary,library,permission,mode;
+    private Button primary;
+    private Switch recording;
+    private int primaryState=-1,cardIndex;private boolean motionPaused;
+    private final Runnable ticker=new Runnable(){public void run(){if(RootPanel.alive(activity)&&root.isAttachedToWindow()){update();root.postDelayed(this,700);}}};
+    private HomeScreen(Activity activity,LinearLayout root){this.activity=activity;this.root=root;}
+    public static void attach(Activity a){
+        io.github.phiscript.i18n.UiText.attach(a);io.github.phiscript.GamePackages.init(a);
+        LinearLayout root=find(a.findViewById(android.R.id.content));if(root==null||root.getTag() instanceof HomeScreen)return;
+        HomeScreen home=new HomeScreen(a,root);root.setTag(home);home.scrollable();home.build();
+        io.github.phiscript.assets.ExternalCharts.attach(a);
+        root.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener(){
+            public void onViewAttachedToWindow(View v){root.removeCallbacks(home.ticker);root.post(home.ticker);}
+            public void onViewDetachedFromWindow(View v){root.removeCallbacks(home.ticker);UiMotion.cancelTree(root);}
+        });
+        if(root.isAttachedToWindow())root.post(home.ticker);
+    }
+    public static void refresh(Activity a){LinearLayout root=find(a.findViewById(android.R.id.content));if(root!=null&&root.getTag() instanceof HomeScreen)((HomeScreen)root.getTag()).update();}
+    private void scrollable(){
+        if(root.getParent() instanceof android.widget.ScrollView||!(root.getParent() instanceof ViewGroup))return;
+        ViewGroup parent=(ViewGroup)root.getParent();int index=parent.indexOfChild(root);ViewGroup.LayoutParams p=root.getLayoutParams();parent.removeView(root);
+        android.widget.ScrollView scroll=new android.widget.ScrollView(activity);scroll.setFillViewport(true);scroll.addView(root,new android.widget.ScrollView.LayoutParams(-1,-2));parent.addView(scroll,index,p);
+    }
+    private static LinearLayout find(View v){
+        if(v instanceof LinearLayout&&((LinearLayout)v).getOrientation()==LinearLayout.VERTICAL)return(LinearLayout)v;
+        if(v instanceof ViewGroup){ViewGroup g=(ViewGroup)v;for(int i=0;i<g.getChildCount();i++){LinearLayout r=find(g.getChildAt(i));if(r!=null)return r;}}
+        return null;
+    }
+    private String w(String zh,String en){return UiDesign.words(zh,en);}
+    private void build(){
+        TextView oldStatus=field("statusView"),oldAccess=field("accessibilityView"),oldLog=field("logView");
+        root.removeAllViews();int inset=activity.getResources().getConfiguration().screenWidthDp<360?14:20;
+        root.setPadding(dp(inset),dp(22),dp(inset),dp(28));root.setBackgroundColor(BG);
+        if(root.getParent() instanceof View)((View)root.getParent()).setBackgroundColor(BG);
+        activity.getWindow().setStatusBarColor(BG);activity.getWindow().setNavigationBarColor(BG);
+        View decor=activity.getWindow().getDecorView();decor.setSystemUiVisibility(decor.getSystemUiVisibility()&~(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR));
+        TextView brand=text(root,"PHIGROS SCRIPT",11,ACCENT,true);brand.setLetterSpacing(.18f);
+        text(root,w("演奏台","Performance"),28,INK,true).setPadding(0,dp(12),0,0);
+        text(root,w("为下一首，准备就绪。","Ready for your next chart."),13,MUTED,false).setPadding(0,dp(8),0,dp(8));
+        LinearLayout transport=card();badge=text(transport,"",12,ACCENT,true);badge.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        mode=text(transport,"",20,INK,true);mode.setPadding(0,dp(12),dp(8),dp(10));mode.setMinHeight(dp(52));mode.setGravity(Gravity.CENTER_VERTICAL);mode.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+        mode.setBackground(UiDesign.ripple(activity,CARD,10));mode.setFocusable(true);mode.setOnClickListener(v->PlayEntry.choose(activity));UiMotion.bindPress(mode);
+        summary=text(transport,"",13,MUTED,false);summary.setMinHeight(dp(42));
+        primary=action(transport,w("开始打谱","Start performance"),true,()->{
+            if(RootPhiraImport.isBusy()||PhiraImportControl.isBusy()){RootPhiraImport.cancel();PhiraImportControl.cancel();}
+            else if(RuntimeState.INSTANCE.getRunning().get()||ManualChartControl.isOpen())AutoEntry.stop(activity);else PlayEntry.start(activity,false);update();
+        });primary.setTag("data-primary-transport");
+        transport.addView(UiDesign.row(activity,UiDesign.PLAY,w("启动 Phira Pro","Open Phira Pro"),w("打开游戏并选择 Pro 模式","Launch the game and select Pro mode"),()->GameLaunch.phira(activity,true,true)),params(-1,-2,6));
+        text(transport,w("保持游戏横屏 · 音量减键可停止","Keep landscape · Volume down stops"),11,MUTED,false).setPadding(0,dp(8),0,0);
+        LinearLayout charts=card();label(charts,w("谱库","Chart library"),"LIBRARY");
+        text(charts,w("下载、导入与删除，放在一起。","Get, import and manage in one place."),12,MUTED,false).setPadding(0,dp(8),0,0);
+        library=text(charts,"",12,MUTED,false);library.setPadding(0,dp(12),0,dp(12));
+        text(charts,"Phigros",17,INK,true);
+        triad(charts,"Phigros",new String[]{w("下载","Get charts"),w("导入","Import"),w("删除 / 清理","Delete")},new Runnable[]{this::downloadCharts,this::importCharts,()->PhigrosLibraryManagement.open(activity)},new String[]{"data-phigros-download","data-import","data-phigros-delete"});
+        divider(charts);text(charts,"Phira / Pro",17,INK,true);
+        triad(charts,"Phira / Pro",new String[]{w("在线谱库","Online"),w("导入","Import"),w("删除","Delete")},new Runnable[]{()->OnlinePhiraLibraryUi.open(activity),()->{if(!RootPanel.blocked(activity))invoke(activity,"choosePhira");},()->PhiraLibraryManagement.open(activity)},new String[]{"data-phira-online","data-phira-import","data-phira-delete"});
+        divider(charts);LinearLayout prepare=UiDesign.row(activity,UiDesign.SETTINGS,w("重新计算触点","Prepare touch points"),w("调整设置后，重新准备已缓存谱面","Refresh prepared charts after changing settings"),()->PreparedChartsUi.open(activity));prepare.setTag("data-prepare-charts");charts.addView(prepare,new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout controls=card();label(controls,w("权限与设置","Access & settings"),"CONTROLS");permission=text(controls,"",12,MUTED,false);permission.setPadding(0,dp(12),0,dp(4));
+        controls.addView(UiDesign.row(activity,UiDesign.SHIELD,w("权限与触控","Permissions & input"),w("无障碍、悬浮窗与 Root","Accessibility, overlay and Root"),this::permissions),new LinearLayout.LayoutParams(-1,-2));
+        controls.addView(UiDesign.row(activity,UiDesign.SETTINGS,w("设置与工具","Settings & tools"),w("校准、识别、手势与语言","Calibration, recognition, gestures and language"),this::settings),new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout video=card();label(video,w("录屏","Recording"),"RECORDING");
+        recording=new Switch(activity);recording.setText(w("打谱时自动录屏","Record performances"));recording.setTextSize(15);recording.setTextColor(INK);recording.setMinHeight(dp(56));recording.setPadding(0,dp(8),0,dp(8));
+        recording.setThumbTintList(ColorStateList.valueOf(ACCENT));recording.setTrackTintList(ColorStateList.valueOf(0xff3b675e));recording.setChecked(new AppSettings(activity).flag("recording_on_play",true));video.addView(recording,new LinearLayout.LayoutParams(-1,-2));
+        recording.setOnCheckedChangeListener((v,on)->{if(!RuntimeState.INSTANCE.getRunning().get()&&!RootPanel.isBusy())new AppSettings(activity).saveFlag("recording_on_play",on);});
+        text(video,w("演奏结束保存无声 MP4","Silent MP4 is saved when the performance ends"),12,MUTED,false);
+        video.addView(UiDesign.row(activity,UiDesign.VIDEO,w("分辨率与帧率","Resolution & frame rate"),w("按设备选择录屏档位","Choose a profile for your device"),()->io.github.phiscript.record.RecordingSettings.show(activity)),params(-1,-2,8));
+        video.addView(UiDesign.row(activity,UiDesign.HISTORY,w("最近录屏","Recent recordings"),w("查看或分享已保存的视频","View or share saved videos"),()->{try{activity.startActivity(io.github.phiscript.record.RecordingFiles.view(activity));}catch(Exception e){RootPanel.message(activity,"录屏位置","Android 10+：Movies/PhigrosScript；Android 8/9：应用录屏目录。\n\n"+e.getMessage());}}),new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout diagnostics=card(),details=new LinearLayout(activity);details.setOrientation(1);details.setVisibility(View.GONE);
+        TextView expand=text(diagnostics,w("运行记录  ＋","Activity log  +"),14,MUTED,true);expand.setMinHeight(dp(48));expand.setGravity(Gravity.CENTER_VERTICAL);expand.setFocusable(true);expand.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+        expand.setOnClickListener(v->{boolean open=!UiMotion.expanded(details);UiMotion.toggle(details,open);expand.setText(open?w("运行记录  −","Activity log  −"):w("运行记录  ＋","Activity log  +"));expand.setContentDescription(open?w("收起运行记录","Collapse activity log"):w("展开运行记录","Expand activity log"));});UiMotion.bindPress(expand);diagnostics.addView(details,new LinearLayout.LayoutParams(-1,-2));
+        for(TextView v:new TextView[]{oldStatus,oldAccess,oldLog})if(v!=null){if(v.getParent() instanceof ViewGroup)((ViewGroup)v.getParent()).removeView(v);v.setTextColor(MUTED);v.setTextSize(12);v.setPadding(0,dp(8),0,dp(8));details.addView(v,new LinearLayout.LayoutParams(-1,-2));}
+        text(root,"Phigros Script  /  data1.1.0",11,MUTED,false).setPadding(0,dp(22),0,0);update();
+    }
+    private void triad(LinearLayout parent,String platform,String[] labels,Runnable[] actions,String[] tags){
+        LinearLayout row=new LinearLayout(activity);parent.addView(row,params(-1,-2,10));
+        for(int i=0;i<labels.length;i++){Button b=UiDesign.button(activity,labels[i],false,actions[i]);b.setTag(tags[i]);b.setMinWidth(0);b.setMinimumWidth(0);b.setTextSize(13);b.setPadding(dp(4),dp(12),dp(4),dp(12));b.setContentDescription(platform+", "+labels[i]);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);if(i>0)p.leftMargin=dp(6);row.addView(b,p);}
+    }
+    private void divider(LinearLayout box){View line=new View(activity);line.setBackgroundColor(UiDesign.LINE);box.addView(line,params(-1,dp(1),18));View gap=new View(activity);box.addView(gap,new LinearLayout.LayoutParams(1,dp(16)));}
+    private void update(){
+        boolean running=RuntimeState.INSTANCE.getRunning().get()||ManualChartControl.isOpen(),busy=RootPanel.isBusy();
+        boolean touch=RuntimeState.INSTANCE.getActiveTouchStop().get()!=null;
+        if((running||touch)&&!motionPaused)UiMotion.cancelTree(root);motionPaused=running||touch;
+        AppSettings prefs=new AppSettings(activity);
+        UiMotion.state(mode,io.github.phiscript.i18n.UiText.text(PlayEntry.label(activity)+"  ⌄"));
+        mode.setContentDescription(w("切换演奏模式：","Change performance mode: ")+io.github.phiscript.i18n.UiText.text(PlayEntry.label(activity)));
+        UiMotion.state(badge,io.github.phiscript.i18n.UiText.text(RootPanel.isRootPending()?"正在等待 ROOT 授权":running?(touch?"正在演奏":"自动检测已开启"):busy?"正在处理谱库":"待机"));
+        String log=RuntimeState.INSTANCE.logText();
+        if((running||RootPhiraImport.isBusy()||PhiraImportControl.isBusy())&&log!=null&&!log.trim().isEmpty()){
+            String value=log.trim();int line=value.lastIndexOf('\n');if(line>=0)value=value.substring(line+1);UiMotion.state(summary,io.github.phiscript.i18n.UiText.text(value.length()>120?value.substring(0,120)+"…":value));
+        }else if(!running&&!busy&&!prefs.text("phigros_last_error","").isEmpty()){
+            UiMotion.state(badge,io.github.phiscript.i18n.UiText.text("上次自动检测已停止"));UiMotion.state(summary,io.github.phiscript.i18n.UiText.text(prefs.text("phigros_last_error","")));
+        }else UiMotion.state(summary,io.github.phiscript.i18n.UiText.text(RootPanel.isRootPending()?"授权结束后会自动更新状态，返回游戏后继续确认曲目。":
+            ModeRouting.kind(prefs)==ModeRouting.Kind.PHIGROS_AUTO?"进入歌曲画面后自动暂停，再识别谱面并点击中央重试。":"选择与游戏一致的模式，导入谱面后即可开始。"));
+        boolean importing=RootPhiraImport.isBusy()||PhiraImportControl.isBusy(),cancelling=RootPhiraImport.isCancelling()||PhiraImportControl.isCancelling();
+        UiMotion.state(primary,io.github.phiscript.i18n.UiText.text(cancelling?"正在取消谱面导入…":importing?"取消谱面导入":running?"停止打谱":RootPanel.isRootPending()?"等待 Root 授权…":busy?"正在处理…":"开始打谱"));
+        boolean transportEnabled=!cancelling&&(importing||running||!busy);if(primary.isEnabled()!=transportEnabled){primary.setEnabled(transportEnabled);primary.setAlpha(transportEnabled?1f:.5f);}
+        int nextState=running?1:0;if(primaryState!=nextState){primaryState=nextState;primary.setBackground(ripple(running?0xff593746:ACCENT));primary.setTextColor(running?INK:BG);}primary.setContentDescription(primary.getText());
+        ChartLibrary phi=RuntimeState.INSTANCE.getLibrary();PhiraLibrary phira=RuntimeState.INSTANCE.getPhiraLibrary();
+        UiMotion.state(library,io.github.phiscript.i18n.UiText.text("Phigros  "+(phi==null?"未导入":phi.getLocations().size()+" 个谱面难度")+"\nPhira  "+(phira==null?"未导入":phira.getEntries().size()+" 个谱面")));
+        UiMotion.state(permission,io.github.phiscript.i18n.UiText.text((InputBackend.rootEnabled?"Root 触控":"无障碍触控")+"  ·  "+(TouchService.Companion.getCurrent()!=null?"无障碍已连接":"无障碍未连接")+"\n"+(Settings.canDrawOverlays(activity)?"悬浮窗已允许":"悬浮窗待授权")+"  ·  截屏权限在开始时申请"));
+        recording.setEnabled(!running&&!busy);boolean enabled=prefs.flag("recording_on_play",true);if(recording.isChecked()!=enabled)recording.setChecked(enabled);
+        UiMotion.state(recording,io.github.phiscript.i18n.UiText.text("打谱时录屏（"+io.github.phiscript.record.RecordingPreferences.load(activity).label()+"）"));
+    }
+    private void downloadCharts(){
+        if(RootPanel.blocked(activity))return;
+        UiDesign.show(UiDesign.dialog(activity,w("下载 Phigros 谱面","Get Phigros charts")).setItems(new String[]{w("Swordalt · 原谱与噪域","Swordalt · Charts & noise areas"),w("小飞机 · 新谱库（feyajI8g）","Feijipan · New library (feyajI8g)"),w("小飞机 · 上次谱库","Feijipan · Previous library"),w("联网链接 / 更新目录","Online link / Update catalog")},(d,i)->{
+            if(i==0)io.github.phiscript.assets.SwordaltLibraryUi.open(activity);else if(i==1)io.github.phiscript.assets.ExternalCharts.useNewShare(activity);else if(i==2)io.github.phiscript.assets.ExternalCharts.useCloud(activity);else io.github.phiscript.assets.ExternalCharts.network(activity);
+        }).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).create());
+    }
+    private void importCharts(){
+        if(RootPanel.blocked(activity))return;
+        UiDesign.show(UiDesign.dialog(activity,w("导入 Phigros 谱库","Import Phigros charts")).setItems(new String[]{w("导入本地 PEZ / ZIP / JSON","Import local PEZ / ZIP / JSON"),w("使用已导入的 PEZ / ZIP","Use imported PEZ / ZIP"),w("导入已安装游戏 APK","Import installed game APK"),w("选择 APK 文件","Choose APK files")},(d,i)->{
+            if(i==0)io.github.phiscript.assets.ExternalCharts.choose(activity);else if(i==1)io.github.phiscript.assets.ExternalCharts.useLocal(activity);else if(i==2)importInstalledCharts();else invoke(activity,"chooseApks");
+        }).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).create());
+    }
+
+    private void importInstalledCharts(){
+        if(RootPanel.blocked(activity))return;
+        if(InputBackend.rootEnabled)RootPanel.scan(activity);
+        else invoke(activity,"scan",new Class<?>[]{kotlin.jvm.functions.Function0.class},new Object[]{null});
+    }
+
+    private void permissions(){
+        UiDesign.show(UiDesign.dialog(activity, "").setTitle(io.github.phiscript.i18n.UiText.text("权限与触控")).setItems(io.github.phiscript.i18n.UiText.text(new String[]{"选择触控方式：Root / 无障碍","启用无障碍服务","允许悬浮窗","Shizuku 辅助与诊断"}),(d,i)->{
+            if(i==0){
+                if(RootPanel.blocked(activity))return;
+                UiDesign.show(UiDesign.dialog(activity, "").setTitle(io.github.phiscript.i18n.UiText.text("触控方式")).setSingleChoiceItems(io.github.phiscript.i18n.UiText.text(new String[]{"Root（需授权）","无障碍"}),InputBackend.rootEnabled?0:1,(dialog,index)->{
+                    dialog.dismiss();if(index==0){if(!InputBackend.rootEnabled)RootPanel.requestRoot(activity);}else RootPanel.useAccessibility(activity);
+                }).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).create());
+            }else if(i==1)activity.startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+            else if(i==2)activity.startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,android.net.Uri.parse("package:"+activity.getPackageName())));
+            else shizuku();
+        }).setNegativeButton(io.github.phiscript.i18n.UiText.text("关闭"),null).create());
+    }
+    private void settings(){
+        UiDesign.show(UiDesign.dialog(activity, "").setTitle(io.github.phiscript.i18n.UiText.text("设置与工具")).setItems(io.github.phiscript.i18n.UiText.text(new String[]{"Phigros / Phira · 重试校准","识别区域与设备设置","修正曲名识别","Phira · 自动识别 / 选择谱面","只识别预览","RPE 兼容说明","连键手势与边缘避让","语言 / Language","检查更新","噪域与随机点击"}),(d,i)->{
+            switch(i){
+                case 0:AutoEntry.settings(activity);break;
+                case 1:RecognitionSettings.open(activity);break;
+                case 2:invoke(activity,"editAlias");break;
+                case 3:if(!RootPanel.blocked(activity)){ModeRouting.select(new AppSettings(activity),1);invoke(activity,"choosePhiraChart");}break;
+                case 4:PlayEntry.start(activity,true);break;
+                case 5:RootPanel.message(activity,"RPE 兼容说明","支持 JSON / ZIP / PEZ、长键多押、父子线、变 BPM、上下侧及已适配的多层事件。这里只计算触控，不渲染视频或特效；自定义脚本、带音符的 UI 绑定线及新版扩展仍有限制。不会保证所有谱面兼容或全连。");break;
+                case 6:GestureSettings.open(activity);break;
+                case 7:io.github.phiscript.i18n.LanguageSettings.open(activity);break;
+                case 8:io.github.phiscript.update.UpdateChecker.check(activity);break;
+                case 9:TapSettings.open(activity);break;
+            }
+        }).setNegativeButton(io.github.phiscript.i18n.UiText.text("关闭"),null).create());
+    }
+    private void shizuku(){
+        UiDesign.show(UiDesign.dialog(activity, "").setTitle(io.github.phiscript.i18n.UiText.text("无障碍与 Shizuku")).setItems(io.github.phiscript.i18n.UiText.text(new String[]{"连接 Shizuku","通过 Shizuku 启用无障碍","查看 / 复制无障碍诊断","记录服务关闭原因"}),(d,i)->{
+            if(i==0){try{io.github.phiscript.assets.ApkAccess.INSTANCE.requestPermission();}catch(Exception e){RootPanel.message(activity,"Shizuku",e.getMessage());}}
+            else invoke(activity,i==1?"enableAccessibilityWithShizuku":i==2?"accessibilityHelp":"captureAccessibilityFailure");
+        }).setNegativeButton(io.github.phiscript.i18n.UiText.text("关闭"),null).create());
+    }
+    public static void invoke(Activity a,String name){invoke(a,name,new Class<?>[0],new Object[0]);}
+    private static void invoke(Activity a,String name,Class<?>[] types,Object[] values){
+        try{Method m=a.getClass().getDeclaredMethod(name,types);m.setAccessible(true);m.invoke(a,values);}
+        catch(Exception e){Throwable t=e instanceof InvocationTargetException?((InvocationTargetException)e).getTargetException():e;RootPanel.message(a,"操作未完成",String.valueOf(t.getMessage()));}
+    }
+    private TextView field(String name){try{Field f=activity.getClass().getDeclaredField(name);f.setAccessible(true);return(TextView)f.get(activity);}catch(Exception e){RuntimeState.INSTANCE.log("界面状态字段未读取："+name);return null;}}
+    private LinearLayout card(){LinearLayout box=UiDesign.card(activity);root.addView(box,params(-1,-2,14));UiMotion.enter(box,cardIndex++);return box;}
+    private void label(LinearLayout box,String title,String caption){TextView name=text(box,title,17,INK,true);if(android.os.Build.VERSION.SDK_INT>=28)name.setAccessibilityHeading(true);}
+    private TextView text(LinearLayout parent,String value,int size,int color,boolean bold){TextView v=UiDesign.text(activity,value,size,color,bold);parent.addView(v,new LinearLayout.LayoutParams(-1,-2));return v;}
+    private Button action(LinearLayout parent,String value,boolean main,Runnable click){Button b=UiDesign.button(activity,value,main,click);parent.addView(b,params(-1,-2,12));return b;}
+    private GradientDrawable shape(int color,int radius){return UiDesign.shape(activity,color,radius);}
+    private RippleDrawable ripple(int color){return UiDesign.ripple(activity,color,14);}
+    private LinearLayout.LayoutParams params(int w,int h,int top){return UiDesign.space(activity,w,h,top);}
+    private int dp(float n){return Math.round(n*activity.getResources().getDisplayMetrics().density);}
+}

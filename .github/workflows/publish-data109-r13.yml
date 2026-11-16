@@ -1,0 +1,48 @@
+name: Publish data1.0.9-r13
+on:
+  push:
+    branches: [release/data1.0.9-r13]
+    paths: [.github/workflows/publish-data109-r13.yml, 'updates/data1.0.9-r13/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data109-r13
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/release/data1.0.9-r13'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Download the data1.0.9 base
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download data1.0.9 --repo "$GITHUB_REPOSITORY" --pattern PhigrosScript_data1.0.9.apk --dir base
+      - name: Restore and verify all four assets
+        run: python3 updates/data1.0.9-r13/restore.py base/PhigrosScript_data1.0.9.apk updates/data1.0.9-r13/release-data release
+      - name: Verify the source archive against the tagged source tree
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          source = Path("updates/data1.0.9-r13")
+          with ZipFile("release/PhigrosScript_patch.zip") as archive:
+              checked = set()
+              for name in archive.namelist():
+                  path = source / name
+                  if path.read_bytes() != archive.read(name):
+                      raise ValueError(name)
+                  checked.add(path)
+              if checked != {p for p in (source / "patch").rglob("*") if p.is_file()}:
+                  raise ValueError("Source tree and archive file lists differ")
+          PY
+      - name: Publish APKs and source after verifying remote asset digests
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 updates/data1.0.9-r13/publish.py release updates/data1.0.9-r13/release-data/manifest.json updates/data1.0.9-r13/RELEASE_NOTES.md

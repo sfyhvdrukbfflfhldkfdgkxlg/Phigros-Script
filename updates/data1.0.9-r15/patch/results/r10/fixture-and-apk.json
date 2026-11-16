@@ -1,0 +1,9 @@
+{
+  "fixture": "Desultory_Signals_AT.pez",
+  "bytes": 19849814,
+  "sha256": "7f63e3dec8e45321a668928b2c981244bd015cade931e551126b10fd60491af1",
+  "notes": 2026,
+  "noiseAreas": 160,
+  "baselineApkSha256": "8f7fdb1ef0230955837f73e70d6161834c9952af4907ec6b18bbcc531e917206",
+  "finalApkSha256": "91094698f5cb10efcae78a88eabd18d99c2b925d26d8c70e693d19a8a38e3cb3"
+}

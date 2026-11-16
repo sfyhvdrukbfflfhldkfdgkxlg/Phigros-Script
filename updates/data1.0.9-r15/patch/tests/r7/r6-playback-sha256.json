@@ -1,0 +1,14 @@
+{
+  "patch/src/io/github/phiscript/capture/AutoSessionRouter.java": "aaf03371f0638d3339aec6dd640bce0d8de0d22bd461bca6e7bb1edfcf39aabd",
+  "patch/src/io/github/phiscript/capture/PhigrosAutoEngine.java": "71a8f13b2768504c9e5017457bbb891c08412dfb938fc6be86baa9b038d7e01a",
+  "patch/src/io/github/phiscript/capture/PhigrosRetryClock.java": "b7a19be23b6ba040c00224f2c0e1934a8004008542d5355fd9444bb5ad3d672c",
+  "patch/src/io/github/phiscript/capture/SessionFeedback.java": "a306ac5dd1d8f86de9261546a06bf3ed5def2f49ee8eb8b8d187dad1d9d5d355",
+  "patch/src/io/github/phiscript/engine/BlockAreaSet.java": "fd80ab8818b3e0e29d9efc3aef50a9c0042ba5d7db4d0ceda11e29aac67302b2",
+  "patch/src/io/github/phiscript/engine/NativeChartProjection.java": "c5de90f323f84cf5207462e24c15faa91b930742f21cde12d3ac6d4bd702b173",
+  "patch/src/io/github/phiscript/input/ChartMultiTouchPlayer.java": "5d677e96cb10452c4e9c7f7372ced52713eb06185a0f03ba2d09481bb0b3854f",
+  "patch/src/io/github/phiscript/input/GesturePlan.java": "f990d2c1005c2158f7d19f5127950560b6e5c255d60fedf4e8aa3c8df380fcf8",
+  "patch/src/io/github/phiscript/input/RootChartPlayer.java": "9a72eac0a9b4b6b58cf0c3cba516a64704ea5c7b7c56ba54662210af05c115a0",
+  "patch/src/io/github/phiscript/input/SharedChartPlayback.java": "457f23b3a012af0a3f7e11e3d6f1c34dd40d7159c56752f0990eee61ba4f0b61",
+  "patch/src/io/github/phiscript/input/TapMod.java": "dd0942ef0ff912e2bd0accd56a2b914e02ddd79f65bfb6a0d724b57f538631a0",
+  "patch/src/io/github/phiscript/input/TouchSafety.java": "793df3bc41fa6da55c68116279be3848ef0c31d93b2ce4403b1de778b7fa61d3"
+}

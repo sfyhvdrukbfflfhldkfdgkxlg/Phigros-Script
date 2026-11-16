@@ -1,16 +1,18 @@
 # Phigros Script
 
-最新补丁版本：**data1.0.10（预发布测试版）**。
+<img src="updates/data1.0.9-r15/patch/icon/icon.svg" width="112" alt="Phigros Script 图标">
 
-[安装包与完整源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.0.10) · [源码与构建说明](updates/data1.0.10/patchdata109/README.md) · [验证记录](updates/data1.0.10/TESTING.md) · [校验值](updates/data1.0.10/SHA256SUMS.txt)
+当前版本：**data1.1.0** / versionCode **11000**。基于官方 R15 与后续改进，沿用 data 系列签名。
 
-本版修复 Phigros 校准延迟与 Phira Pro 兼容，噪域 active 时段关闭可选连续连接，录屏改为 1080p60。原音符、原始长按、普通区域的连接开关、首键资料和逐谱时间表继续保留。
+[安装包与源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.1.0) · [使用与构建](updates/data1.1.0/README.md) · [验证记录](updates/data1.1.0/TESTING.md)
 
-另有独立的 [手势录入器](updates/data1.0.10/gesture-recorder/README.md)：多指录入、预览和 JSON 导出；独立 APK 不集成到主程序，导出资料供开发时修改手势使用。
+Phigros 与 Phira / Phira Pro 支持导入谱面自动演奏。谱面导入或下载后提前计算点击、长按与滑动轨迹；演奏时查表，按实际提交时刻复查噪域，优先选择合法安全空隙中心。已有有效缓存直接复用，复杂红键规划跳过必定无法使用的候选分支。
 
-**主程序 APK 使用新的开发测试签名，不能直接覆盖原版。** 旧谱面需重新导入才能读取噪域元数据。Host 与最终 DEX 回归、签名和对齐检查通过，尚无真机判定、GPU/EGL、持续 1080p60 或录入器 UI/SAF 验证。详情见 [发布说明](updates/data1.0.10/RELEASE_NOTES.md)。
+Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导入删除与 Phira 管理并列显示。课题模式三首歌逐首校准；录屏提供 720p / 1080p、30 / 60fps 档位。界面采用统一卡片与图标，自定义动效统一线性，演奏时停止动效。
 
-根目录 app/ 保留旧 Alpha Gradle 工程。data 系列的源码、构建说明与验证位于版本目录；完整源码 ZIP 在 Releases，包含完整回归所需的三个参考谱面。
+支持 Root 与无障碍输入。验证覆盖最终签名 APK 的实际代码、原谱及 Android 主机模型；Android 真机界面、判定与录屏性能仍需实测，不保证任意谱面全连或满分。
+
+活动补丁源码保留在 `updates/data1.0.9-r15/patch`，构建入口为 `build_110.py`。根目录旧 Alpha Gradle 工程不包含本版；完整补丁源码与复现说明随发行版提供。
 
 <details>
 <summary>原 Alpha 版本说明</summary>

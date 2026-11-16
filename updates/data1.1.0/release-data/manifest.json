@@ -1,0 +1,118 @@
+{
+  "version": "data1.1.0",
+  "versionCode": 11000,
+  "verified_source_commit": "94039e20249b22f41696931a81ffcd6d7dc21276",
+  "verified_patch_tree": "22953eff5bb35388db84e7b8572bb91f4d0421b4",
+  "base_sha256": "d7d38b37f3ba821261c5c9917366c5600d7432c5836a1b8fb4e2b27bba58c5b8",
+  "assets": {
+    "PhigrosScript_data1.1.0.apk": {
+      "size": 48341387,
+      "sha256": "6120ebee80312fbbb22eff9de56d99d083e6d2c3bde8b712789237642b754996"
+    },
+    "PhigrosScript_data1.1.0_Source.zip": {
+      "size": 1027815,
+      "sha256": "60598e16ec1a1ac5f50f4a8e39314dfb6ea4c0a489febdef0f98afa8e16c6528"
+    },
+    "使用说明_data1.1.0.md": {
+      "size": 5547,
+      "sha256": "589a7fc45bedc09a513c054c106b1074aef4fcb9cb1978ee303195800802fe96"
+    },
+    "验证记录_data1.1.0.md": {
+      "size": 16955,
+      "sha256": "0bcd9f576be72337520b712ddefb6ba81a567af425e2a39114d1933475287c58"
+    },
+    "回放对照_data1.1.0.md": {
+      "size": 2955,
+      "sha256": "368e84845cbdbceccc793892110456f156c9fd035a85d01777459066ccaad401"
+    },
+    "回放对照_data1.1.0.json": {
+      "size": 7499,
+      "sha256": "76ddc9aa0be2756ac8c68d7d5213550350a904411e13e3fccbe128f0b9a192a8"
+    },
+    "PhigrosScript_r15_to_data1.1.0.patch": {
+      "size": 809866,
+      "sha256": "595f701886880f0920a1cfff386416d1c55b760e3710c560d16269162afd71a1"
+    },
+    "PhigrosScript_data1.1.0.hooks.json": {
+      "size": 1270,
+      "sha256": "408acb68dfb35d96f3430dd20539bb6391f02a9c3921bde3fadf07d38f160cff"
+    },
+    "PhigrosScript_Icon_data1.1.0.png": {
+      "size": 65895,
+      "sha256": "f47d7d2be9a373e08905dfc81f955261b56ebb1f6d8743cbb03f3ede0494cf03"
+    },
+    "PhigrosScript_Icon_data1.1.0.svg": {
+      "size": 654,
+      "sha256": "efc3476f947bb19d04d54dfe797c82a8abe604f7535266f819654b46df9c8804"
+    },
+    "RELEASE_NOTES_data1.1.0.md": {
+      "size": 1408,
+      "sha256": "89c3de1bcfd390bc3b003ee13a47d463e8e91beb7c5b0c07731fd9c8828c30ee"
+    },
+    "SHA256SUMS_data1.1.0.txt": {
+      "size": 1071,
+      "sha256": "d8787446f81b6445268d64aff57448794c0d3f67bdbd99e96a85dd15c8aa2d76"
+    }
+  },
+  "transport": {
+    "size": 2061248,
+    "sha256": "d8a9a4106031d5ba04a90232049bb1dcdd46bd7f4541bd831ca634ca8cf981b7",
+    "parts": [
+      {
+        "name": "transport.part000",
+        "size": 196608,
+        "sha256": "56bfc45448907b8dfb216197faf2d8af0649b67083c1fc66fac797f7b9208e12"
+      },
+      {
+        "name": "transport.part001",
+        "size": 196608,
+        "sha256": "2abbbf4fd199ea3a811eae6489dae45b722b01d850fea89169455b16bdbf38e5"
+      },
+      {
+        "name": "transport.part002",
+        "size": 196608,
+        "sha256": "8e9c251d2bb198f4146c970d2fc5138416d970e03b385443c702b2f2ff2e6853"
+      },
+      {
+        "name": "transport.part003",
+        "size": 196608,
+        "sha256": "feb52d5107b7c400ba1a5b602212ee79946d33a38970b9aaf3c56c082a3b927d"
+      },
+      {
+        "name": "transport.part004",
+        "size": 196608,
+        "sha256": "27f7e7c1d8c774f889c3a9573b23c19704a1fd93dae372634ae138b21dcbf665"
+      },
+      {
+        "name": "transport.part005",
+        "size": 196608,
+        "sha256": "99b9aa83ece83364820d8412f643b50ff4ee2aebc09c157eb8f74274d0a6bf8f"
+      },
+      {
+        "name": "transport.part006",
+        "size": 196608,
+        "sha256": "bb380d25c2e04ac188ac2c95cf43c7ad3f4983373208ff18b1c4c396ff2244d4"
+      },
+      {
+        "name": "transport.part007",
+        "size": 196608,
+        "sha256": "4327f5c01632b2d076051803419c097fd5b28d2cf1b7d0d451d065fa8877ca49"
+      },
+      {
+        "name": "transport.part008",
+        "size": 196608,
+        "sha256": "d6cc40f9bd303a13d7c1457c6e1fb3af556926642c54662cef8514ee6df0264c"
+      },
+      {
+        "name": "transport.part009",
+        "size": 196608,
+        "sha256": "157dbd33019fc19274885b413c9eff56859f42e6a1ccbc901e31f217e5c87dc3"
+      },
+      {
+        "name": "transport.part010",
+        "size": 95168,
+        "sha256": "a0eaa7bff7580c12015ed6ea3931f6f5afa989dfbc5de3f7217fc7053da9101f"
+      }
+    ]
+  }
+}

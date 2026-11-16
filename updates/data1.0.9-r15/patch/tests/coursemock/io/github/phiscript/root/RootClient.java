@@ -1,0 +1,1 @@
+package io.github.phiscript.root;import io.github.phiscript.capture.CourseEngineRegression;public class RootClient implements AutoCloseable {private boolean closed;public void close(){if(!closed){closed=true;CourseEngineRegression.closed++;}}}

@@ -1,0 +1,15 @@
+Decoded: Desultory Signals / AT Lv.18; JSON chars 12494578
+Parsed: 2026 notes; noise 160
+Exception in thread "main" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 26
+	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
+	at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)
+	at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:266)
+	at java.base/java.util.Objects.checkIndex(Objects.java:361)
+	at java.base/java.util.ArrayList.get(ArrayList.java:427)
+	at io.github.phiscript.input.UnifiedGesturePlanner.assign(Unknown Source)
+	at io.github.phiscript.input.UnifiedGesturePlanner.build(Unknown Source)
+	at io.github.phiscript.input.GesturePlan.individual(Unknown Source)
+	at io.github.phiscript.input.GesturePlan.build(Unknown Source)
+	at io.github.phiscript.input.GesturePlan.obtain(Unknown Source)
+	at io.github.phiscript.input.GesturePlan.preflight(Unknown Source)
+	at io.github.phiscript.assets.UserChartProbe.main(UserChartProbe.java:10)

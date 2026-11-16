@@ -1,0 +1,59 @@
+PASS 237 checks. Both input backends: one/two/six physical fingers; cross-line hold/drag/flick reuse, actual swipe displacement, safe DOWN and MOVE, narrow subtractive window.
+Desultory Signals AT Lv.18 notes=2026 zones=160 peak=2 blockedHeads=15 safeNearHit=15 unavailable=0 unmatchedYellow=0 seconds=0.103195999
+TOTAL random=false charts=1 notes=2026 areas=160 yellows=581 yellowPeak=2 initiallyBlocked=15 safeNearHit=15 unavailable=0 uncheckedYellow=0 safeObservations=3475
+Desultory Signals AT Lv.18 notes=2026 zones=160 peak=2 blockedHeads=21 safeNearHit=21 unavailable=0 unmatchedYellow=0 seconds=0.140376033
+TOTAL random=true charts=1 notes=2026 areas=160 yellows=581 yellowPeak=2 initiallyBlocked=21 safeNearHit=21 unavailable=0 uncheckedYellow=0 safeObservations=3459
+Accessibility completed notes=2026 physicalDowns=1440 peakAllNoteTypes=10 blockedDowns=0 positionSamples=40359 blockedSamples=0
+Root completed notes=2026 physicalDowns=1440 peakAllNoteTypes=10 blockedDowns=0 positionSamples=23764 blockedSamples=0
+Ametrine.GRYSCLMIssionary.0/AT.json notes=784 zones=19 peak=2 blockedHeads=55 safeNearHit=55 unavailable=0 unmatchedYellow=0 seconds=0.083575083
+Ametrine.GRYSCLMIssionary.0/EZ.json notes=302 zones=5 peak=1 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.005621443
+Ametrine.GRYSCLMIssionary.0/HD.json notes=838 zones=15 peak=2 blockedHeads=43 safeNearHit=43 unavailable=0 unmatchedYellow=0 seconds=0.066971269
+Ametrine.GRYSCLMIssionary.0/IN.json notes=769 zones=24 peak=2 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.030894185
+DesultorySignals.technoplanet.0/AT.json notes=2026 zones=160 peak=2 blockedHeads=15 safeNearHit=15 unavailable=0 unmatchedYellow=0 seconds=0.051635336
+DesultorySignals.technoplanet.0/EZ.json notes=831 zones=3 peak=1 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.010528087
+DesultorySignals.technoplanet.0/HD.json notes=1002 zones=170 peak=2 blockedHeads=15 safeNearHit=15 unavailable=0 unmatchedYellow=0 seconds=0.558770716
+DesultorySignals.technoplanet.0/IN.json notes=2019 zones=27 peak=6 blockedHeads=123 safeNearHit=123 unavailable=0 unmatchedYellow=0 seconds=0.077879048
+LeaveAllBehind.rider.0/AT.json notes=808 zones=27 peak=3 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.016548035
+Message.くるぶっこちゃん.0/AT.json notes=777 zones=1376 peak=2 blockedHeads=6 safeNearHit=6 unavailable=0 unmatchedYellow=0 seconds=0.533541512
+Message.くるぶっこちゃん.0/EZ.json notes=100 zones=24 peak=3 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.002370831
+Message.くるぶっこちゃん.0/HD.json notes=544 zones=16 peak=1 blockedHeads=44 safeNearHit=44 unavailable=0 unmatchedYellow=0 seconds=0.041253162
+Message.くるぶっこちゃん.0/IN.json notes=886 zones=142 peak=6 blockedHeads=17 safeNearHit=17 unavailable=0 unmatchedYellow=0 seconds=0.087147743
+Message.くるぶっこちゃん.0/SP.json notes=600 zones=15 peak=2 blockedHeads=42 safeNearHit=42 unavailable=0 unmatchedYellow=0 seconds=0.0582061
+Petrichor.voidMournfinale.0/AT.json notes=1436 zones=36 peak=1 blockedHeads=18 safeNearHit=18 unavailable=0 unmatchedYellow=0 seconds=0.033410871
+Petrichor.voidMournfinale.0/EZ.json notes=420 zones=5 peak=1 blockedHeads=2 safeNearHit=2 unavailable=0 unmatchedYellow=0 seconds=0.005285981
+Petrichor.voidMournfinale.0/HD.json notes=777 zones=79 peak=1 blockedHeads=28 safeNearHit=28 unavailable=0 unmatchedYellow=0 seconds=0.022589113
+Petrichor.voidMournfinale.0/IN.json notes=1242 zones=427 peak=1 blockedHeads=48 safeNearHit=48 unavailable=0 unmatchedYellow=0 seconds=0.050507658
+TrueHomeTrueWorldRework.816ThreeNumbers.0/EZ.json notes=424 zones=36 peak=2 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.032085978
+TrueHomeTrueWorldRework.816ThreeNumbers.0/HD.json notes=807 zones=3 peak=1 blockedHeads=5 safeNearHit=5 unavailable=0 unmatchedYellow=0 seconds=0.011801971
+TrueHomeTrueWorldRework.816ThreeNumbers.0/IN.json notes=1142 zones=23 peak=2 blockedHeads=13 safeNearHit=13 unavailable=0 unmatchedYellow=0 seconds=0.043600573
+ハテ.rNFrums.0/AT.json notes=1397 zones=14355 peak=2 blockedHeads=376 safeNearHit=376 unavailable=0 unmatchedYellow=0 seconds=2.679269694
+ハテ.rNFrums.0/EZ.json notes=1049 zones=1 peak=1 blockedHeads=179 safeNearHit=179 unavailable=0 unmatchedYellow=0 seconds=0.024328136
+ハテ.rNFrums.0/HD.json notes=1000 zones=13 peak=1 blockedHeads=172 safeNearHit=172 unavailable=0 unmatchedYellow=0 seconds=0.017271095
+ハテ.rNFrums.0/IN.json notes=1014 zones=781 peak=1 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.019679563
+TOTAL random=false charts=25 notes=22994 areas=17782 yellows=7266 yellowPeak=6 initiallyBlocked=1201 safeNearHit=1201 unavailable=0 uncheckedYellow=0 safeObservations=35147
+Ametrine.GRYSCLMIssionary.0/AT.json notes=784 zones=19 peak=2 blockedHeads=13 safeNearHit=13 unavailable=0 unmatchedYellow=0 seconds=0.102451096
+Ametrine.GRYSCLMIssionary.0/EZ.json notes=302 zones=5 peak=1 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.010535792
+Ametrine.GRYSCLMIssionary.0/HD.json notes=838 zones=15 peak=2 blockedHeads=27 safeNearHit=27 unavailable=0 unmatchedYellow=0 seconds=0.109193577
+Ametrine.GRYSCLMIssionary.0/IN.json notes=769 zones=24 peak=2 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.051482348
+DesultorySignals.technoplanet.0/AT.json notes=2026 zones=160 peak=2 blockedHeads=15 safeNearHit=15 unavailable=0 unmatchedYellow=0 seconds=0.071722023
+DesultorySignals.technoplanet.0/EZ.json notes=831 zones=3 peak=1 blockedHeads=26 safeNearHit=26 unavailable=0 unmatchedYellow=0 seconds=0.012654579
+DesultorySignals.technoplanet.0/HD.json notes=1002 zones=170 peak=2 blockedHeads=17 safeNearHit=17 unavailable=0 unmatchedYellow=0 seconds=0.669771158
+DesultorySignals.technoplanet.0/IN.json notes=2019 zones=27 peak=6 blockedHeads=116 safeNearHit=116 unavailable=0 unmatchedYellow=0 seconds=0.076453711
+LeaveAllBehind.rider.0/AT.json notes=808 zones=27 peak=3 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.014246498
+Message.くるぶっこちゃん.0/AT.json notes=777 zones=1376 peak=1 blockedHeads=10 safeNearHit=10 unavailable=0 unmatchedYellow=0 seconds=0.534091832
+Message.くるぶっこちゃん.0/EZ.json notes=100 zones=24 peak=3 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.002454673
+Message.くるぶっこちゃん.0/HD.json notes=544 zones=16 peak=1 blockedHeads=42 safeNearHit=42 unavailable=0 unmatchedYellow=0 seconds=0.046736673
+Message.くるぶっこちゃん.0/IN.json notes=886 zones=142 peak=6 blockedHeads=14 safeNearHit=14 unavailable=0 unmatchedYellow=0 seconds=0.09380207
+Message.くるぶっこちゃん.0/SP.json notes=600 zones=15 peak=2 blockedHeads=40 safeNearHit=40 unavailable=0 unmatchedYellow=0 seconds=0.058338563
+Petrichor.voidMournfinale.0/AT.json notes=1436 zones=36 peak=1 blockedHeads=18 safeNearHit=18 unavailable=0 unmatchedYellow=0 seconds=0.036273248
+Petrichor.voidMournfinale.0/EZ.json notes=420 zones=5 peak=1 blockedHeads=2 safeNearHit=2 unavailable=0 unmatchedYellow=0 seconds=0.005928984
+Petrichor.voidMournfinale.0/HD.json notes=777 zones=79 peak=1 blockedHeads=26 safeNearHit=26 unavailable=0 unmatchedYellow=0 seconds=0.032293105
+Petrichor.voidMournfinale.0/IN.json notes=1242 zones=427 peak=1 blockedHeads=41 safeNearHit=41 unavailable=0 unmatchedYellow=0 seconds=0.038971626
+TrueHomeTrueWorldRework.816ThreeNumbers.0/EZ.json notes=424 zones=36 peak=2 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.032098385
+TrueHomeTrueWorldRework.816ThreeNumbers.0/HD.json notes=807 zones=3 peak=1 blockedHeads=4 safeNearHit=4 unavailable=0 unmatchedYellow=0 seconds=0.009971424
+TrueHomeTrueWorldRework.816ThreeNumbers.0/IN.json notes=1142 zones=23 peak=2 blockedHeads=13 safeNearHit=13 unavailable=0 unmatchedYellow=0 seconds=0.064533408
+ハテ.rNFrums.0/AT.json notes=1397 zones=14355 peak=2 blockedHeads=347 safeNearHit=347 unavailable=0 unmatchedYellow=0 seconds=3.293946988
+ハテ.rNFrums.0/EZ.json notes=1049 zones=1 peak=1 blockedHeads=191 safeNearHit=191 unavailable=0 unmatchedYellow=0 seconds=0.012289084
+ハテ.rNFrums.0/HD.json notes=1000 zones=13 peak=1 blockedHeads=60 safeNearHit=60 unavailable=0 unmatchedYellow=0 seconds=0.013506297
+ハテ.rNFrums.0/IN.json notes=1014 zones=781 peak=1 blockedHeads=0 safeNearHit=0 unavailable=0 unmatchedYellow=0 seconds=0.018121965
+TOTAL random=true charts=25 notes=22994 areas=17782 yellows=7266 yellowPeak=6 initiallyBlocked=1022 safeNearHit=1022 unavailable=0 uncheckedYellow=0 safeObservations=35078

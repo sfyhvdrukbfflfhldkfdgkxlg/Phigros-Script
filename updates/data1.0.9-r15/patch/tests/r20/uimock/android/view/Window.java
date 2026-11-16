@@ -1,0 +1,1 @@
+package android.view;public class Window{public int animations=1;public final View decor=new View(new android.content.Context());public View getDecorView(){return decor;}public void setWindowAnimations(int value){animations=value;}}

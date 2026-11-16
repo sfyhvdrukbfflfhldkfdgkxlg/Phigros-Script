@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 108 108">
+  <title>Phigros Script — Safe Pulse</title>
+  <desc>A mint open phi and a white timing line converge on a soft red touch point.</desc>
+  <rect width="108" height="108" rx="24" fill="#0b111b"/>
+  <g fill="none" stroke="#83e4ca" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 31 C33 34 27 42 27 54 C27 66 33 74 45 77"/>
+    <path d="M63 31 C75 34 81 42 81 54 C81 66 75 74 63 77"/>
+  </g>
+  <path d="M54 23 V75" stroke="#f0f5fc" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="54" cy="85" r="3.5" fill="#ffb5b7"/>
+</svg>

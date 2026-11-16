@@ -1,0 +1,1 @@
+package io.github.phiscript.vision;import android.graphics.*;import java.util.Collections;public class VisualNoteDetector {public VisualNoteDetector(RectF r){}public VisualScene detect(Bitmap b){return new VisualScene(1000,600,Collections.emptyList(),Collections.emptyList(),true);}}

@@ -1,0 +1,33 @@
+name: Publish verified data1.1.0
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-data1-1-0.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  # Share the obsolete data1.0.10 workflow's publication lock.
+  group: publish-data110
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Publish verified data1.1.0 release')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Download pinned public base APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download data1.0.9-r15 --repo sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script --pattern PhigrosScript_data1.0.9-r15.apk --dir base
+      - name: Restore and verify all 12 exact signed release assets
+        run: python3 .github/scripts/data1_1_0/restore.py base/PhigrosScript_data1.0.9-r15.apk updates/data1.1.0/release-data dist
+      - name: Publish verified assets before removing the obsolete release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/data1_1_0/publish.py dist updates/data1.1.0/release-data/manifest.json updates/data1.1.0/RELEASE_NOTES.md

@@ -1,0 +1,19 @@
+{
+  "apk_sha256": "0b1a6a4e7151a54874995ba3d683a05c66e3622a0a0b3c96294eb1eafca5002f",
+  "bytes": 48111524,
+  "dex_classes": 9541,
+  "dex_versions": [
+    "dex\n038\u0000"
+  ],
+  "duplicate_classes": 0,
+  "changed_original_entries": [
+    "AndroidManifest.xml",
+    "classes11.dex",
+    "classes4.dex",
+    "classes6.dex",
+    "classes7.dex",
+    "classes8.dex"
+  ],
+  "unchanged_original_entries": 447,
+  "catalog_entries": 1022
+}

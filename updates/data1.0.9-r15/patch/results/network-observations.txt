@@ -1,0 +1,6 @@
+Public share catalogue: 1022 unique file IDs; 10 pages read successfully.
+Python downloads: original sample plus 10 listed samples fetched.
+Java public-client download after matching parameter ordering: succeeded twice, 923201 bytes, 738 notes.
+Final APK live attempt 1: HTTP 503. Final APK live attempt with bounded retry: host subprocess timed out at 100 seconds (proxy environment).
+Network stability not passed; no further repeated requests were made.
+The 46 transport/import/cache assertions use controlled responses and are separate from live-network observations.
