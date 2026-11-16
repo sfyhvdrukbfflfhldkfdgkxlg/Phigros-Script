@@ -2,7 +2,11 @@ name: Publish verified data1.1.0
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/publish-data1-1-0.yml]
+    paths:
+      - .github/workflows/publish-data1-1-0.yml
+      - .github/scripts/data1_1_0/publish.py
+      - .github/scripts/data1_1_0/restore.py
+      - updates/data1.1.0/release-data/manifest.json
   workflow_dispatch:
 permissions:
   contents: read

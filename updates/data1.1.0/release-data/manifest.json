@@ -13,19 +13,19 @@
       "size": 1027815,
       "sha256": "60598e16ec1a1ac5f50f4a8e39314dfb6ea4c0a489febdef0f98afa8e16c6528"
     },
-    "使用说明_data1.1.0.md": {
+    "USAGE_data1.1.0.md": {
       "size": 5547,
       "sha256": "589a7fc45bedc09a513c054c106b1074aef4fcb9cb1978ee303195800802fe96"
     },
-    "验证记录_data1.1.0.md": {
+    "TESTING_data1.1.0.md": {
       "size": 16955,
       "sha256": "0bcd9f576be72337520b712ddefb6ba81a567af425e2a39114d1933475287c58"
     },
-    "回放对照_data1.1.0.md": {
+    "REPLAY_ANALYSIS_data1.1.0.md": {
       "size": 2955,
       "sha256": "368e84845cbdbceccc793892110456f156c9fd035a85d01777459066ccaad401"
     },
-    "回放对照_data1.1.0.json": {
+    "REPLAY_ANALYSIS_data1.1.0.json": {
       "size": 7499,
       "sha256": "76ddc9aa0be2756ac8c68d7d5213550350a904411e13e3fccbe128f0b9a192a8"
     },
@@ -50,13 +50,13 @@
       "sha256": "89c3de1bcfd390bc3b003ee13a47d463e8e91beb7c5b0c07731fd9c8828c30ee"
     },
     "SHA256SUMS_data1.1.0.txt": {
-      "size": 1071,
-      "sha256": "d8787446f81b6445268d64aff57448794c0d3f67bdbd99e96a85dd15c8aa2d76"
+      "size": 1065,
+      "sha256": "e9add212662613ec19aa391c1bc538e80d315601fe9a98f57aa87e11d652e30f"
     }
   },
   "transport": {
-    "size": 2061248,
-    "sha256": "d8a9a4106031d5ba04a90232049bb1dcdd46bd7f4541bd831ca634ca8cf981b7",
+    "size": 2061199,
+    "sha256": "146c28974337ae5a48743d797f785be1e11f3ccb15cb1342c313e9f164969b2d",
     "parts": [
       {
         "name": "transport.part000",
@@ -110,8 +110,8 @@
       },
       {
         "name": "transport.part010",
-        "size": 95168,
-        "sha256": "a0eaa7bff7580c12015ed6ea3931f6f5afa989dfbc5de3f7217fc7053da9101f"
+        "size": 95119,
+        "sha256": "e00e5b4e9ce4466ae2d84c75cf4d31da5590e0c624543df65a81182890d61ef5"
       }
     ]
   }

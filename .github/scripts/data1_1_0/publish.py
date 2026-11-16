@@ -24,6 +24,22 @@ OLD_ASSETS = {
     "PhigrosScript_data1.0.10_Source.zip": (933678, "b79da0af280cad5e06069769000445e9e54f0b92f46738b1b7b0acab30293d4f"),
     "SHA256SUMS.txt": (289, "642dd8d8287cd27924dcd2b9e421b8f172a023ced2faf46789f5477191b6db48"),
 }
+# The first attempt uploaded exact bytes, but GitHub sanitized a Chinese filename.
+# This exception is limited to that unpublished release and its observed asset IDs.
+RECOVERY_ID = 447231369
+RECOVERY_COMMIT = "28ccc560827da22d9dd20b1a80d63b7f74bb32fb"
+RECOVERY_ASSETS = {
+    "PhigrosScript_data1.1.0.apk": (755380097, 48341387, "6120ebee80312fbbb22eff9de56d99d083e6d2c3bde8b712789237642b754996"),
+    "PhigrosScript_data1.1.0.hooks.json": (755380210, 1270, "408acb68dfb35d96f3430dd20539bb6391f02a9c3921bde3fadf07d38f160cff"),
+    "PhigrosScript_data1.1.0_Source.zip": (755380251, 1027815, "60598e16ec1a1ac5f50f4a8e39314dfb6ea4c0a489febdef0f98afa8e16c6528"),
+    "PhigrosScript_Icon_data1.1.0.png": (755380038, 65895, "f47d7d2be9a373e08905dfc81f955261b56ebb1f6d8743cbb03f3ede0494cf03"),
+    "PhigrosScript_Icon_data1.1.0.svg": (755380066, 654, "efc3476f947bb19d04d54dfe797c82a8abe604f7535266f819654b46df9c8804"),
+    "PhigrosScript_r15_to_data1.1.0.patch": (755380300, 809866, "595f701886880f0920a1cfff386416d1c55b760e3710c560d16269162afd71a1"),
+    "RELEASE_NOTES_data1.1.0.md": (755380340, 1408, "89c3de1bcfd390bc3b003ee13a47d463e8e91beb7c5b0c07731fd9c8828c30ee"),
+    "SHA256SUMS_data1.1.0.txt": (755380388, 1071, "d8787446f81b6445268d64aff57448794c0d3f67bdbd99e96a85dd15c8aa2d76"),
+    "_data1.1.0.md": (755380444, 5547, "589a7fc45bedc09a513c054c106b1074aef4fcb9cb1978ee303195800802fe96"),
+}
+RECOVERY_REMOVE = {755380444, 755380388}
 
 
 def api(method, path, payload=None, allow_missing=False, input_file=None):
@@ -122,6 +138,53 @@ def check_assets(release, expected, complete):
     return present
 
 
+def check_recovery_draft(release, notes):
+    check_identity(release, RECOVERY_COMMIT, notes)
+    require(release["id"] == RECOVERY_ID and release.get("draft") is True and
+            release.get("immutable") is False, "Not the pinned recoverable draft")
+    assets = release.get("assets")
+    require(isinstance(assets, list), "Invalid recovery assets")
+    present = {asset["name"]: asset for asset in assets}
+    require(len(present) == len(assets) and not (set(present) - set(RECOVERY_ASSETS)),
+            "Unexpected recovery assets; refusing deletion")
+    required_names = {name for name, item in RECOVERY_ASSETS.items()
+                      if item[0] not in RECOVERY_REMOVE}
+    require(required_names <= set(present), "A retained recovery asset is missing")
+    for name, asset in present.items():
+        asset_id, size, digest = RECOVERY_ASSETS[name]
+        require(asset.get("id") == asset_id and asset.get("state") == "uploaded" and
+                asset.get("size") == size and asset.get("digest") == "sha256:" + digest,
+                "Recovery asset identity or digest mismatch: " + name)
+    return present
+
+
+def recover_pinned_draft(release, commit, notes, expected):
+    # Only the two pinned failed-attempt assets may be absent on a retry. The seven
+    # retained originals must still match their exact IDs, sizes and digests.
+    original = check_recovery_draft(release, notes)
+    retained = [asset for asset in original.values() if asset["id"] not in RECOVERY_REMOVE]
+    check_assets({"assets": retained}, expected, complete=False)
+    require(tag_commit(allow_missing=True) is None, "Recovery draft already has a Git tag")
+    for asset_id in sorted(RECOVERY_REMOVE):
+        current = api("GET", "releases/" + str(RECOVERY_ID))
+        present = check_recovery_draft(current, notes)
+        check_main(commit)
+        if any(asset["id"] == asset_id for asset in present.values()):
+            api("DELETE", "releases/assets/" + str(asset_id))
+    current = api("GET", "releases/" + str(RECOVERY_ID))
+    present = check_recovery_draft(current, notes)
+    require(not any(asset["id"] in RECOVERY_REMOVE for asset in present.values()),
+            "Pinned obsolete draft assets remain")
+    check_main(commit)
+    require(tag_commit(allow_missing=True) is None, "Recovery draft acquired a Git tag")
+    api("PATCH", "releases/" + str(RECOVERY_ID), {"target_commitish": commit})
+    current = api("GET", "releases/" + str(RECOVERY_ID))
+    check_identity(current, commit, notes)
+    require(current.get("draft") is True, "Recovery release was unexpectedly published")
+    check_assets(current, expected, complete=False)
+    return current
+
+
 def verify_published(release_id, commit, notes, expected):
     release = api("GET", "releases/" + str(release_id))
     check_identity(release, commit, notes)
@@ -188,6 +251,8 @@ def publish(assets_dir, manifest_path, notes_path):
     existing_tag = tag_commit(allow_missing=True)
     require(existing_tag is None or existing_tag == commit, "Existing tag points to different source")
     release = find_release()
+    if release is not None and release.get("target_commitish") != commit:
+        release = recover_pinned_draft(release, commit, notes, expected)
     if release is None:
         release = api("POST", "releases", {
             "tag_name": TAG, "target_commitish": commit, "name": "Phigros Script " + TAG,
@@ -208,7 +273,8 @@ def publish(assets_dir, manifest_path, notes_path):
     check_identity(release, commit, notes)
     check_assets(release, expected, complete=True)
     check_main(commit)
-    # No asset overwrite or deletion occurs. Only an exact release can become latest.
+    # Only the pinned migration above can remove draft assets. Never overwrite an
+    # existing asset or mutate another published release.
     api("PATCH", "releases/" + str(release["id"]),
         {"draft": False, "prerelease": False, "make_latest": "true"})
     published = None
