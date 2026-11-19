@@ -1,4 +1,6 @@
 package io.github.phiscript.input;
+
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
 import android.content.Context;
 import io.github.phiscript.AppSettings;
 import io.github.phiscript.engine.*;
@@ -11,7 +13,7 @@ public final class TapMod {
     static final ThreadLocal<Boolean> planning = new ThreadLocal<>();
     static final ThreadLocal<java.util.concurrent.atomic.AtomicBoolean> preparationStop=new ThreadLocal<>();
     static final ThreadLocal<long[]> planningQueryCounts=new ThreadLocal<>();
-    static void checkPlanningCancelled(){java.util.concurrent.atomic.AtomicBoolean stop=preparationStop.get();if(Thread.currentThread().isInterrupted()||stop!=null&&stop.get())throw new java.util.concurrent.CancellationException("谱面预计算已取消");}
+    static void checkPlanningCancelled(){java.util.concurrent.atomic.AtomicBoolean stop=preparationStop.get();if(Thread.currentThread().isInterrupted()||stop!=null&&stop.get())throw new java.util.concurrent.CancellationException(tr("谱面预计算已取消"));}
     // Include the dispatch-to-input delay when a moving noise edge reaches a touch.
     private static final class Guard {
         final int backMs,aheadMs;final double back,ahead;final double[] shifts;
@@ -33,7 +35,7 @@ public final class TapMod {
         NoSafePoint(String message) { super(message); }
     }
     private static final class DeadlineExceeded extends NoSafePoint {
-        DeadlineExceeded(){super("噪域安全检查超时，先释放此触点并等待下一次重试");}
+        DeadlineExceeded(){super(tr("噪域安全检查超时，先释放此触点并等待下一次重试"));}
     }
     private static Context app;
     private static volatile boolean enabled=true,noiseAvoid=true;
@@ -62,13 +64,13 @@ public final class TapMod {
     private static long mix(long x){x=(x^(x>>>30))*0xbf58476d1ce4e5b9L;x=(x^(x>>>27))*0x94d049bb133111ebL;return x^(x>>>31);}
     private static double unit(long x){return (mix(x)>>>11)*0x1.0p-53*2-1;}
     private static long seed(Chart c,Note n){synchronized(salts){Long s=salts.get(c);if(s==null){s=random.nextLong();salts.put(c,s);}return s^Double.doubleToLongBits(n.getTimeSeconds())^mix(Double.doubleToLongBits(n.getPositionX()))^((long)n.getLineIndex()<<17)^(n.getAbove()?31:63);}}
-    private static Point normal(Chart c,Note n,double t,Viewport v){Point p=c.judgeNormal(n,t,v);double m=Math.hypot(p.getX(),p.getY());if(!Double.isFinite(m)||m<1e-9)throw new IllegalStateException("判定线方向无效");return new Point((float)(p.getX()/m),(float)(p.getY()/m));}
+    private static Point normal(Chart c,Note n,double t,Viewport v){Point p=c.judgeNormal(n,t,v);double m=Math.hypot(p.getX(),p.getY());if(!Double.isFinite(m)||m<1e-9)throw new IllegalStateException(tr("判定线方向无效"));return new Point((float)(p.getX()/m),(float)(p.getY()/m));}
     public static boolean avoids(Chart c){return noiseAvoid&&BlockAreaSet.count(c)>0;}
     private static boolean blocked(Chart c,Viewport v,Point p,double t){return BlockAreaSet.covers(c,p.getX(),p.getY(),v.getLeft(),v.getTop(),v.getWidth(),v.getHeight(),t);}
     public static Point adjustNote(Chart c,Note n,double t,Viewport v,boolean visual,Point p){
         if(visual||p==null)return p;
         if(!enabled)return avoid(c,n,t,v,p);
-        if(!Float.isFinite(p.getX())||!Float.isFinite(p.getY())||v.getWidth()<=2||v.getHeight()<=2)throw new IllegalArgumentException("无效点击坐标");
+        if(!Float.isFinite(p.getX())||!Float.isFinite(p.getY())||v.getWidth()<=2||v.getHeight()<=2)throw new IllegalArgumentException(tr("无效点击坐标"));
         Point dir=normal(c,n,t,v);long seed=seed(c,n);float amount=v.getHeight()*vertical/1000,amp=v.getHeight()*jitter/1000;
         float shift=amount+(float)unit(seed)*amp;
         float dx=dir.getX()*shift,dy=dir.getY()*shift,factor=1;
@@ -181,7 +183,7 @@ public final class TapMod {
             }
         }
         if(best!=null)return best;
-        throw new NoSafePoint("噪域内找不到可触控的同判定带落点");
+        throw new NoSafePoint(tr("噪域内找不到可触控的同判定带落点"));
     }
     private static Point at(TouchBounds bounds,Point origin,float nx,float ny,double offset){return new Point(bounds.x((float)(origin.getX()+offset*nx)),bounds.y((float)(origin.getY()+offset*ny)));}
     private static void checkSearchBudget(long deadline){
@@ -207,7 +209,7 @@ public final class TapMod {
         checkDeadline(deadline);
         Guard timing=guard;
         if(!avoids(c)||!BlockAreaSet.overlaps(c,from-timing.backMs,to+timing.aheadMs))return;
-        for(double shift:timing.shifts){checkDeadline(deadline);boolean blocked=BlockAreaSet.crossesTranslation(c,v,a,b,from/1000.0+shift,to/1000.0+shift);checkDeadline(deadline);if(blocked)throw new NoSafePoint("移动噪域将扫过连续触点，应在此抬指");}
+        for(double shift:timing.shifts){checkDeadline(deadline);boolean blocked=BlockAreaSet.crossesTranslation(c,v,a,b,from/1000.0+shift,to/1000.0+shift);checkDeadline(deadline);if(blocked)throw new NoSafePoint(tr("移动噪域将扫过连续触点，应在此抬指"));}
         double dx=b.getX()-a.getX(),dy=b.getY()-a.getY(),distance=Math.hypot(dx,dy);
         int slices=(int)Math.min(4096,Math.max(1,Math.ceil(Math.abs(to-from)/4.0)));
         // Test intersections analytically as well as sampled pixels. A sub-pixel-wide
@@ -228,11 +230,11 @@ public final class TapMod {
                 checkDeadline(deadline);
                 double f=(edges.get(j-1)+edges.get(j))*.5;
                 Point q=new Point((float)(a.getX()+dx*f),(float)(a.getY()+dy*f));
-                if(!clearAt(c,v,q,(from+(to-from)*f)/1000.0,timing,deadline))throw new NoSafePoint("连续手势穿过噪域");
+                if(!clearAt(c,v,q,(from+(to-from)*f)/1000.0,timing,deadline))throw new NoSafePoint(tr("连续手势穿过噪域"));
             }
         }
         int count=(int)Math.min(16384,Math.max(1,Math.max(Math.ceil(Math.hypot(b.getX()-a.getX(),b.getY()-a.getY())/2),Math.ceil(Math.abs(to-from)/2.0))));
         for(int i=0;i<=count;i++){double f=i/(double)count;Point p=new Point((float)(a.getX()+(b.getX()-a.getX())*f),(float)(a.getY()+(b.getY()-a.getY())*f));
-            checkDeadline(deadline);if(!clearAt(c,v,p,(from+(to-from)*f)/1000,timing,deadline))throw new NoSafePoint("此段连续手势经过噪域，应在此抬指");}
+            checkDeadline(deadline);if(!clearAt(c,v,p,(from+(to-from)*f)/1000,timing,deadline))throw new NoSafePoint(tr("此段连续手势经过噪域，应在此抬指"));}
     }
 }

@@ -1,5 +1,7 @@
 package io.github.phiscript.input;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import io.github.phiscript.engine.Chart;
 import io.github.phiscript.engine.Note;
 import io.github.phiscript.engine.Point;
@@ -36,7 +38,11 @@ public final class GesturePlan {
         synchronized(CACHE){Cached old=CACHE.get(chart);return old!=null&&old.prepared&&old.plan.precomputed!=null&&old.matches(chart,profile,viewport,bounds)?old.plan:null;}
     }
     Point preparedPoint(TouchEvent event,long time,Point previous,long previousTime){return precomputed==null?null:precomputed.point(event,time,previous,previousTime);}
-    public byte[] encodePrepared(String fingerprint)throws IOException{if(precomputed==null)throw new IOException("谱面轨迹尚未预计算");return PreparedTrajectory.encode(this,precomputed,fingerprint);}
+    Point preparedAccessibilityEndpoint(TouchEvent event,long time,boolean continuous,long previousTime,GestureChannel.Live prior){
+        if(precomputed==null)throw new IllegalStateException(tr("谱面轨迹尚未预计算"));
+        return precomputed.accessibilityEndpoint(event,time,continuous,previousTime,prior.x,prior.y);
+    }
+    public byte[] encodePrepared(String fingerprint)throws IOException{if(precomputed==null)throw new IOException(tr("谱面轨迹尚未预计算"));return PreparedTrajectory.encode(this,precomputed,fingerprint);}
     public static GesturePlan decodePrepared(Chart chart,GestureProfile profile,Viewport viewport,TouchBounds bounds,byte[] data,String fingerprint)throws IOException{
         TapMod.reload();GesturePlan plan=PreparedTrajectory.decode(chart,profile,viewport,bounds,data,fingerprint);cache(chart,profile,viewport,bounds,plan,true);return plan;
     }
@@ -53,7 +59,7 @@ public final class GesturePlan {
         }
     }
     public static GesturePlan prepareForImport(Chart chart,GestureProfile profile,Viewport viewport,TouchBounds bounds,AtomicBoolean cancel){
-        if(Thread.currentThread().isInterrupted()||cancel!=null&&cancel.get())throw new IllegalStateException("谱面轨迹预计算已取消");
+        if(Thread.currentThread().isInterrupted()||cancel!=null&&cancel.get())throw new IllegalStateException(tr("谱面轨迹预计算已取消"));
         TapMod.reload();synchronized(CACHE){Cached old=CACHE.get(chart);if(old!=null&&old.matches(chart,profile,viewport,bounds)&&old.plan.precomputed!=null){old.prepared=true;return old.plan;}}
         AtomicBoolean previousStop=TapMod.preparationStop.get();if(cancel==null)TapMod.preparationStop.remove();else TapMod.preparationStop.set(cancel);
         try{TapMod.begin(chart);GesturePlan plan=ContactPlanner.build(chart,viewport,bounds,profile);plan.precomputed=PreparedTrajectory.prepare(chart,plan,profile,viewport,bounds,cancel);cache(chart,profile,viewport,bounds,plan,true);return plan;}
@@ -93,7 +99,7 @@ public final class GesturePlan {
         synchronized(CACHE){if(CACHE.size()>8)CACHE.clear();CACHE.put(c,cache);}return plan;
     }
     public static void preflight(Chart c){
-        prepareForImport(c,GestureProfile.read(TouchService.Companion.getCurrent()),REFERENCE,bounds(REFERENCE),null);
+        forPlayback(c,GestureProfile.read(TouchService.Companion.getCurrent()));
     }
     public static void preflight(Chart c,TouchService service,Viewport v){
         int[] screen=ChartMultiTouchPlayer.dimensions(service);
@@ -101,11 +107,7 @@ public final class GesturePlan {
     }
     public static GesturePlan forPlayback(Chart c,GestureProfile p){return forPlayback(c,p,REFERENCE,bounds(REFERENCE));}
     static GesturePlan forPlayback(Chart c,GestureProfile p,Viewport v,TouchBounds b){
-        TapMod.reload();synchronized(CACHE){Cached old=CACHE.get(c);if(old!=null&&old.prepared&&old.matches(c,p,v,b))return old.plan;CACHE.remove(c);}
-        // Every player resolves this before reading its initial music clock.
-        // A settings/geometry miss therefore prepares once here instead of
-        // falling back to geometry searches while contacts are already alive.
-        return prepareForImport(c,p,v,b,null);
+        return PreparedChartStore.loadForPlayback(c,p,v,b);
     }
     static GesturePlan mixed(List<TouchEvent> events,IdentityHashMap<TouchEvent,UnifiedGesturePlanner.Contact> paths,int groups,int notes,int covered){GesturePlan p=new GesturePlan(events,new IdentityHashMap<>(),groups,notes,covered);p.mixed.putAll(paths);return p;}
     static GesturePlan individual(Chart chart,GestureProfile profile,boolean bridge,java.util.Set<Note> skipped){
@@ -121,7 +123,7 @@ public final class GesturePlan {
         if(profile.catchDrags)for(TouchEvent event:source)if(event.getNote().getType()==3)holds.add(event);
         List<Trace> all=new ArrayList<>();Map<Long,List<Trace>> tracks=new HashMap<>();int iterations=0;
         for(TouchEvent event:source){
-            if((iterations++&1023)==0&&Thread.currentThread().isInterrupted())throw new IllegalStateException("手势规划已取消");
+            if((iterations++&1023)==0&&Thread.currentThread().isInterrupted())throw new IllegalStateException(tr("手势规划已取消"));
             Note note=event.getNote();
             if(note.getType()!=2||!profile.connectDrags&&!profile.catchDrags){all.add(new Trace(event));continue;}
             long hit=Math.round(note.getTimeSeconds()*1000);
@@ -227,10 +229,10 @@ public final class GesturePlan {
             TouchEvent b=trace.nodes.get(index+1);long from=Math.round(a.getNote().getTimeSeconds()*1000),to=Math.round(b.getNote().getTimeSeconds()*1000);
             float ratio=to<=from?1:Math.max(0,Math.min(1,(time-from)/(float)(to-from)));
             Point next=chart.position(b.getNote(),seconds,viewport,false);
-            if(p==null||next==null)throw new IllegalArgumentException("无法计算连续拖键轨迹");
+            if(p==null||next==null)throw new IllegalArgumentException(tr("无法计算连续拖键轨迹"));
             p=new Point(p.getX()+(next.getX()-p.getX())*ratio,p.getY()+(next.getY()-p.getY())*ratio);
         }
-        if(p==null)throw new IllegalArgumentException("无法计算连续拖键落点");
+        if(p==null)throw new IllegalArgumentException(tr("无法计算连续拖键落点"));
         float x=GestureChannel.clamp(p.getX(),Math.max(0,viewport.getLeft()),Math.min(screen[0]-1,Math.nextDown(viewport.getRight())));
         float y=GestureChannel.clamp(p.getY(),Math.max(0,viewport.getTop()),Math.min(screen[1]-1,Math.nextDown(viewport.getBottom())));
         if(x!=p.getX()||y!=p.getY())bounded[0]=true;
@@ -240,7 +242,7 @@ public final class GesturePlan {
         if(i==1&&t.nodes.get(0).getNote().getType()==1)start=Math.max(start,t.start+18);return Math.max(t.start,start);}
     private static long legEnd(Trace t,int i){long h=hit(t.nodes.get(i)),end=h+24;if(i+1<t.nodes.size())end=Math.min(end,h+Math.max(1,(hit(t.nodes.get(i+1))-h)/2));return Math.max(legStart(t,i)+24,end);}
     private static Point endpoint(Trace t,int i,boolean end,Chart c,long now,Viewport v,TouchBounds bounds,boolean[] bounded){
-        TouchEvent e=t.nodes.get(i);Point p=c.position(e.getNote(),Math.max(0,now)/1000.0,v,false);if(p==null)throw new IllegalArgumentException("无法计算连续划键轨迹");
+        TouchEvent e=t.nodes.get(i);Point p=c.position(e.getNote(),Math.max(0,now)/1000.0,v,false);if(p==null)throw new IllegalArgumentException(tr("无法计算连续划键轨迹"));
         float x=bounds.x(p.getX()),y=bounds.y(p.getY());if(x!=p.getX()||y!=p.getY())bounded[0]=true;
         int first=t.nodes.get(0).getNote().getType()==1?1:0;
         if(end==((i-first)%2==0)){

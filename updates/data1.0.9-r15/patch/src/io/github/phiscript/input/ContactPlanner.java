@@ -1,5 +1,7 @@
 package io.github.phiscript.input;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import io.github.phiscript.engine.*;
 import java.util.*;
 
@@ -19,7 +21,7 @@ final class ContactPlanner {
             if(pin)return new Point(b.x(v.getLeft()+v.getWidth()*dx),b.y(v.getTop()+v.getHeight()*dy));
             double seconds=Math.max(0,t)/1000.0;
             Point p=chart.position(note,seconds,v,false);
-            if(p==null)throw new IllegalArgumentException("无法计算触点位置");
+            if(p==null)throw new IllegalArgumentException(tr("无法计算触点位置"));
             float x=p.getX(),y=p.getY();
             if(dx!=0 || dy!=0){
                 Point d=chart.judgeNormal(note,seconds,v);
@@ -314,7 +316,7 @@ final class ContactPlanner {
                 selected.keys.put(t,best);selected.keys.put(t+8,best);selected.free=t+8;
                 Point p=actual(selected,t);int before=pending.size();
                 pending.removeIf(n->covered(n,t,p));
-                if(before==pending.size())throw new IllegalStateException("黄键分配与实际轨迹不一致");
+                if(before==pending.size())throw new IllegalStateException(tr("黄键分配与实际轨迹不一致"));
                 shared+=before-pending.size()-1;
             }
             pending.addAll(deferred);

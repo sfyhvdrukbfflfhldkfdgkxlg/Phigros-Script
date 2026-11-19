@@ -2,9 +2,9 @@
 
 <img src="updates/data1.0.9-r15/patch/icon/icon.svg" width="112" alt="Phigros Script 图标">
 
-当前版本：**data1.1.0** / versionCode **11000**。基于官方 R15 与后续改进，沿用 data 系列签名。
+本分支版本为 **data1.1.1**，versionCode 为 **11001**。导入时生成逐毫秒的落点和无障碍续接端点。Phira 默认重试延迟为 715 毫秒，默认不叠加谱面自带偏移。Phigros 默认为 1700 毫秒。[升级与使用说明](updates/data1.1.1/README.md)
 
-[安装包与源码 / Releases](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/data1.1.0) · [使用与构建](updates/data1.1.0/README.md) · [验证记录](updates/data1.1.0/TESTING.md)
+[GitHub 发行版](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases) · [data1.1.0 使用与构建](updates/data1.1.0/README.md) · [data1.1.0 验证记录](updates/data1.1.0/TESTING.md)
 
 Phigros 与 Phira / Phira Pro 支持导入谱面自动演奏。谱面导入或下载后提前计算点击、长按与滑动轨迹；演奏时查表，按实际提交时刻复查噪域，优先选择合法安全空隙中心。已有有效缓存直接复用，复杂红键规划跳过必定无法使用的候选分支。
 
@@ -12,7 +12,7 @@ Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导
 
 支持 Root 与无障碍输入。验证覆盖最终签名 APK 的实际代码、原谱及 Android 主机模型；Android 真机界面、判定与录屏性能仍需实测，不保证任意谱面全连或满分。
 
-活动补丁源码保留在 `updates/data1.0.9-r15/patch`，构建入口为 `build_110.py`。根目录旧 Alpha Gradle 工程不包含本版；完整补丁源码与复现说明随发行版提供。
+data1.1.1 的补丁源码和构建入口位于 [updates/data1.0.9-r15/patch/build_111.py](updates/data1.0.9-r15/patch/build_111.py)。根目录保留旧版 Alpha Gradle 工程。
 
 <details>
 <summary>原 Alpha 版本说明</summary>

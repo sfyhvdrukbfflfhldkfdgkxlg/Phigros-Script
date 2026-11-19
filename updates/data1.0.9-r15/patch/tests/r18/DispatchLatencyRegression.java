@@ -22,7 +22,7 @@ public final class DispatchLatencyRegression {
     static TouchService play(Chart chart,int cpu,List<String> status)throws Exception{
         cost=cpu;runtime=false;SystemClock.now=100000;InputBackend.rootEnabled=false;
         AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");TapMod.init(new android.content.Context());
-        TouchService service=new TouchService();GesturePlan.preflight(chart,service,V);runtime=true;
+        TouchService service=new TouchService();service.prepareChart(chart,V);runtime=true;
         try{ChartMultiTouchPlayer.play(service,chart,100000,V,new AtomicBoolean(),text->{status.add(text);return Unit.INSTANCE;},new AtomicBoolean(),new AtomicBoolean());}
         finally{runtime=false;}
         ok(service.roots.isEmpty()&&!service.frameworkFailed,"physical pointer ownership failed");return service;

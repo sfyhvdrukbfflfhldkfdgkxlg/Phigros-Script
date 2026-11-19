@@ -1,5 +1,7 @@
 package io.github.phiscript.assets;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import org.json.*;
 import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
@@ -11,7 +13,7 @@ public final class PgrScriptConverter {
     private static final double LOW=-1000000000.0;
     private static double number(JSONObject o,String key,double fallback)throws JSONException {
         double n=o.has(key)?o.getDouble(key):fallback;
-        if(Double.isNaN(n)||Double.isInfinite(n))throw new JSONException("非有限数字："+key);
+        if(Double.isNaN(n)||Double.isInfinite(n))throw new JSONException(tr("非有限数字：")+key);
         return n;
     }
     private static JSONObject frame(double t,double v,int tween)throws JSONException {
@@ -36,7 +38,7 @@ public final class PgrScriptConverter {
     }
     private static double boundary(double raw,double tick){
         double seconds=raw*tick;
-        if(Double.isNaN(seconds)||Double.isInfinite(seconds)||!(tick>0))throw new IllegalArgumentException("判定线时间无效");
+        if(Double.isNaN(seconds)||Double.isInfinite(seconds)||!(tick>0))throw new IllegalArgumentException(tr("判定线时间无效"));
         // Select the same side of an instantaneous jump as EventTrack's seconds/tick.
         // Multiplication and division need not round back to the same source tick.
         while(seconds/tick<raw)seconds=Math.nextUp(seconds);
@@ -80,11 +82,11 @@ public final class PgrScriptConverter {
 
     public static byte[] convert(byte[] original,JSONObject entry,JSONObject catalog)throws JSONException {
         JSONObject raw=new JSONObject(new String(original,StandardCharsets.UTF_8));int version=raw.getInt("formatVersion");
-        if(version!=1&&version!=3)throw new JSONException("只支持 PGR 1/3");
+        if(version!=1&&version!=3)throw new JSONException(tr("只支持 PGR 1/3"));
         JSONArray input=raw.getJSONArray("judgeLineList"),lines=new JSONArray();double duration=0;
         // Determine the playable range before translating animations; omit post-chart scenery.
         for(int i=0;i<input.length();i++){
-            JSONObject line=input.getJSONObject(i);double bpm=line.getDouble("bpm");if(!(bpm>0)||Double.isInfinite(bpm))throw new JSONException("BPM 无效");double tick=1.875/bpm;
+            JSONObject line=input.getJSONObject(i);double bpm=line.getDouble("bpm");if(!(bpm>0)||Double.isInfinite(bpm))throw new JSONException(tr("BPM 无效"));double tick=1.875/bpm;
             for(String key:new String[]{"notesAbove","notesBelow"}){
                 JSONArray notes=line.optJSONArray(key);if(notes!=null)for(int j=0;j<notes.length();j++){
                     JSONObject n=notes.getJSONObject(j);double start=n.getDouble("time")*tick;
@@ -94,7 +96,7 @@ public final class PgrScriptConverter {
         }
         double high=duration+10;
         for(int i=0;i<input.length();i++){
-            JSONObject source=input.getJSONObject(i);double bpm=source.getDouble("bpm");if(!(bpm>0))throw new JSONException("BPM 无效");double tick=1.875/bpm;
+            JSONObject source=input.getJSONObject(i);double bpm=source.getDouble("bpm");if(!(bpm>0))throw new JSONException(tr("BPM 无效"));double tick=1.875/bpm;
             JSONArray moves=source.optJSONArray("judgeLineMoveEvents");
             if(version==1&&moves!=null){
                 moves=new JSONArray(moves.toString());
@@ -147,7 +149,7 @@ public final class PgrScriptConverter {
             JSONObject object=(JSONObject)v;List<String> keys=new ArrayList<>();Iterator<String> it=object.keys();while(it.hasNext())keys.add(it.next());Collections.sort(keys);
             out.append('{');boolean comma=false;for(String k:keys){if(comma)out.append(',');comma=true;quote(out,k);out.append(':');write(out,object.get(k));}out.append('}');
         }else if(v instanceof JSONArray){JSONArray a=(JSONArray)v;out.append('[');for(int i=0;i<a.length();i++){if(i>0)out.append(',');write(out,a.get(i));}out.append(']');}
-        else if(v instanceof Number){double d=((Number)v).doubleValue();if(Double.isNaN(d)||Double.isInfinite(d))throw new JSONException("非有限数字");out.append(BigDecimal.valueOf(d).stripTrailingZeros().toPlainString());}
+        else if(v instanceof Number){double d=((Number)v).doubleValue();if(Double.isNaN(d)||Double.isInfinite(d))throw new JSONException(tr("非有限数字"));out.append(BigDecimal.valueOf(d).stripTrailingZeros().toPlainString());}
         else if(v instanceof Boolean)out.append(v.toString());else quote(out,v.toString());
     }
 }

@@ -1,5 +1,7 @@
 package io.github.phiscript.engine;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -11,7 +13,7 @@ public final class NativeChartProjection {
     private static Projection get(Object owner){
         synchronized(CACHE){Projection p=CACHE.get(owner);if(p==null){
             try{p=new Projection((List<NativeLine>)field(owner,"lines"),(Map<Integer,NativeAnim>)field(owner,"noteX"));}
-            catch(Exception e){throw new IllegalStateException("无法读取原生谱面坐标",e);}CACHE.put(owner,p);
+            catch(Exception e){throw new IllegalStateException(tr("无法读取原生谱面坐标"),e);}CACHE.put(owner,p);
         }return p;}
     }
     public static Point position(Object owner,Note note,double time,Viewport viewport){return get(owner).position(note,time,viewport);}
@@ -25,13 +27,13 @@ public final class NativeChartProjection {
         double time=Double.NaN;float width=Float.NaN,height=Float.NaN;
         Projection(List<NativeLine> lines,Map<Integer,NativeAnim> noteX){this.lines=lines;this.noteX=noteX;int n=lines.size();x=new double[n];y=new double[n];rotation=new double[n];stamps=new int[n];path=new int[n];}
         void ensure(int index,double at,Viewport v){
-            if(!Double.isFinite(at))throw new IllegalArgumentException("谱面时刻无效");
+            if(!Double.isFinite(at))throw new IllegalArgumentException(tr("谱面时刻无效"));
             if(time!=at||width!=v.getWidth()||height!=v.getHeight()){
                 time=at;width=v.getWidth();height=v.getHeight();
                 if(++generation==0){Arrays.fill(stamps,0);generation=1;}
             }
             int size=0,cursor=index;
-            while(cursor>=0&&stamps[cursor]!=generation){if(size>=path.length)throw new IllegalStateException("判定线父子循环");path[size++]=cursor;cursor=lines.get(cursor).getParent();}
+            while(cursor>=0&&stamps[cursor]!=generation){if(size>=path.length)throw new IllegalStateException(tr("判定线父子循环"));path[size++]=cursor;cursor=lines.get(cursor).getParent();}
             while(size>0){int i=path[--size];NativeLine line=lines.get(i);int parent=line.getParent();
                 double px=line.getX().value(at)*width/2.0,py=line.getY().value(at)*height/2.0,angle=line.getRotation().value(at)*Math.PI/180;
                 if(parent<0){x[i]=px;y[i]=py;rotation[i]=angle;}

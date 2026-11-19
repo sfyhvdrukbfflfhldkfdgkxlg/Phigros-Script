@@ -25,7 +25,7 @@ public final class SubmissionSafetyRegression {
     static void replay(boolean root,int cost)throws Exception{
         runtime=false;cpu=cost;SystemClock.now=100000;InputBackend.rootEnabled=root;RootClient.after=null;RootClient.failAt=-1;
         AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");TapMod.init(new android.content.Context());
-        Chart chart=chart();TouchService service=new TouchService();GesturePlan.preflight(chart,service,V);
+        Chart chart=chart();TouchService service=new TouchService();service.prepareChart(chart,V);
         int[] actualPathViolations={0};if(!root)observePaths(service,chart,actualPathViolations);
         List<String> status=new ArrayList<>();runtime=true;
         try{ChartMultiTouchPlayer.play(service,chart,100000,V,new AtomicBoolean(),text->{status.add(text);return Unit.INSTANCE;},new AtomicBoolean(),new AtomicBoolean());}
@@ -48,7 +48,7 @@ public final class SubmissionSafetyRegression {
         BlockAreaSet.capture(new JSONObject().put("blockAreaList",new JSONArray().put(area)));BlockAreaSet.bind(chart);
         runtime=false;cpu=0;SystemClock.now=100000;InputBackend.rootEnabled=root;RootClient.after=null;RootClient.failAt=-1;
         AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.init(new android.content.Context());
-        TouchService service=new TouchService();GesturePlan.preflight(chart,service,V);int[] bad={0};if(!root)observePaths(service,chart,bad);
+        TouchService service=new TouchService();service.prepareChart(chart,V);int[] bad={0};if(!root)observePaths(service,chart,bad);
         List<String> status=new ArrayList<>();ChartMultiTouchPlayer.play(service,chart,100000,V,new AtomicBoolean(),s->{status.add(s);return Unit.INSTANCE;},new AtomicBoolean(),new AtomicBoolean());
         List<long[]> downs=root?RootClient.last.heads:service.downs;int left=0,right=0;for(long[] d:downs){float x=Float.intBitsToFloat((int)d[2]);if(Math.abs(x-250)<2)left++;if(Math.abs(x-750)<2)right++;}
         if(root)for(float[] s:RootClient.last.samples)if(BlockAreaSet.covers(chart,s[2],s[3],0,0,1000,600,(s[0]-100000)/1000.0))bad[0]++;

@@ -1,5 +1,7 @@
 package io.github.phiscript.root;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -49,7 +51,7 @@ public final class RootPanel {
             if(!alive(activity))return;
             Runnable access=()->{if(alive(activity)&&!accessibilityEnabled(activity)){
                 try{activity.startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));}
-                catch(Exception e){RuntimeState.INSTANCE.log("请在系统设置启用无障碍："+e.getMessage());}
+                catch(Exception e){RuntimeState.INSTANCE.log(tr("请在系统设置启用无障碍：")+e.getMessage());}
             }};
             // Request these in sequence: opening Settings during a su dialog steals focus.
             if(!InputBackend.rootEnabled)requestRoot(activity,access);else access.run();
@@ -67,7 +69,7 @@ public final class RootPanel {
     private static void requestRoot(Activity activity,Runnable after){
         if(blocked(activity)||!busy.compareAndSet(false,true))return;
         rootPending=true;HomeScreen.refresh(activity);
-        RuntimeState.INSTANCE.log("正在请求 Root 授权；授权完成后触控后端会自动就绪");
+        RuntimeState.INSTANCE.log(tr("正在请求 Root 授权；授权完成后触控后端会自动就绪"));
         new Thread(()->{
             String error=null;
             try{
@@ -77,12 +79,12 @@ public final class RootPanel {
                     client.frame(new ArrayList<RootTouchState.Sample>());
                 }
                 InputBackend.rootEnabled=true;new AppSettings(activity).saveFlag("root_input_enabled",true);
-                RuntimeState.INSTANCE.log("Root 已授权，触控后端就绪");
-            }catch(Exception e){error=e.getMessage();RuntimeState.INSTANCE.log("Root 未启用："+error);}
+                RuntimeState.INSTANCE.log(tr("Root 已授权，触控后端就绪"));
+            }catch(Exception e){error=e.getMessage();RuntimeState.INSTANCE.log(tr("Root 未启用：")+error);}
             final String failure=error;rootPending=false;busy.set(false);
             activity.runOnUiThread(()->{
                 if(!alive(activity))return;HomeScreen.refresh(activity);
-                if(failure!=null)message(activity,"Root 未启用",failure);
+                if(failure!=null)message(activity,tr("Root 未启用"),failure);
                 if(after!=null)after.run();
             });
         },"phi-root-preflight").start();
@@ -95,12 +97,12 @@ public final class RootPanel {
     public static boolean blocked(Activity a){
         boolean originalBusy=false;try{Method m=a.getClass().getDeclaredMethod("taskBusy");m.setAccessible(true);originalBusy=Boolean.TRUE.equals(m.invoke(a));}catch(Exception ignored){}
         if(isBusy()||originalBusy||RuntimeState.INSTANCE.getRunning().get()){
-            message(a,"请先停止当前任务","请停止当前导入、识别或演奏，再切换模式或谱库。");return true;
+            message(a,tr("请先停止当前任务"),tr("请停止当前导入、识别或演奏，再切换模式或谱库。"));return true;
         }return false;
     }
     public static void scan(Activity activity){
         if(blocked(activity)||!busy.compareAndSet(false,true))return;
-        RuntimeState.INSTANCE.log("Root 正在导入已安装 Phigros 的 APK 资源索引…");
+        RuntimeState.INSTANCE.log(tr("Root 正在导入已安装 Phigros 的 APK 资源索引…"));
         new Thread(()->{
             String error=null;ChartLibrary result=null;
             try{
@@ -108,41 +110,57 @@ public final class RootPanel {
                 Method method=ChartLibrary.Companion.class.getDeclaredMethod("scanSource",Context.class,ChartSource.class,String.class,Function1.class);
                 method.setAccessible(true);
                 Function1<String,Unit> progress=s->{RuntimeState.INSTANCE.log(s);return Unit.INSTANCE;};
-                result=(ChartLibrary)method.invoke(ChartLibrary.Companion,activity.getApplicationContext(),source,"Root · 已安装 Phigros",progress);
+                result=(ChartLibrary)method.invoke(ChartLibrary.Companion,activity.getApplicationContext(),source,tr("Root · 已安装 Phigros"),progress);
             }catch(Exception e){Throwable cause=e instanceof InvocationTargetException?((InvocationTargetException)e).getTargetException():e;error=cause.getMessage();}
             if(result!=null)RuntimeState.INSTANCE.setLibrary(result);
             final ChartLibrary library=result;final String failure=error;busy.set(false);
             activity.runOnUiThread(()->{
-                if(library==null){message(activity,"Root 导入失败",failure==null?"未能读取游戏资源":failure);return;}
+                if(library==null){message(activity,tr("Root 导入失败"),failure==null?tr("未能读取游戏资源"):failure);return;}
                 io.github.phiscript.assets.ExternalCharts.onApkLibrary(activity);
                 new AppSettings(activity).saveFlag("root_phigros_source",true);
-                message(activity,"Phigros 谱库已导入","已发现 "+library.getLocations().size()+" 个谱面难度。点击首页“开始打谱”自动检测。游戏更新后请重新导入；重启应用后若谱库未恢复，也可再次导入。\n只读取 APK；不修改游戏文件。未识别的新版资源格式会报错，不会假装导入成功。");
+                message(activity,tr("Phigros 谱库已导入"),tr("已发现 ")+library.getLocations().size()+tr(" 个谱面难度。点击首页“开始打谱”自动检测。游戏更新后请重新导入；重启应用后若谱库未恢复，也可再次导入。\n只读取 APK；不修改游戏文件。未识别的新版资源格式会报错，不会假装导入成功。"));
             });
         },"phi-root-import").start();
     }
     public static void choose(Activity activity){
+        choose(activity,false);
+    }
+    static void choosePreparation(Activity activity){
+        choose(activity,true);
+    }
+    private static void choose(Activity activity,boolean prepare){
         if(!io.github.phiscript.assets.ExternalCharts.ensurePhigrosSelected(activity))return;
         if(blocked(activity))return;
         ChartLibrary library=RuntimeState.INSTANCE.getLibrary();
-        if(library==null){message(activity,"尚无 Phigros 谱库","请先点击 Root 一键导入，或使用原有的扫描 / 手动导入 APK 按钮。");return;}
+        if(library==null){message(activity,tr("尚无 Phigros 谱库"),tr("请先点击 Root 一键导入，或使用原有的扫描 / 手动导入 APK 按钮。"));return;}
         java.util.Map<String,String> titles=new java.util.HashMap<>();for(io.github.phiscript.vision.SongCandidate song:library.songs())titles.put(song.getId(),song.getTitle());
-        EditText query=new EditText(activity);query.setSingleLine(true);query.setHint("曲名、歌曲 ID 或难度，留空列出全部");
-        new AlertDialog.Builder(activity).setTitle(io.github.phiscript.i18n.UiText.text("筛选 Phigros 谱面")).setView(query).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).setPositiveButton(io.github.phiscript.i18n.UiText.text("查找"),(d,w)->{
+        EditText query=new EditText(activity);query.setSingleLine(true);query.setHint(tr("曲名、歌曲 ID 或难度，留空列出全部"));
+        AlertDialog search=UiDesign.dialog(activity,io.github.phiscript.i18n.UiText.text("筛选 Phigros 谱面")).setView(UiDesign.inputBox(activity,null,query)).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).setPositiveButton(io.github.phiscript.i18n.UiText.text("查找"),(d,w)->{
             String text=query.getText().toString().trim().toLowerCase(java.util.Locale.ROOT);
             List<ChartLocation> entries=new ArrayList<>();for(ChartLocation l:library.getLocations())
                 if((titles.getOrDefault(l.getSongId(),l.getAssetKey())+" "+l.getSongId()+" "+l.getDifficulty()).toLowerCase(java.util.Locale.ROOT).contains(text))entries.add(l);
             Collections.sort(entries,(a,b)->{int song=a.getSongId().compareTo(b.getSongId());return song!=0?song:a.getDifficulty().compareTo(b.getDifficulty());});
-            if(entries.isEmpty()){message(activity,"没有匹配谱面","请换一个曲名、歌曲 ID 或清空筛选。");return;}
+            if(entries.isEmpty()){message(activity,tr("没有匹配谱面"),tr("请换一个曲名、歌曲 ID 或清空筛选。"));return;}
             String[] labels=new String[entries.size()];for(int i=0;i<labels.length;i++)labels[i]=titles.getOrDefault(entries.get(i).getSongId(),entries.get(i).getAssetKey())+" / "+entries.get(i).getDifficulty();
-            new AlertDialog.Builder(activity).setTitle(io.github.phiscript.i18n.UiText.text("选择与游戏一致的歌曲 / 难度")).setItems(io.github.phiscript.i18n.UiText.text(labels),(dialog,index)->load(activity,library,entries.get(index))).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).show();
-        }).show();
+            UiDesign.show(UiDesign.dialog(activity,prepare?UiDesign.words("选择要准备的歌曲 / 难度","Choose a song and difficulty to prepare"):io.github.phiscript.i18n.UiText.text("选择与游戏一致的歌曲 / 难度"))
+                .setItems(labels,(dialog,index)->{
+                    if(prepare)PreparedChartsUi.start(activity,library,entries.get(index),labels[index]);
+                    else load(activity,library,entries.get(index));
+                }).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).create());
+        }).create();
+        query.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH);
+        query.setOnEditorActionListener((view,action,event)->{
+            if(action!=android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH)return false;
+            return search.getButton(AlertDialog.BUTTON_POSITIVE).performClick();
+        });
+        UiDesign.show(search);
     }
     private static void load(Activity activity,ChartLibrary library,ChartLocation location){
         if(blocked(activity))return;
         try{
             io.github.phiscript.assets.SessionChartSource.selectManual(activity,library,location);
             HomeScreen.refresh(activity);AutoEntry.launch(activity,false);
-        }catch(Exception error){message(activity,"无法选择谱面",error.getMessage());}
+        }catch(Exception error){message(activity,tr("无法选择谱面"),error.getMessage());}
     }
     public static void timing(Activity activity){RetryCalibration.open(activity);}
 }

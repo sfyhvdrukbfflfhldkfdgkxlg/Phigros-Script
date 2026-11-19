@@ -93,7 +93,7 @@ public final class PointerReplayRegression {
             }
         };
         try {
-            GesturePlan.preflight(chart,service,VIEW);
+            service.prepareChart(chart,VIEW);
             ChartMultiTouchPlayer.play(service,chart,EPOCH,VIEW,new AtomicBoolean(),m->kotlin.Unit.INSTANCE,new AtomicBoolean(),new AtomicBoolean());
             if(!root){
                 for(long[] p:service.downs)trace.changes.add(new long[]{p[1]-EPOCH,1});

@@ -1,4 +1,6 @@
 package io.github.phiscript.i18n;
+
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
 import android.app.Activity;
 import android.app.AlertDialog;
 import io.github.phiscript.AppSettings;
@@ -9,7 +11,7 @@ public final class StyledLanguageSettings {
     public static void open(Activity activity){
         if(RootPanel.blocked(activity))return;
         String[] values={"auto","zh","en"};String choice=new AppSettings(activity).text("ui_language","auto");int selected=0;for(int i=0;i<values.length;i++)if(values[i].equals(choice))selected=i;
-        UiDesign.show(UiDesign.dialog(activity,"语言 / Language").setSingleChoiceItems(UiText.text(new String[]{"跟随系统","简体中文","English"}),selected,(dialog,index)->{
+        UiDesign.show(UiDesign.dialog(activity,tr("语言 / Language")).setSingleChoiceItems(UiText.text(new String[]{tr("跟随系统"),"简体中文","English"}),selected,(dialog,index)->{
             new AppSettings(activity).save("ui_language",values[index]);UiText.attach(activity);dialog.dismiss();activity.recreate();
         }).setNegativeButton(UiText.text("取消"),null).create());
     }

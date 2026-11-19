@@ -1,5 +1,7 @@
 package io.github.phiscript.root;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -17,13 +19,15 @@ public final class PlayEntry {
     public static void choose(Activity a){
         if(RootPanel.blocked(a))return;
         new AlertDialog.Builder(a).setTitle(io.github.phiscript.i18n.UiText.text("演奏模式")).setItems(io.github.phiscript.i18n.UiText.text(new String[]{
-            "Phigros · 自动读谱","Phira · 谱面演奏","Phigros · 纯视觉","Phigros · 手选谱面","Phira Pro · 谱面演奏","Phigros · 课题连续校准（三首）"
+            tr("Phigros · 自动读谱"),tr("Phira · 谱面演奏"),tr("Phigros · 纯视觉"),tr("Phigros · 手选谱面"),tr("Phira Pro · 谱面演奏"),tr("Phigros · 课题连续校准（三首）")
         }),(dialog,index)->select(a,index)).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).show();
     }
     public static void select(Activity a,int index){
         if(index==1||index==4){GameLaunch.phira(a,index==4,false);return;}
         ModeRouting.select(new AppSettings(a),index);HomeScreen.refresh(a);
-        if(index==5)RootPanel.message(a,"课题连续校准","建议先导入三首课题的本地谱面，联网读取可能错过开头。进入游戏课题选曲界面后启动打谱，等待通道就绪，再开始第一首。\n\n每首重新识别曲名、难度并用移动音符校准，锁定后才触控。课题内不会点击暂停或重试。暂停、结算或校准失败会停止。开头过短、隐藏判定线或复杂演出可能无法锁定。");
+        if(index==5)RootPanel.message(a,tr("课题连续校准"),UiDesign.words(
+            "请先在曲库准备三首课题谱面的触点。进入游戏课题选曲界面后启动打谱，等待通道就绪，再开始第一首。每首会重新识别曲名、难度并校准。",
+            "Prepare touches for all three course charts in the library. Open the course selection screen, start playback in the app and wait for input to be ready before starting the first song. The app recognizes and calibrates each song separately."));
     }
     public static String label(Activity a){return ModeRouting.label(new AppSettings(a));}
 
@@ -39,7 +43,7 @@ public final class PlayEntry {
     public static boolean intercept(Activity a,boolean preview){
         if(!io.github.phiscript.assets.ExternalCharts.ensureSelected(a))return true;
         AppSettings prefs=new AppSettings(a);
-        if(ModeRouting.needsPhigros(prefs)&&RuntimeState.INSTANCE.getLibrary()==null){RootPanel.message(a,"缺少谱库","请先导入 Phigros 谱库再开启自动检测。");return true;}
+        if(ModeRouting.needsPhigros(prefs)&&RuntimeState.INSTANCE.getLibrary()==null){RootPanel.message(a,tr("缺少谱库"),tr("请先导入 Phigros 谱库再开启自动检测。"));return true;}
         if(!preview&&ModeRouting.kind(prefs)==ModeRouting.Kind.PHIGROS_MANUAL&&!io.github.phiscript.assets.SessionChartSource.hasManual(a,RuntimeState.INSTANCE.getLibrary())){RootPanel.choose(a);return true;}
         return false;
     }
@@ -51,7 +55,7 @@ public final class PlayEntry {
             library=PhiraLibrary.Companion.importFiles(c,new ArrayList<Uri>(files.subList(i,Math.min(i+16,files.size()))),text->{RuntimeState.INSTANCE.log(text);return Unit.INSTANCE;});
             PhiraImportControl.check();
         }
-        if(library==null)throw new IllegalArgumentException("没有可导入的 Phira 谱面");
+        if(library==null)throw new IllegalArgumentException(tr("没有可导入的 Phira 谱面"));
         return library;
         }
     }

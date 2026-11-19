@@ -20,7 +20,7 @@ APK_NAME="PhigrosScript_data1.0.9-r17.apk"
 
 def build(base,key,cert,output,release="data1.0.9-r17",code=41):
     assert hashlib.sha256(base.read_bytes()).hexdigest()==previous.BASE_SHA256,"Expected exact official R15 APK"
-    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000))
+    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001))
     sdk=ROOT/"tools/platform/android-35/android.jar"
     bt=ROOT/"tools/build-tools/android-15"
     ecj=ROOT/"tools/ecj.jar"
@@ -45,6 +45,13 @@ def build(base,key,cert,output,release="data1.0.9-r17",code=41):
         if code>=44:
             import r20_hooks
             r20_hooks.apply(decoded)
+        if code >= 11001:
+            import r20_native_i18n
+            r20_native_i18n.apply(decoded)
+            import timing_111_hooks
+            timing_111_hooks.apply(decoded)
+            import update_111_hooks
+            update_111_hooks.apply(decoded)
         after={str(p.relative_to(decoded)):hashlib.sha256(p.read_bytes()).hexdigest() for p in decoded.glob("smali*/**/*.smali")}
         changed=sorted(p for p in before.keys()|after.keys() if before.get(p)!=after.get(p))
         indexes=sorted({int(Path(p).parts[0].removeprefix("smali_classes")) for p in changed})

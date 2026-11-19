@@ -1,5 +1,7 @@
 package io.github.phiscript.input;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.accessibilityservice.GestureDescription;
 import android.graphics.Path;
 import java.util.ArrayList;
@@ -23,7 +25,7 @@ final class GestureBatch<K> {
     void add(K key, GestureChannel.Live prior, Path path, long down, long up,
             boolean keep, float x, float y) {
         if (down < 0 || up <= down || (prior != null && down != 0))
-            throw new IllegalArgumentException("触点时间无效，已停止");
+            throw new IllegalArgumentException(tr("触点时间无效，已停止"));
         Item<K> item = new Item<>();
         item.key=key; item.prior=prior; item.path=path; item.down=down; item.up=up;
         item.keep=keep; item.x=x; item.y=y;
@@ -66,7 +68,7 @@ final class GestureBatch<K> {
         next.clear(); duration=1;
         for (Item<K> item : items) {
             if (continuing > 0 && item.prior == null && item.down < 2)
-                throw new IllegalStateException("新触点不能占用续接握手，已停止");
+                throw new IllegalStateException(tr("新触点不能占用续接握手，已停止"));
             GestureDescription.StrokeDescription stroke = item.prior == null
                 ? new GestureDescription.StrokeDescription(item.path, item.down,
                     item.up-item.down, item.keep)
@@ -81,7 +83,7 @@ final class GestureBatch<K> {
     }
     private void normalize(){
         if (items.isEmpty() || items.size() > GestureChannel.POINTER_LIMIT)
-            throw new IllegalStateException("触点批次超过系统安全容量，已停止");
+            throw new IllegalStateException(tr("触点批次超过系统安全容量，已停止"));
         // MotionEventInjector removes UPs before adding DOWNs, but uses the
         // original step index for a new pointer. Leave at least 1 ms between
         // those operations so ended points are absent from the DOWN step.
@@ -100,7 +102,7 @@ final class GestureBatch<K> {
                     changed=true;
                 }
             }
-            if (++passes > 40) throw new IllegalStateException("无法安全排列触点，已停止");
+            if (++passes > 40) throw new IllegalStateException(tr("无法安全排列触点，已停止"));
         } while (changed);
         // MotionEventInjector indexes a DOWN relative to every still-held pointer.
         // A stroke marked for continuation must appear in every later sampled step

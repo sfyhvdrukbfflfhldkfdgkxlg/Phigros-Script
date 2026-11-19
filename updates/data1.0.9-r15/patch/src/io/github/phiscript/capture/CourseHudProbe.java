@@ -1,5 +1,7 @@
 package io.github.phiscript.capture;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import io.github.phiscript.vision.NormalizedPoint;
@@ -10,7 +12,7 @@ final class CourseHudProbe {
     private final RectF roi;
     private int[] pixels=new int[0];
     CourseHudProbe(RectF roi){
-        if(roi.left<0||roi.top<0||roi.right>1||roi.bottom>1||roi.width()<=0||roi.height()<=0)throw new IllegalArgumentException("暂停检测区域无效");
+        if(roi.left<0||roi.top<0||roi.right>1||roi.bottom>1||roi.width()<=0||roi.height()<=0)throw new IllegalArgumentException(tr("暂停检测区域无效"));
         this.roi=new RectF(roi);
     }
     NormalizedPoint observe(Bitmap bitmap){

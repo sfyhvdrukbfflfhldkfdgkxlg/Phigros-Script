@@ -1,5 +1,7 @@
 package io.github.phiscript.capture;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 /** Three independent songs. A confirmed non-gameplay interval separates starts,
  * including courses that repeat the same song/difficulty. Never guesses a retry. */
 public final class PhigrosCourseGate {
@@ -42,11 +44,11 @@ public final class PhigrosCourseGate {
         return identityEvidence.observe(identity,captured,now)?Decision.READY:Decision.WAIT;
     }
     public void playing(){
-        if(!boundary||candidate==null||completed>=3)throw new IllegalStateException("课题曲目尚未确认");
+        if(!boundary||candidate==null||completed>=3)throw new IllegalStateException(tr("课题曲目尚未确认"));
         playing=true;
     }
     public void finished(boolean observedTransition){
-        if(!playing)throw new IllegalStateException("课题曲目尚未开始");
+        if(!playing)throw new IllegalStateException(tr("课题曲目尚未开始"));
         completed++;playing=false;boundary=observedTransition;previousIdentity=candidate;
         firstHud=-1;candidate=null;identityEvidence.reset();boundaryEvidence.reset();
     }

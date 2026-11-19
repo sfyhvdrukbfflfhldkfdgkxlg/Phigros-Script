@@ -1,5 +1,7 @@
 package io.github.phiscript.engine;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -137,8 +139,8 @@ public final class BlockAreaSet {
         }
         try {
             JSONArray jSONArrayOptJSONArray = jSONObject.optJSONArray(jSONObject.has("blockAreaList")?"blockAreaList":"BlockAreaList");
-            if((jSONObject.has("blockAreaList")||jSONObject.has("BlockAreaList"))&&jSONArrayOptJSONArray==null)throw new IllegalArgumentException("噪域列表格式无效");
-            if(jSONArrayOptJSONArray!=null&&jSONArrayOptJSONArray.length()>32768)throw new IllegalArgumentException("噪域数量超过 32768");
+            if((jSONObject.has("blockAreaList")||jSONObject.has("BlockAreaList"))&&jSONArrayOptJSONArray==null)throw new IllegalArgumentException(tr("噪域列表格式无效"));
+            if(jSONArrayOptJSONArray!=null&&jSONArrayOptJSONArray.length()>32768)throw new IllegalArgumentException(tr("噪域数量超过 32768"));
             if (jSONArrayOptJSONArray != null) {
                 ArrayList arrayList = new ArrayList(jSONArrayOptJSONArray.length());
                 ArrayList arrayList2 = new ArrayList();
@@ -150,7 +152,7 @@ public final class BlockAreaSet {
                         } else {
                             arrayList.add(blockArea);
                         }
-                    }else throw new IllegalArgumentException("噪域数据缺少坐标或事件无效："+i);
+                    }else throw new IllegalArgumentException(tr("噪域数据缺少坐标或事件无效：")+i);
                 }
                 BlockAreaSet captured=new BlockAreaSet((BlockArea[]) arrayList.toArray(new BlockArea[arrayList.size()]), (BlockArea[]) arrayList2.toArray(new BlockArea[arrayList2.size()]));
                 captured.singleInvert=jSONObject.optBoolean("phiscriptNoiseSingleInvert",false);pending.set(captured);
@@ -159,7 +161,7 @@ public final class BlockAreaSet {
             }
             pending.set(EMPTY);
         } catch (Exception th) {
-            pending.remove();throw new IllegalArgumentException("无法读取噪域数据："+th.getMessage(),th);
+            pending.remove();throw new IllegalArgumentException(tr("无法读取噪域数据：")+th.getMessage(),th);
         }
     }
 
@@ -496,7 +498,7 @@ public final class BlockAreaSet {
                     track.y[i2] = dOptDouble;
                 }
             }
-            for(int n=0;n<track.time.length;n++)if(!Double.isFinite(track.time[n])||!Double.isFinite(track.x[n])||!Double.isFinite(track.y[n])||track.easeX[n]<0||track.easeX[n]>14||track.easeY[n]<0||track.easeY[n]>14)throw new IllegalArgumentException("噪域事件数字或缓动类型无效");
+            for(int n=0;n<track.time.length;n++)if(!Double.isFinite(track.time[n])||!Double.isFinite(track.x[n])||!Double.isFinite(track.y[n])||track.easeX[n]<0||track.easeX[n]>14||track.easeY[n]<0||track.easeY[n]>14)throw new IllegalArgumentException(tr("噪域事件数字或缓动类型无效"));
             return track;
         }
 
@@ -511,7 +513,7 @@ public final class BlockAreaSet {
                 anchors.x[i] = jSONObjectOptJSONObject == null ? d : jSONObjectOptJSONObject.optDouble("x", d);
                 anchors.y[i] = jSONObjectOptJSONObject == null ? d2 : jSONObjectOptJSONObject.optDouble("y", d2);
             }
-            for(int n=0;n<anchors.time.length;n++)if(!Double.isFinite(anchors.time[n])||!Double.isFinite(anchors.x[n])||!Double.isFinite(anchors.y[n]))throw new IllegalArgumentException("噪域锚点无效");
+            for(int n=0;n<anchors.time.length;n++)if(!Double.isFinite(anchors.time[n])||!Double.isFinite(anchors.x[n])||!Double.isFinite(anchors.y[n]))throw new IllegalArgumentException(tr("噪域锚点无效"));
             return anchors;
         }
 

@@ -40,7 +40,7 @@ def semantic_nodes(source):
     return result
 
 
-def check(base,final=None):
+def check(base,final=None,release="data1.1.0",version_code=11000):
     base=Path(base);aapt=axml.ROOT/"tools/build-tools/android-15"/("aapt2.exe" if __import__("os").name=="nt" else "aapt2")
     with ZipFile(base) as apk:
         original=apk.read("AndroidManifest.xml");table=apk.read("resources.arsc")
@@ -79,8 +79,8 @@ def check(base,final=None):
     assert build_110.VERSION=="data1.1.0" and build_110.VERSION_CODE==11000
     if final is not None:
         with ZipFile(final) as apk:_,current,_,_=inspect(apk.read("AndroidManifest.xml"))
-        assert current[0x0101021b][0]==11000 and current[0x0101021c][0]=="data1.1.0"
-    print("PASS version manifest: eight short/long/Unicode/legacy names, AAPT2 typed/raw verification, preserved old indices/attributes, icon ordering, numeric raw value and baseline rejection; data1.1.0 code11000.")
+        assert current[0x0101021b][0]==version_code and current[0x0101021c][0]==release
+    print(f"PASS version manifest: typed/raw fields, preserved attributes and resources; {release} code {version_code}.")
 
 
 if __name__=="__main__":check(*sys.argv[1:])

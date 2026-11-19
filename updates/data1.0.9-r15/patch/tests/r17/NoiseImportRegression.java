@@ -60,7 +60,7 @@ public final class NoiseImportRegression {
         for(boolean root:new boolean[]{false,true}){
             Chart c=lib.load(id);ok(BlockAreaSet.count(c)==1&&covered(c,.5,.5,.5),"saved/reloaded noise data missing");
             AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");TapMod.init(ctx);SystemClock.now=100000;InputBackend.rootEnabled=root;
-            TouchService service=new TouchService();ChartMultiTouchPlayer.play(service,c,100000,V,new AtomicBoolean(),s->kotlin.Unit.INSTANCE,new AtomicBoolean(),new AtomicBoolean());
+            TouchService service=new TouchService();Regression.prepareAndPlay(service,c,100000,V,new AtomicBoolean(),s->kotlin.Unit.INSTANCE,new AtomicBoolean(),new AtomicBoolean());
             List<long[]> downs=root?RootClient.last.heads:service.downs;ok(downs.size()==1,"sidecar chart did not play exactly one tap");
             for(long[] d:downs){float x=Float.intBitsToFloat((int)d[2]),y=Float.intBitsToFloat((int)d[3]);ok(!BlockAreaSet.covers(c,x,y,0,0,1000,600,(d[1]-100000)/1000.0),"persisted sidecar player touched noise");}
         }

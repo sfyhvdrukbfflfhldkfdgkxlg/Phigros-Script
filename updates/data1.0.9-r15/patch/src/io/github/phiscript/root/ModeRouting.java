@@ -1,4 +1,6 @@
 package io.github.phiscript.root;
+
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
 import io.github.phiscript.AppSettings;
 import io.github.phiscript.PlayMode;
 /** One mode decision shared by source selection, startup checks, labels and capture dispatch. */
@@ -18,7 +20,7 @@ public final class ModeRouting {
     public static boolean autoEngine(AppSettings p,PlayMode capturedMode){return capturedMode==PlayMode.VISUAL&&needsPhigros(p);}
     private static void record(AppSettings p){p.save(SCHEMA,"4");p.save("play_route",kind(p).name());}
     public static void select(AppSettings p,int index){
-        if(index<0||index>5||index==4)throw new IllegalArgumentException("演奏模式无效");
+        if(index<0||index>5||index==4)throw new IllegalArgumentException(tr("演奏模式无效"));
         p.save("mode",index==1?"PHIRA":"VISUAL");p.saveFlag(AUTO,index==0||index==5);p.saveFlag(MANUAL,index==3);p.saveFlag(COURSE,index==5);record(p);
     }
     /** Called after the real preference write, including writes from the old Phira import UI. */
@@ -40,5 +42,5 @@ public final class ModeRouting {
         if("local".equals(p.text("phigros_library_source",""))&&previous==Kind.PHIRA)previous=Kind.PHIGROS_AUTO;
         select(p,previous==Kind.PHIRA?1:previous==Kind.VISUAL?2:previous==Kind.PHIGROS_MANUAL?3:0);
     }
-    public static String label(AppSettings p){switch(kind(p)){case PHIRA:return "org.flos.phirapro".equals(p.text("phira_package",""))?"Phira Pro 谱面演奏":"Phira 谱面演奏";case PHIGROS_MANUAL:return "Phigros 手选谱面";case PHIGROS_AUTO:return course(p)?"Phigros 课题连续校准":"Phigros 自动读谱";default:return "Phigros 纯视觉";}}
+    public static String label(AppSettings p){switch(kind(p)){case PHIRA:return "org.flos.phirapro".equals(p.text("phira_package",""))?tr("Phira Pro 谱面演奏"):tr("Phira 谱面演奏");case PHIGROS_MANUAL:return tr("Phigros 手选谱面");case PHIGROS_AUTO:return course(p)?tr("Phigros 课题连续校准"):tr("Phigros 自动读谱");default:return tr("Phigros 纯视觉");}}
 }

@@ -39,8 +39,8 @@ public final class SharedSessionRegression {
   }else{
    if(failure!=null)throw failure;ok(SessionTrace.offers==1&&SessionTrace.commands.equals(Arrays.asList("pause:2","retry:1")),"one confirmed pause/retry sequence");ok(SessionTrace.plays==1,"exactly one Phira playback entry");
    ok(SessionTrace.chart.getNotes().size()==7&&BlockAreaSet.count(SessionTrace.chart)==1,"source retained chart notes and noise");
-   long expected=PhiraRestartClock.INSTANCE.epoch(SessionTrace.receipt,settings.getPhiraRestartDelayMs(),SessionTrace.chart.getOffsetSeconds(),settings.getPhiraGlobalOffsetMs(),settings.getTouchOffsetMs());
-   ok(Math.abs(SessionTrace.epoch-expected)<10,"shared retry epoch includes chart/global/touch offsets exactly once");
+   long expected=PhiraRestartClock.INSTANCE.epoch(SessionTrace.receipt,settings.getPhiraRestartDelayMs(),pgr?SessionTrace.chart.getOffsetSeconds():0.0,settings.getPhiraGlobalOffsetMs(),settings.getTouchOffsetMs());
+   ok(Math.abs(SessionTrace.epoch-expected)<10,"shared retry epoch uses the selected game's chart offset policy");
    Viewport wanted=automatic?PhiraViewport.INSTANCE.bounds(2400,1080,1.5,true):new Viewport(240,54,1920,972);
    ok(Math.abs(SessionTrace.viewport.getLeft()-wanted.getLeft())<.1&&Math.abs(SessionTrace.viewport.getTop()-wanted.getTop())<.1&&Math.abs(SessionTrace.viewport.getWidth()-wanted.getWidth())<.1&&Math.abs(SessionTrace.viewport.getHeight()-wanted.getHeight())<.1,"uses identical Phira viewport and source aspect metadata");
    if(ending.equals("detected-retry"))ok(Math.abs(SessionTrace.retryX-(pgr?.56f:.5f))<.002&&Math.abs(SessionTrace.retryY-(pgr?.47f:.5f))<.002,"Phigros clicks measured retry glyph; Phira retains configured point");

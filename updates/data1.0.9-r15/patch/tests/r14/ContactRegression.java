@@ -33,7 +33,7 @@ public final class ContactRegression {
     }
     static TouchService play(Chart c,boolean root)throws Exception{
         TouchService service=new TouchService();SystemClock.now=100000;InputBackend.rootEnabled=root;
-        ChartMultiTouchPlayer.play(service,c,100000,V,new AtomicBoolean(),s->kotlin.Unit.INSTANCE,new AtomicBoolean(),new AtomicBoolean());return service;
+        Regression.prepareAndPlay(service,c,100000,V,new AtomicBoolean(),s->kotlin.Unit.INSTANCE,new AtomicBoolean(),new AtomicBoolean());return service;
     }
     static int peak(TouchService s,boolean root){return root?RootClient.last.peak:s.peak;}
     static int heads(TouchService s,boolean root){return root?RootClient.last.heads.size():s.downs.size();}

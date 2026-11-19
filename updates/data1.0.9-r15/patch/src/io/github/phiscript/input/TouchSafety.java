@@ -1,6 +1,9 @@
 package io.github.phiscript.input;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Insets;
 import android.os.Build;
 import android.view.WindowInsets;
@@ -19,6 +22,9 @@ public final class TouchSafety {
     private TouchSafety(boolean enabled,boolean inward,TouchBounds bounds){this.enabled=enabled;this.inwardFlick=inward;this.bounds=bounds;}
     static TouchSafety forPreparation(TouchBounds bounds){return new TouchSafety(TapMod.preparationEdgeGuard(),TapMod.preparationInwardFlick(),bounds);}
     public static TouchSafety read(Context context,int width,int height,Viewport viewport){
+        return read(context,width,height,viewport,false);
+    }
+    static TouchSafety read(Context context,int width,int height,Viewport viewport,boolean importingFromPortrait){
         AppSettings prefs=new AppSettings(context);boolean enabled=prefs.flag("gesture_edge_guard",true);
         float left=0,top=0,right=0,bottom=0;
         if(enabled){
@@ -31,8 +37,30 @@ public final class TouchSafety {
                     WindowInsets insets=((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getMaximumWindowMetrics().getWindowInsets();
                     Insets bars=insets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());
                     Insets gestures=insets.getInsets(WindowInsets.Type.systemGestures()|WindowInsets.Type.mandatorySystemGestures());
-                    left=Math.max(left,Math.max(bars.left,gestures.left)+2);top=Math.max(top,Math.max(bars.top,gestures.top)+2);
-                    right=Math.max(right,Math.max(bars.right,gestures.right)+2);bottom=Math.max(bottom,Math.max(bars.bottom,gestures.bottom)+2);
+                    int[] edges={Math.max(bars.left,gestures.left),Math.max(bars.top,gestures.top),
+                        Math.max(bars.right,gestures.right),Math.max(bars.bottom,gestures.bottom)};
+                    // A portrait activity can see the camera cutout on a different edge.
+                    // Remember the real game window even when its first preflight misses,
+                    // so preparing the chart back in the library uses those exact insets.
+                    if(width>height&&(importingFromPortrait||context instanceof TouchService)){
+                        SharedPreferences observed=context.getSharedPreferences("game_window_insets",Context.MODE_PRIVATE);
+                        boolean matches=observed.getInt("width",-1)==width&&observed.getInt("height",-1)==height
+                            &&observed.getFloat("density",0)==density;
+                        String[] keys={"left","top","right","bottom"};
+                        if(importingFromPortrait&&matches){
+                            for(int i=0;i<edges.length;i++)edges[i]=observed.getInt(keys[i],edges[i]);
+                        }else if(!importingFromPortrait){
+                            boolean changed=!matches;
+                            for(int i=0;i<edges.length;i++)changed|=observed.getInt(keys[i],-1)!=edges[i];
+                            if(changed){
+                                SharedPreferences.Editor next=observed.edit().putInt("width",width).putInt("height",height).putFloat("density",density);
+                                for(int i=0;i<edges.length;i++)next.putInt(keys[i],edges[i]);
+                                next.apply();
+                            }
+                        }
+                    }
+                    left=Math.max(left,edges[0]+2);top=Math.max(top,edges[1]+2);
+                    right=Math.max(right,edges[2]+2);bottom=Math.max(bottom,edges[3]+2);
                 }catch(RuntimeException ignored){/* Older OEM window implementations: retain explicit margins. */}
             }
         }
@@ -80,7 +108,7 @@ public final class TouchSafety {
         if(plan.hasFlickPath(event))p=plan.point(chart,event,time,viewport,screen,bounded,bounds);
         else if(event.getNote().getType()==4&&inwardFlick){
             double seconds=Math.max(0,Math.max(event.getStartMs(),Math.min(event.getEndMs(),time)))/1000.0;
-            p=chart.position(event.getNote(),seconds,viewport,false);if(p==null)throw new IllegalArgumentException("无法计算划键位置");
+            p=chart.position(event.getNote(),seconds,viewport,false);if(p==null)throw new IllegalArgumentException(tr("无法计算划键位置"));
             Point normal=chart.judgeNormal(event.getNote(),seconds,viewport);
             float x=bounds.x(p.getX()),y=bounds.y(p.getY());float[] target=bounds.flick(x,y,normal.getX()*viewport.getHeight()*.1f,normal.getY()*viewport.getHeight()*.1f);
             float progress=Math.max(0,Math.min(1,(time-event.getStartMs())/60f));

@@ -1,0 +1,34 @@
+name: Publish verified data1.1.1
+on:
+  push:
+    branches: [main]
+    paths:
+      - updates/data1.1.1/release-data/manifest.json
+      - .github/workflows/publish-data1-1-1.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data1-1-1
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Fetch the public R15 baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download data1.0.9-r15 --repo "$GITHUB_REPOSITORY" --pattern PhigrosScript_data1.0.9-r15.apk --dir base
+      - name: Restore the signed APK and source archive
+        run: python3 .github/scripts/data1_1_1/restore.py base/PhigrosScript_data1.0.9-r15.apk updates/data1.1.1/release-data "$RUNNER_TEMP/data111-dist"
+      - name: Publish verified assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/data1_1_1/publish.py "$RUNNER_TEMP/data111-dist" updates/data1.1.1/release-data/manifest.json

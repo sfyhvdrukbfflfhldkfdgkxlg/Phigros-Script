@@ -1,5 +1,7 @@
 package io.github.phiscript.assets;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.content.Context;
 import android.os.SystemClock;
 import io.github.phiscript.RuntimeState;
@@ -48,20 +50,20 @@ final class OnlinePhiraSession {
             if(now<nextRequest||requests>=12)return null;
             nextRequest=now+4000;requests++;
             try{
-                RuntimeState.INSTANCE.log("Phira 在线谱库：按识别结果查询 "+title);
+                RuntimeState.INSTANCE.log(tr("Phira 在线谱库：按识别结果查询 ")+title);
                 found=api.search(title,stop);searches.put(key,found);
                 for(OnlinePhiraLibrary.Entry e:found.entries)remote.put(e.key(),e);
-            }catch(Exception e){if(stop.get()||Thread.currentThread().isInterrupted())return null;RuntimeState.INSTANCE.log("Phira 在线查询失败："+e.getMessage()+"；可按编号导入后重试");return null;}
+            }catch(Exception e){if(stop.get()||Thread.currentThread().isInterrupted())return null;RuntimeState.INSTANCE.log(tr("Phira 在线查询失败：")+e.getMessage()+tr("；可按编号导入后重试"));return null;}
         }
         PhiraCandidate result=unique(labels,found);
-        if(result==null&&now-lastLog>5000){lastLog=now;RuntimeState.INSTANCE.log("Phira 在线候选不唯一或难度不符，未导入；请按谱面编号导入");}
+        if(result==null&&now-lastLog>5000){lastLog=now;RuntimeState.INSTANCE.log(tr("Phira 在线候选不唯一或难度不符，未导入；请按谱面编号导入"));}
         return result;
     }
     Chart load(String id,String level)throws Exception{
-        OnlinePhiraLibrary.Entry entry=remote.get(id);if(entry==null||!entry.level.equals(level))throw new IllegalStateException("在线谱面标识已变化，请重新识别");
+        OnlinePhiraLibrary.Entry entry=remote.get(id);if(entry==null||!entry.level.equals(level))throw new IllegalStateException(tr("在线谱面标识已变化，请重新识别"));
         PhiraEntry local=imported.get(id);
-        if(local==null){RuntimeState.INSTANCE.log("下载并导入 Phira #"+entry.id+"："+entry.title+" / "+entry.level);local=api.importEntry(context,entry,stop);imported.put(id,local);}
-        PhiraLibrary library=RuntimeState.INSTANCE.getPhiraLibrary();if(library==null)throw new IllegalStateException("Phira 导入谱库不可用");
+        if(local==null){RuntimeState.INSTANCE.log(tr("下载并导入 Phira #")+entry.id+"："+entry.title+" / "+entry.level);local=api.importEntry(context,entry,stop);imported.put(id,local);}
+        PhiraLibrary library=RuntimeState.INSTANCE.getPhiraLibrary();if(library==null)throw new IllegalStateException(tr("Phira 导入谱库不可用"));
         return library.load(local.getId(),local.getLevel());
     }
     boolean contains(String id){return remote.containsKey(id);}

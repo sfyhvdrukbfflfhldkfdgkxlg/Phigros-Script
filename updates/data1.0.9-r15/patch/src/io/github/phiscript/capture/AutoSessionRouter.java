@@ -1,5 +1,7 @@
 package io.github.phiscript.capture;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import io.github.phiscript.AppSettings;
 import io.github.phiscript.SessionSettings;
 import io.github.phiscript.input.TouchService;
@@ -20,12 +22,12 @@ public final class AutoSessionRouter {
             SessionFeedback.clear(context);
             try{
                 TouchService service=TouchService.Companion.getCurrent();
-                if(service==null)throw new IllegalStateException("无障碍服务尚未连接，请重新启用后开始");
+                if(service==null)throw new IllegalStateException(tr("无障碍服务尚未连接，请重新启用后开始"));
                 OverlayHost.rebind(overlay,service);
                 new PhigrosAutoEngine(service,frames,settings,preview,stop,overlay).run();
             }
             catch(InterruptedException e){throw e;}
-            catch(LinkageError e){if(!stop.get())SessionFeedback.failed(context,e);throw new IllegalStateException("设备兼容错误："+e.getClass().getSimpleName(),e);}
+            catch(LinkageError e){if(!stop.get())SessionFeedback.failed(context,e);throw new IllegalStateException(tr("设备兼容错误：")+e.getClass().getSimpleName(),e);}
             catch(Exception e){if(!stop.get())SessionFeedback.failed(context,e);throw e;}
         }else new SessionEngine(frames,settings,preview,stop,overlay).run();
     }

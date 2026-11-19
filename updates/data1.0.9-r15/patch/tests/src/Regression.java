@@ -26,9 +26,14 @@ public final class Regression {
     }
     static TouchService play(Chart c,long elapsed) throws Exception {
         TouchService s=new TouchService();AtomicBoolean playing=new AtomicBoolean();
-        ChartMultiTouchPlayer.play(s,c,SystemClock.now-elapsed,new Viewport(0,0,1000,600),
+        prepareAndPlay(s,c,SystemClock.now-elapsed,new Viewport(0,0,1000,600),
             new AtomicBoolean(),STATUS,playing,new AtomicBoolean());
         ok(!playing.get(),"playing flag leaked");ok(s.roots.isEmpty(),"held pointer leaked");return s;
+    }
+    static void prepareAndPlay(TouchService service,Chart chart,long epoch,Viewport viewport,AtomicBoolean stop,
+            Function1<? super String,Unit> status,AtomicBoolean playing,AtomicBoolean cancelled)throws InterruptedException{
+        service.prepareChart(chart,viewport);
+        ChartMultiTouchPlayer.play(service,chart,epoch,viewport,stop,status,playing,cancelled);
     }
     static VisualTouch v(long id,VisualTouchKind kind,float x){
         return new VisualTouch(id,kind,x,.5f,0,-.05f);
@@ -64,22 +69,22 @@ public final class Regression {
         GestureDescription.maxStrokes=10;
         ok(ChordPlanner.endOfBatch(timeline,8,8,0,10)==11,"OEM stroke batch must split at first excluded event");
         reset();boolean rejected=false;TouchService capacityService=new TouchService();AtomicBoolean capacityPlaying=new AtomicBoolean();
-        try{List<Note> eleven=new ArrayList<>(ten);eleven.add(n(10,3,.02,.25));ChartMultiTouchPlayer.play(capacityService,chart(eleven.toArray(new Note[0])),SystemClock.now,
+        try{List<Note> eleven=new ArrayList<>(ten);eleven.add(n(10,3,.02,.25));prepareAndPlay(capacityService,chart(eleven.toArray(new Note[0])),SystemClock.now,
             new Viewport(0,0,1000,600),new AtomicBoolean(),STATUS,capacityPlaying,new AtomicBoolean());}
         catch(IllegalStateException e){rejected=e.getMessage().contains("容量");}
         ok(rejected&&capacityService.peak<=10&&capacityService.roots.isEmpty()&&!capacityPlaying.get(),"runtime Android capacity must release input after startup precheck removal");
         reset();s=new TouchService();s.cancelAt=2;AtomicBoolean playing=new AtomicBoolean();
-        boolean cancelled=false;try{ChartMultiTouchPlayer.play(s,chart(n(0,3,.01,.5)),SystemClock.now,
+        boolean cancelled=false;try{prepareAndPlay(s,chart(n(0,3,.01,.5)),SystemClock.now,
             new Viewport(0,0,1000,600),new AtomicBoolean(),STATUS,playing,new AtomicBoolean());}
         catch(IllegalStateException e){cancelled=e.getMessage().contains("取消");}
         ok(cancelled&&!playing.get(),"system cancellation was mistaken for completion");
         reset();s=new TouchService();s.rejectAt=2;playing=new AtomicBoolean();
-        boolean rejectedDispatch=false;try{ChartMultiTouchPlayer.play(s,chart(n(0,3,.01,.5)),SystemClock.now,
+        boolean rejectedDispatch=false;try{prepareAndPlay(s,chart(n(0,3,.01,.5)),SystemClock.now,
             new Viewport(0,0,1000,600),new AtomicBoolean(),STATUS,playing,new AtomicBoolean());}
         catch(IllegalStateException e){rejectedDispatch=e.getMessage().contains("拒绝");}
         ok(rejectedDispatch&&!playing.get()&&s.roots.isEmpty(),"rejected dispatch did not release last accepted hold");
         reset();s=new TouchService();AtomicBoolean stop=new AtomicBoolean();s.after=g->stop.set(true);
-        ChartMultiTouchPlayer.play(s,chart(n(0,3,.01,10)),SystemClock.now,new Viewport(0,0,1000,600),stop,STATUS,new AtomicBoolean(),new AtomicBoolean());
+        prepareAndPlay(s,chart(n(0,3,.01,10)),SystemClock.now,new Viewport(0,0,1000,600),stop,STATUS,new AtomicBoolean(),new AtomicBoolean());
         ok(s.roots.isEmpty()&&s.ups.size()==1,"manual stop must release the long key");
         reset();s=play(Chart.Companion.fromNative$app_debug(Arrays.asList(n(0,3,.01,.1),n(1,1,.06,.06)),0,
             (n,t,v)->new Point(n.getId()==0?-500:200,300),(n,t,v)->new Point(0,-1)),0);

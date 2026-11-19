@@ -1,5 +1,7 @@
 package io.github.phiscript.record;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.MediaCodec;
@@ -42,23 +44,23 @@ final class BitmapVideoEncoder {
             format.setInteger(MediaFormat.KEY_BIT_RATE,profile.bitRate);format.setInteger(MediaFormat.KEY_FRAME_RATE,profile.fps);
             format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL,1);
             String codecName=new android.media.MediaCodecList(android.media.MediaCodecList.REGULAR_CODECS).findEncoderForFormat(format);
-            if(codecName==null)throw new IllegalStateException("设备不支持 "+profile.label()+" AVC 录制，请降低录屏档位");
+            if(codecName==null)throw new IllegalStateException(tr("设备不支持 ")+profile.label()+tr(" AVC 录制，请降低录屏档位"));
             codec=MediaCodec.createByCodecName(codecName);codec.configure(format,null,null,MediaCodec.CONFIGURE_FLAG_ENCODE);
             surface=codec.createInputSurface();codec.start();
             output=new RecordingFiles(c);muxer=new MediaMuxer(output.descriptor.getFileDescriptor(),MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
             egl=EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);int[] versions=new int[2];
-            if(!EGL14.eglInitialize(egl,versions,0,versions,1))throw new IllegalStateException("EGL 初始化失败");
+            if(!EGL14.eglInitialize(egl,versions,0,versions,1))throw new IllegalStateException(tr("EGL 初始化失败"));
             int[] attrs={EGL14.EGL_RED_SIZE,8,EGL14.EGL_GREEN_SIZE,8,EGL14.EGL_BLUE_SIZE,8,EGL14.EGL_RENDERABLE_TYPE,EGL14.EGL_OPENGL_ES2_BIT,EGL14.EGL_SURFACE_TYPE,EGL14.EGL_WINDOW_BIT,0x3142,1,EGL14.EGL_NONE};
             EGLConfig[] configs=new EGLConfig[1];int[] count=new int[1];
-            if(!EGL14.eglChooseConfig(egl,attrs,0,configs,0,1,count,0)||count[0]<1)throw new IllegalStateException("无可用录屏 EGL 配置");
+            if(!EGL14.eglChooseConfig(egl,attrs,0,configs,0,1,count,0)||count[0]<1)throw new IllegalStateException(tr("无可用录屏 EGL 配置"));
             context=EGL14.eglCreateContext(egl,configs[0],EGL14.EGL_NO_CONTEXT,new int[]{EGL14.EGL_CONTEXT_CLIENT_VERSION,2,EGL14.EGL_NONE},0);
             window=EGL14.eglCreateWindowSurface(egl,configs[0],surface,new int[]{EGL14.EGL_NONE},0);
-            if(!EGL14.eglMakeCurrent(egl,window,window,context))throw new IllegalStateException("无法绑定编码 Surface");
+            if(!EGL14.eglMakeCurrent(egl,window,window,context))throw new IllegalStateException(tr("无法绑定编码 Surface"));
             int vs=shader(GLES20.GL_VERTEX_SHADER,"attribute vec2 p; attribute vec2 t; varying vec2 uv; void main(){gl_Position=vec4(p,0.,1.);uv=t;}");
             int fs=shader(GLES20.GL_FRAGMENT_SHADER,"precision mediump float; varying vec2 uv; uniform sampler2D image; void main(){gl_FragColor=texture2D(image,uv);}");
             program=GLES20.glCreateProgram();GLES20.glAttachShader(program,vs);GLES20.glAttachShader(program,fs);GLES20.glLinkProgram(program);
             int[] ok=new int[1];GLES20.glGetProgramiv(program,GLES20.GL_LINK_STATUS,ok,0);
-            GLES20.glDeleteShader(vs);GLES20.glDeleteShader(fs);if(ok[0]==0)throw new IllegalStateException("录屏着色器链接失败");
+            GLES20.glDeleteShader(vs);GLES20.glDeleteShader(fs);if(ok[0]==0)throw new IllegalStateException(tr("录屏着色器链接失败"));
             int[] textures=new int[1];GLES20.glGenTextures(1,textures,0);texture=textures[0];
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,texture);GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_CLAMP_TO_EDGE);GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_CLAMP_TO_EDGE);
@@ -68,7 +70,7 @@ final class BitmapVideoEncoder {
     }
     private static int shader(int type,String source){
         int shader=GLES20.glCreateShader(type);GLES20.glShaderSource(shader,source);GLES20.glCompileShader(shader);int[] status=new int[1];GLES20.glGetShaderiv(shader,GLES20.GL_COMPILE_STATUS,status,0);
-        if(status[0]==0){GLES20.glDeleteShader(shader);throw new IllegalStateException("录屏着色器编译失败");}return shader;
+        if(status[0]==0){GLES20.glDeleteShader(shader);throw new IllegalStateException(tr("录屏着色器编译失败"));}return shader;
     }
     void frame(Bitmap bitmap,long captured)throws Exception{
         if(first<0)first=captured;
@@ -83,21 +85,21 @@ final class BitmapVideoEncoder {
         vertices.position(0);GLES20.glVertexAttribPointer(p,2,GLES20.GL_FLOAT,false,16,vertices);GLES20.glEnableVertexAttribArray(p);
         vertices.position(2);GLES20.glVertexAttribPointer(t,2,GLES20.GL_FLOAT,false,16,vertices);GLES20.glEnableVertexAttribArray(t);
         GLES20.glUniform1i(GLES20.glGetUniformLocation(program,"image"),0);GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4);
-        if(GLES20.glGetError()!=GLES20.GL_NO_ERROR)throw new IllegalStateException("录屏绘制失败");
+        if(GLES20.glGetError()!=GLES20.GL_NO_ERROR)throw new IllegalStateException(tr("录屏绘制失败"));
         EGLExt.eglPresentationTimeANDROID(egl,window,timestamp*1000);
-        if(!EGL14.eglSwapBuffers(egl,window))throw new IllegalStateException("录屏提交失败");
+        if(!EGL14.eglSwapBuffers(egl,window))throw new IllegalStateException(tr("录屏提交失败"));
         drain(false);
     }
     private void drain(boolean finish)throws Exception{
         long deadline=android.os.SystemClock.elapsedRealtime()+3000;
         while(true){
             int index=codec.dequeueOutputBuffer(info,finish?10000:0);
-            if(index==MediaCodec.INFO_TRY_AGAIN_LATER){if(!finish)return;if(android.os.SystemClock.elapsedRealtime()>deadline)throw new IllegalStateException("录屏封装超时");continue;}
-            if(index==MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){if(muxing)throw new IllegalStateException("编码格式重复改变");track=muxer.addTrack(codec.getOutputFormat());muxer.start();muxing=true;continue;}
+            if(index==MediaCodec.INFO_TRY_AGAIN_LATER){if(!finish)return;if(android.os.SystemClock.elapsedRealtime()>deadline)throw new IllegalStateException(tr("录屏封装超时"));continue;}
+            if(index==MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){if(muxing)throw new IllegalStateException(tr("编码格式重复改变"));track=muxer.addTrack(codec.getOutputFormat());muxer.start();muxing=true;continue;}
             if(index<0)continue;
             try{
                 if((info.flags&MediaCodec.BUFFER_FLAG_CODEC_CONFIG)!=0)info.size=0;
-                if(info.size>0){if(!muxing)throw new IllegalStateException("编码头未就绪");ByteBuffer buffer=codec.getOutputBuffer(index);buffer.position(info.offset);buffer.limit(info.offset+info.size);muxer.writeSampleData(track,buffer,info);frames++;}
+                if(info.size>0){if(!muxing)throw new IllegalStateException(tr("编码头未就绪"));ByteBuffer buffer=codec.getOutputBuffer(index);buffer.position(info.offset);buffer.limit(info.offset+info.size);muxer.writeSampleData(track,buffer,info);frames++;}
                 if((info.flags&MediaCodec.BUFFER_FLAG_END_OF_STREAM)!=0)return;
             }finally{codec.releaseOutputBuffer(index,false);}
         }

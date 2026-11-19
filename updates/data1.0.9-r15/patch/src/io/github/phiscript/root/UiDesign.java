@@ -25,6 +25,7 @@ import io.github.phiscript.i18n.UiText;
 
 /** Native design primitives shared by home, libraries and settings dialogs. */
 public final class UiDesign {
+    private static final int STYLED_TEXT=0x7f0f7b04;
     public static final int BG=0xff0b111b,SURFACE=0xff151f2d,RAISED=0xff202d3e,
         INK=0xfff0f5fc,MUTED=0xffaab9cc,ACCENT=0xff83e4ca,DANGER=0xffffb5b7,LINE=0xff2b3b4e;
     public static final int PLAY=0,LIBRARY=1,DOWNLOAD=2,IMPORT=3,TRASH=4,SETTINGS=5,SHIELD=6,VIDEO=7,HISTORY=8;
@@ -35,7 +36,7 @@ public final class UiDesign {
     public static RippleDrawable ripple(Context c,int color,int radius){return new RippleDrawable(ColorStateList.valueOf(0x3383e4ca),shape(c,color,radius),shape(c,0xffffffff,radius));}
     public static LinearLayout.LayoutParams space(Context c,int width,int height,int top){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(width,height);p.topMargin=dp(c,top);return p;}
     public static TextView text(Context c,String value,int size,int color,boolean bold){
-        TextView v=new TextView(c);v.setText(UiText.text(value));v.setTextSize(size);v.setTextColor(color);v.setLineSpacing(dp(c,3),1);v.setIncludeFontPadding(false);
+        TextView v=new TextView(c);v.setText(UiText.text(value));v.setTextSize(size);v.setTextColor(color);v.setLineSpacing(dp(c,3),1);v.setIncludeFontPadding(false);v.setTag(STYLED_TEXT,true);
         if(bold)v.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return v;
     }
     public static LinearLayout card(Context c){LinearLayout box=new LinearLayout(c);box.setOrientation(1);box.setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));box.setBackground(shape(c,SURFACE,22));return box;}
@@ -48,7 +49,7 @@ public final class UiDesign {
     public static LinearLayout row(Context c,int kind,String title,String subtitle,Runnable click){
         LinearLayout row=new LinearLayout(c);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(c,10),dp(c,12),dp(c,10),dp(c,12));row.setMinimumHeight(dp(c,68));row.setBackground(ripple(c,SURFACE,14));
         row.addView(icon(c,kind),new LinearLayout.LayoutParams(dp(c,42),dp(c,42)));
-        LinearLayout copy=new LinearLayout(c);copy.setOrientation(1);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,-2,1);cp.leftMargin=dp(c,12);row.addView(copy,cp);
+        LinearLayout copy=new LinearLayout(c);copy.setOrientation(1);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,-2,1);cp.setMarginStart(dp(c,12));row.addView(copy,cp);
         copy.addView(text(c,title,15,INK,true));if(subtitle!=null&&!subtitle.isEmpty()){TextView detail=text(c,subtitle,12,MUTED,false);copy.addView(detail,space(c,-1,-2,5));}
         TextView arrow=text(c,"›",24,MUTED,false);arrow.setGravity(Gravity.CENTER);row.addView(arrow,new LinearLayout.LayoutParams(dp(c,24),-2));
         row.setFocusable(true);row.setClickable(true);row.setContentDescription(UiText.text(title)+(subtitle==null?"":", "+UiText.text(subtitle)));
@@ -68,7 +69,7 @@ public final class UiDesign {
     }
     private static void tint(View view){
         if(view==null)return;
-        if(view instanceof TextView){TextView t=(TextView)view;t.setTextColor(INK);if(view instanceof EditText){t.setHintTextColor(MUTED);t.setBackgroundTintList(ColorStateList.valueOf(ACCENT));}else if(t.getId()==android.R.id.text1)t.setMinHeight(dp(view.getContext(),56));}
+        if(view instanceof TextView){TextView t=(TextView)view;if(!Boolean.TRUE.equals(t.getTag(STYLED_TEXT)))t.setTextColor(INK);if(view instanceof EditText){t.setHintTextColor(MUTED);t.setBackgroundTintList(ColorStateList.valueOf(ACCENT));}else if(t.getId()==android.R.id.text1)t.setMinHeight(dp(view.getContext(),56));}
         if(view instanceof ViewGroup){ViewGroup group=(ViewGroup)view;for(int i=0;i<group.getChildCount();i++)tint(group.getChildAt(i));}
     }
     public static LinearLayout inputBox(Activity a,String description,EditText field){

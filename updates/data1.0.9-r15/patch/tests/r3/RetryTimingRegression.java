@@ -6,7 +6,7 @@ public final class RetryTimingRegression {
  public static void main(String[] a){
   AppSettings.values.clear();AppSettings prefs=new AppSettings(new android.content.Context());
   AppSettings.values.put("phigros_auto_start_offset_ms","999999");AppSettings.values.put("phigros_note_clock_offset_ms","-999999");AppSettings.values.put("captureLag","500");AppSettings.values.put("touchOffset","500");
-  ok(PhigrosRetryClock.readDelay(prefs)==0,"one default retry delay; legacy offsets ignored");
+  ok(PhigrosRetryClock.readDelay(prefs)==1700,"one default retry delay; legacy offsets ignored");
   for(long at:new long[]{0,100000,1000000000})for(int delay:new int[]{0,700,5000})for(double offset:new double[]{-.5,0,.125,2}){
    long expected=PhiraRestartClock.INSTANCE.epoch(at,delay,offset,0,0);
    ok(PhigrosRetryClock.epoch(at,delay,offset)==expected,"same epoch calculation as Phira");

@@ -42,7 +42,7 @@ public final class NoisePlaybackRegression {
                 if(stroke.keep){previous.put((long)stroke.getId(),arc(stroke.path.points,1));heldSince.put((long)stroke.getId(),base+stroke.start+stroke.duration);}
             }
         };
-        try{ChartMultiTouchPlayer.play(service,held,100000,new Viewport(0,0,1000,600),new AtomicBoolean(),m->{status.add(m);return kotlin.Unit.INSTANCE;},new AtomicBoolean(),new AtomicBoolean());}
+        try{Regression.prepareAndPlay(service,held,100000,new Viewport(0,0,1000,600),new AtomicBoolean(),m->{status.add(m);return kotlin.Unit.INSTANCE;},new AtomicBoolean(),new AtomicBoolean());}
         finally{RootClient.after=null;}
         List<long[]> downs=root?RootClient.last.heads:service.downs;int left=0,right=0,last=0;
         for(long[] v:downs){float x=Float.intBitsToFloat((int)v[2]);if(x<450)left++;else if(x>700)right++;else last++;}

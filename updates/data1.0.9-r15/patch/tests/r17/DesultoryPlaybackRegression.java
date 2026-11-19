@@ -69,7 +69,7 @@ public final class DesultoryPlaybackRegression {
         for(int input=inputStart;input<args.length;input++){String filename=args[input];byte[] raw=Files.readAllBytes(Paths.get(filename));JSONObject json=new JSONObject(new String(raw,StandardCharsets.UTF_8));Reference ref=new Reference(json);Chart chart=SharedChartImport.parseJson(new String(raw,StandardCharsets.UTF_8));
             if(BlockAreaSet.count(chart)!=ref.areas.length)throw new AssertionError("metadata lost before player");
             SystemClock.now=EPOCH;TouchService service=new TouchService();long[] samples={0},violations={0};double[] firstViolation={-1};
-            long preparationBegan=System.nanoTime();GesturePlan.preflight(chart,service,V);long preparationMs=(System.nanoTime()-preparationBegan)/1000000;
+            long preparationBegan=System.nanoTime();service.prepareChart(chart,V);long preparationMs=(System.nanoTime()-preparationBegan)/1000000;
             GesturePlan planned=GesturePlan.obtain(chart,GestureProfile.read(service),V,TouchSafety.read(service,1000,600,V).bounds,false);
             int preparedSamples=-1;
             try{preparedSamples=((Number)GesturePlan.class.getMethod("preparedSampleCount").invoke(planned)).intValue();if(preparedSamples<=0)throw new AssertionError("dense preparation was bypassed");}

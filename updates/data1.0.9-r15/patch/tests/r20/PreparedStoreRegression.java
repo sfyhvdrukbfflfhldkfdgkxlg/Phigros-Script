@@ -89,10 +89,22 @@ public final class PreparedStoreRegression {
         Path probe=new File(directory(context),"symlink-probe").toPath();try{Files.createSymbolicLink(probe,outside.toPath());Files.delete(probe);}catch(UnsupportedOperationException|IOException|SecurityException unsupported){System.out.println("SKIP symbolic link fixture: host does not permit creating symbolic links");return;}
         for(String suffix:new String[]{"",".new",".bak"}){
             Path link=new File(directory(context),name+suffix).toPath();Files.createSymbolicLink(link,outside.toPath());GesturePlan.clearPrepared();
-            try{PreparedChartStore.ensure(context,bound(context,source),PROFILE,V,B,null);ok(Arrays.equals(original,Files.readAllBytes(outside.toPath())),"AtomicFile"+suffix+" followed a link outside app cache");}finally{Files.deleteIfExists(link);}
+            try{
+                Chart chart=bound(context,source);
+                boolean rejected=false;
+                try{PreparedChartStore.ensure(context,chart,PROFILE,V,B,null);}
+                catch(IllegalStateException expected){rejected=expected.getCause() instanceof IOException;}
+                ok(rejected&&GesturePlan.cachedPrepared(chart,PROFILE,V,B)==null,"Unsafe cache path reported successful preparation");
+                ok(Arrays.equals(original,Files.readAllBytes(outside.toPath())),"AtomicFile"+suffix+" followed a link outside app cache");
+            }finally{Files.deleteIfExists(link);}
         }
         File externalDirectory=Files.createTempDirectory("r20-external-dir").toFile();Context linked=context("directory-link");File dir=directory(linked);Files.createSymbolicLink(dir.toPath(),externalDirectory.toPath());
-        try{PreparedChartStore.ensure(linked,bound(linked,source),PROFILE,V,B,null);ok(externalDirectory.list().length==0,"cache directory symlink wrote outside app namespace");}finally{Files.delete(dir.toPath());}
+        try{
+            boolean rejected=false;
+            try{PreparedChartStore.ensure(linked,bound(linked,source),PROFILE,V,B,null);}
+            catch(IllegalStateException expected){rejected=expected.getCause() instanceof IOException;}
+            ok(rejected&&externalDirectory.list().length==0,"cache directory symlink was accepted or wrote outside app namespace");
+        }finally{Files.delete(dir.toPath());}
     }
     public static void main(String[] args)throws Exception{diskLifecycle();namespaces();boundedLru();symlinks();System.out.println("PASS "+checks+" prepared-store checks: real disk encode/restore/corrupt rebuild, geometry/settings/bounds keys, cancellation source retention, namespace isolation, orphan AtomicFile cleanup, file/byte LRU and supported symlink containment.");}
 }

@@ -1,5 +1,7 @@
 package io.github.phiscript.input;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.accessibilityservice.GestureDescription;
 import android.graphics.Path;
 import android.os.Looper;
@@ -32,24 +34,24 @@ public final class ChartMultiTouchPlayer {
             return;
         }
         if (Looper.myLooper() == Looper.getMainLooper())
-            throw new IllegalStateException("触控必须在后台线程执行");
+            throw new IllegalStateException(tr("触控必须在后台线程执行"));
         if (!playing.compareAndSet(false, true))
-            throw new IllegalStateException("已有演奏在运行");
+            throw new IllegalStateException(tr("已有演奏在运行"));
         cancelled.set(false);
         GestureChannel channel = null;
         Map<TouchEvent, GestureChannel.Live> active = new LinkedHashMap<>();
         try {
-            if (!service.getGameForeground()) throw new IllegalStateException("目标游戏尚未处于前台");
+            if (!service.getGameForeground()) throw new IllegalStateException(tr("目标游戏尚未处于前台"));
             int[] screen = dimensions(service);
             if (viewport.getWidth() <= 0 || viewport.getHeight() <= 0
                 || viewport.getLeft() < 0 || viewport.getTop() < 0
                 || viewport.getRight() > screen[0] + 1 || viewport.getBottom() > screen[1] + 1)
-                throw new IllegalArgumentException("玩法视口超出屏幕，请重新校准");
+                throw new IllegalArgumentException(tr("玩法视口超出屏幕，请重新校准"));
             TouchSafety safety=TouchSafety.read(service,screen[0],screen[1],viewport);
             GesturePlan plan=GesturePlan.forPlayback(chart,GestureProfile.read(service),viewport,safety.bounds);
-            if(BlockAreaSet.count(chart)>0)status.invoke(TapMod.avoids(chart)?"噪域避让已开启：读取到 "+BlockAreaSet.count(chart)+" 个激活区域，按原生变换与反转检查":"本谱含噪域，但设置已关闭避让；请开启“避开谱面噪域”");
-            else if(!BlockAreaSet.hasMetadata(chart))status.invoke("本谱未保存噪域数据；旧版导入的谱面请从原始谱包重新导入");
-            if(plan.unavailableNotes>0)status.invoke("规划中有 "+plan.unavailableNotes+" 个音符在判定窗口内未找到安全可用触点");
+            if(BlockAreaSet.count(chart)>0)status.invoke(TapMod.avoids(chart)?tr("噪域避让已开启：读取到 ")+BlockAreaSet.count(chart)+tr(" 个激活区域，按原生变换与反转检查"):tr("本谱含噪域，但设置已关闭避让；请开启“避开谱面噪域”"));
+            else if(!BlockAreaSet.hasMetadata(chart))status.invoke(tr("本谱未保存噪域数据；旧版导入的谱面请从原始谱包重新导入"));
+            if(plan.unavailableNotes>0)status.invoke(tr("规划中有 ")+plan.unavailableNotes+tr(" 个音符在判定窗口内未找到安全可用触点"));
             ChartPlaybackClock clock=ChartPlaybackClock.resolve(epoch);
             List<TouchEvent> events = new ArrayList<>();
             int skipped=0;long maxLate=0,submissionRejected=0,maxSafetyMs=0;
@@ -63,10 +65,10 @@ public final class ChartMultiTouchPlayer {
                     events.add(event);
                 else skipped++;
             }
-            if (events.isEmpty()) { status.invoke("当前已无后续音符"); return; }
+            if (events.isEmpty()) { status.invoke(tr("当前已无后续音符")); return; }
             channel = new GestureChannel(service);
-            if(!channel.reusesIds())status.invoke("此系统的无障碍触点复用受限，密集长按建议使用 Root 模式");
-            status.invoke("多点演奏：连接手势 "+plan.connectedGroups+" 组独立轨迹，蓝键保留按下，黄键滑接，红键来回滑动");
+            if(!channel.reusesIds())status.invoke(tr("此系统的无障碍触点复用受限，密集长按建议使用 Root 模式"));
+            status.invoke(tr("多点演奏：连接手势 ")+plan.connectedGroups+tr(" 组独立轨迹，蓝键保留按下，黄键滑接，红键来回滑动"));
             List<TouchEvent> blockedContacts=new ArrayList<>();
             int cursor = 0;
             int strokeLimit = Math.min(GestureDescription.getMaxStrokeCount(), GestureChannel.POINTER_LIMIT);
@@ -78,7 +80,7 @@ public final class ChartMultiTouchPlayer {
                 if (wall - lastDimensionCheck >= 250) {
                     int[] current = dimensions(service);
                     if (current[0] != screen[0] || current[1] != screen[1])
-                        throw new IllegalStateException("屏幕尺寸变化，请重新开始");
+                        throw new IllegalStateException(tr("屏幕尺寸变化，请重新开始"));
                     lastDimensionCheck = wall;
                 }
                 ChartPlaybackClock.Slice timing=clock.snapshot(wall);
@@ -198,7 +200,7 @@ public final class ChartMultiTouchPlayer {
                                 long submitted=SystemClock.uptimeMillis();shot.rebase(submitted-ready);
                                 maxLate=Math.max(maxLate,timing.chartAt(submitted+shot.startOffset(tap))-Math.round(tap.getNote().getTimeSeconds()*1000));
                                 channel.send(shot);
-                                if(moved[0]&&!warned){status.invoke("部分音符已移入可触控区域，避免系统边缘手势；边缘音符可能无法命中");warned=true;}
+                                if(moved[0]&&!warned){status.invoke(tr("部分音符已移入可触控区域，避免系统边缘手势；边缘音符可能无法命中"));warned=true;}
                                 continue;
                             }
                         }catch(TapMod.NoSafePoint blocked){/* Retain the ordinary per-contact release handling. */}
@@ -225,14 +227,14 @@ public final class ChartMultiTouchPlayer {
                         Point from = prior == null ? safety.point(plan,chart, e, down, viewport, screen, bounded)
                             : new Point(prior.x, prior.y);
                         checkConstructionBudget(constructionDeadline);
-                        Point to = noiseWindow?safety.point(plan,chart,e,up,viewport,screen,bounded,from,down)
-                            :safety.point(plan,chart,e,up,viewport,screen,bounded);
-                        checkConstructionBudget(constructionDeadline);
-                        if (prior != null && keep) {
-                            float[] endpoint = GestureChannel.liveEndpoint(prior, to.getX(), to.getY(),
-                                safety.bounds.left,safety.bounds.top,safety.bounds.right,safety.bounds.bottom);
-                            to = new Point(endpoint[0], endpoint[1]);
+                        Point to;
+                        if(prior!=null&&keep){
+                            to=plan.preparedAccessibilityEndpoint(e,up,noiseWindow,down,prior);
+                        }else{
+                            to=noiseWindow?safety.point(plan,chart,e,up,viewport,screen,bounded,from,down)
+                                :safety.point(plan,chart,e,up,viewport,screen,bounded);
                         }
+                        checkConstructionBudget(constructionDeadline);
                         Path path = new Path(); path.moveTo(from.getX(), from.getY());
                         List<Point> pathPoints=new ArrayList<>();pathPoints.add(from);
                         Point checkedPoint=from;long checkedTime=down;
@@ -306,14 +308,14 @@ public final class ChartMultiTouchPlayer {
                     throw failure;
                 }
                 if (bounded[0] && !warned) {
-                    status.invoke("部分音符已移入可触控区域，避免系统边缘手势；边缘音符可能无法命中");
+                    status.invoke(tr("部分音符已移入可触控区域，避免系统边缘手势；边缘音符可能无法命中"));
                     warned = true;
                 }
             }
             status.invoke(stop.get() || cancelled.get() || !service.getGameForeground()
-                ? "已停止触摸" : "演奏完成");
-            status.invoke("输入统计：跳过 "+skipped+" 个过期手势，最大按下调度延迟 "+Math.max(0,maxLate)+" ms");
-            if(TapMod.avoids(chart))status.invoke("噪域提交复核：拒绝或抬起 "+submissionRejected+" 次触点，最大复核耗时 "+maxSafetyMs+" ms");
+                ? tr("已停止触摸") : tr("演奏完成"));
+            status.invoke(tr("输入统计：跳过 ")+skipped+tr(" 个过期手势，最大按下调度延迟 ")+Math.max(0,maxLate)+" ms");
+            if(TapMod.avoids(chart))status.invoke(tr("噪域提交复核：拒绝或抬起 ")+submissionRejected+tr(" 次触点，最大复核耗时 ")+maxSafetyMs+" ms");
         } finally {
             try { if (channel != null) channel.release(active.values()); }
             finally { if (channel != null) channel.close(); playing.set(false); }
@@ -336,13 +338,13 @@ public final class ChartMultiTouchPlayer {
         Point previous=points.get(0);long from=timing.chartAt(downWall);double traversed=0;
         if(total<.0001){TapMod.segment(chart,viewport,previous,previous,from,timing.chartAt(upWall),deadline);return;}
         for(int i=1;i<points.size();i++){
-            if(System.nanoTime()>=deadline)throw new TapMod.NoSafePoint("噪域提交复核超时，释放此触点后重试");
+            if(System.nanoTime()>=deadline)throw new TapMod.NoSafePoint(tr("噪域提交复核超时，释放此触点后重试"));
             Point next=points.get(i);traversed+=Math.hypot(next.getX()-previous.getX(),next.getY()-previous.getY());
             long to=timing.chartAt(downWall+Math.round((upWall-downWall)*traversed/total));
             TapMod.segment(chart,viewport,previous,next,from,to,deadline);previous=next;from=to;
         }
     }
-    private static void checkConstructionBudget(long deadline){if(deadline!=Long.MAX_VALUE&&System.nanoTime()>=deadline)throw new TapMod.NoSafePoint("噪域本批轨迹计算超时，先释放触点后重试");}
+    private static void checkConstructionBudget(long deadline){if(deadline!=Long.MAX_VALUE&&System.nanoTime()>=deadline)throw new TapMod.NoSafePoint(tr("噪域本批轨迹计算超时，先释放触点后重试"));}
 
     static Point point(Chart chart, TouchEvent e, long time, Viewport v,
             int[] screen, boolean[] bounded) {
@@ -368,7 +370,7 @@ public final class ChartMultiTouchPlayer {
                     y + (target.getY() - y) * progress);
             }
         }
-        if (p == null) throw new IllegalArgumentException("无法计算音符落点");
+        if (p == null) throw new IllegalArgumentException(tr("无法计算音符落点"));
         float x = GestureChannel.clamp(p.getX(), Math.max(0, v.getLeft()),
             Math.min(screen[0] - 1, Math.nextDown(v.getRight())));
         float y = GestureChannel.clamp(p.getY(), Math.max(0, v.getTop()),

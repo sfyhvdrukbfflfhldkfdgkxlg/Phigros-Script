@@ -1,5 +1,7 @@
 package io.github.phiscript.capture;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import io.github.phiscript.SessionSettings;
@@ -39,7 +41,7 @@ public final class SessionPauseMenu {
     }
     public synchronized NormalizedPoint retryPoint(){
         if(phira!=null)return configured;
-        if(measured==null)throw new IllegalStateException("Phigros 三键暂停菜单尚未确认，未点击重试");
+        if(measured==null)throw new IllegalStateException(tr("Phigros 三键暂停菜单尚未确认，未点击重试"));
         return measured;
     }
 }

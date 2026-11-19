@@ -37,7 +37,7 @@ public final class PreparedTrajectoryRegression {
         for(Note note:c.getNotes()){boolean hit=false;if(note.getType()==1||note.getType()==3){for(long[] head:heads)if(Math.abs(head[1]-100000-Math.round(note.getTimeSeconds()*1000))<=100&&Math.abs(Float.intBitsToFloat((int)head[2])-note.getPositionX()*1000)<2)hit=true;}else for(float[] sample:actual)if(Math.abs(sample[0]-100000-note.getTimeSeconds()*1000)<=50&&Math.abs(sample[1]-note.getPositionX()*1000)<98)hit=true;ok(hit,"prepared playback lost TAP/HOLD head or DRAG/FLICK contact coverage for note "+note.getId());}
         float low=Float.POSITIVE_INFINITY,high=Float.NEGATIVE_INFINITY;for(float[] sample:actual)if(sample[0]-100000>=320&&sample[0]-100000<=390){low=Math.min(low,sample[2]);high=Math.max(high,sample[2]);}ok(high-low>=20,"prepared red trajectory collapsed into a stationary touch");
         ok(restored.preparedSampleCount()==plan.preparedSampleCount(),"encoded dense samples changed");forbid=false;
-        for(int i=0;i<plan.events.size();i++){TouchEvent a=plan.events.get(i),b=restored.events.get(i);for(long t=a.getStartMs();t<=a.getEndMs();t+=7){Point x=plan.preparedPoint(a,t,null,t),y=restored.preparedPoint(b,t,null,t);ok(Float.floatToIntBits(x.getX())==Float.floatToIntBits(y.getX())&&Float.floatToIntBits(x.getY())==Float.floatToIntBits(y.getY()),"roundtrip changed physical interpolation");}}
+        for(int i=0;i<plan.events.size();i++){TouchEvent a=plan.events.get(i),b=restored.events.get(i);for(long t=a.getStartMs();t<=a.getEndMs();t+=7){Point x=plan.preparedPoint(a,t,null,t),y=restored.preparedPoint(b,t,null,t);ok(Float.floatToIntBits(x.getX())==Float.floatToIntBits(y.getX())&&Float.floatToIntBits(x.getY())==Float.floatToIntBits(y.getY()),"roundtrip changed saved physical coordinates");}}
         encoded[encoded.length/2]^=1;boolean rejected=false;try{GesturePlan.decodePrepared(c,profile(),V,B,encoded,"fixture-mixed-v1");}catch(IOException expected){rejected=true;}ok(rejected,"corrupt cache accepted");
     }
     static void invalidation()throws Exception{
@@ -60,7 +60,11 @@ public final class PreparedTrajectoryRegression {
     }
     static void primitiveMergeAndInactiveSpan()throws Exception{
         settings();forbid=false;BlockAreaSet.clear();Note note=n(1,3,.01,.019,.5);Chart c=chart(Collections.singletonList(note));ContactPlanner.Route route=new ContactPlanner.Route(note,new ContactPlanner.Anchor(note),10,19);route.keys.put(11L,new ContactPlanner.Anchor(note));route.keys.put(13L,new ContactPlanner.Anchor(note));
-        GesturePlan plan=GesturePlan.routed(Collections.singletonList(route),0,0,0,0);PreparedTrajectory prepared=PreparedTrajectory.prepare(c,plan,profile(),V,B,null);Object track=prepared.tracks.get(plan.events.get(0));java.lang.reflect.Field field=track.getClass().getDeclaredField("time");field.setAccessible(true);ok(Arrays.equals((int[])field.get(track),new int[]{10,11,13,14,18,19}),"primitive merge dropped a non-grid route boundary");
+        GesturePlan plan=GesturePlan.routed(Collections.singletonList(route),0,0,0,0);PreparedTrajectory prepared=PreparedTrajectory.prepare(c,plan,profile(),V,B,null);
+        TouchEvent routeEvent=plan.events.get(0);
+        ok(prepared.sampleCount()==10,"dense touch samples must cover every millisecond");
+        ok(prepared.boundary(routeEvent,10,20)==11&&prepared.boundary(routeEvent,11,20)==13&&prepared.boundary(routeEvent,13,20)==19,
+            "dense storage dropped an exact route boundary or exposed a sampling timestamp as a boundary");
         Note held=n(2,3,.1,.5,.5);Chart gap=chart(Collections.singletonList(held));JSONObject area=new JSONObject().put("bottomLeftPercentage",new JSONObject().put("x",-1).put("y",-1)).put("topRightPercentage",new JSONObject().put("x",2).put("y",2)).put("appearTime",.203).put("enableTime",.203).put("disableTime",.204).put("disappearTime",.204);
         BlockAreaSet.capture(new JSONObject().put("blockAreaList",new JSONArray().put(area)));BlockAreaSet.bind(gap);GesturePlan raw=ContactPlanner.build(gap,V,B,profile());TouchEvent e=raw.events.get(0);TouchSafety safety=TouchSafety.forPreparation(B);Point start=safety.preparePoint(raw,gap,e,190,V,new int[]{1000,600},new boolean[1],null,190);
         ok(TapMod.clearAt(gap,V,start,.190)&&TapMod.clearAt(gap,V,start,.220),"gap oracle endpoints are not clear");boolean rejected=false;try{safety.preparePoint(raw,gap,e,220,V,new int[]{1000,600},new boolean[1],start,190);}catch(TapMod.NoSafePoint expected){rejected=true;}ok(rejected,"inactive-endpoint shortcut skipped a region active between samples");ok(safety.preparePoint(raw,gap,e,220,V,new int[]{1000,600},new boolean[1],null,220)!=null,"a fresh lifetime could not recover after the short activation");
@@ -68,5 +72,73 @@ public final class PreparedTrajectoryRegression {
     static void residentPeek(){
         settings();forbid=false;Chart c=chart(Collections.singletonList(n(1,3,.1,.3,.5)));GesturePlan p=GesturePlan.prepareForImport(c,profile(),V,B,null);int before=calls;forbid=true;ok(GesturePlan.cachedPrepared(c,profile(),V,B)==p,"resident lookup did not preserve the prepared object");ok(calls==before,"resident lookup evaluated geometry");ok(GesturePlan.cachedPrepared(c,profile(),new Viewport(0,0,999,600),B)==null,"resident lookup ignored viewport");long salt=TapMod.preparationSalt(c);TapMod.preparationSalt(c,salt+1);ok(GesturePlan.cachedPrepared(c,profile(),V,B)==null,"resident lookup ignored random salt");TapMod.preparationSalt(c,salt);GesturePlan.discardPrepared(c);ok(GesturePlan.cachedPrepared(c,profile(),V,B)==null,"manual refresh kept a stale resident cache");forbid=false;
     }
-    public static void main(String[] args)throws Exception{for(boolean root:new boolean[]{false,true})preparedPlayback(root);invalidation();gaps();primitiveMergeAndInactiveSpan();residentPeek();InputBackend.rootEnabled=false;System.out.println("PASS "+checks+" dense trajectory checks: cache-hit zero geometry calls, native Root/AOSP playback, digest corruption, settings/viewport/fingerprint invalidation, random salt, cancellation and explicit noise gaps.");}
+
+    static void accessibilityEndpoints()throws Exception{
+        settings();forbid=false;BlockAreaSet.clear();
+        TouchBounds edges=new TouchBounds(100.25f,20.75f,839.85f,550.25f);
+        Chart c=chart(Arrays.asList(n(1,3,.1,.19,.10025),n(2,3,.2,.35,.83985)));
+        GesturePlan plan=GesturePlan.prepareForImport(c,profile(),V,edges,null);
+        byte[] encoded=plan.encodePrepared("fractional-edges");
+        PreparedTrajectory.inspectPrepared(new java.io.ByteArrayInputStream(encoded),encoded.length,profile(),V,edges,"fractional-edges");
+        int before=calls;
+        forbid=true;
+        GesturePlan restored=GesturePlan.decodePrepared(c,profile(),V,edges,encoded,"fractional-edges");
+        boolean lower=false,upper=false,moveRight=false,moveLeft=false;
+        for(int i=0;i<plan.events.size();i++){
+            TouchEvent a=plan.events.get(i),b=restored.events.get(i);
+            for(long t=a.getStartMs();t<=a.getEndMs();t++){
+                Point root=plan.preparedPoint(a,t,null,t);
+                for(GestureChannel.Live prior:new GestureChannel.Live[]{
+                        new GestureChannel.Live(null,edges.left,edges.top),
+                        new GestureChannel.Live(null,root.getX(),root.getY())}){
+                    float[] old=GestureChannel.liveEndpoint(prior,root.getX(),root.getY(),edges.left,edges.top,edges.right,edges.bottom);
+                    Point p=restored.preparedAccessibilityEndpoint(b,t,false,t,prior);
+                    ok(Float.floatToIntBits(old[0])==Float.floatToIntBits(p.getX())&&
+                        Float.floatToIntBits(old[1])==Float.floatToIntBits(p.getY()),
+                        "stored continuation endpoint differs from the native rule at "+t);
+                    lower|=p.getX()==edges.left;
+                    upper|=p.getX()==edges.right;
+                    moveRight|=p.getX()==edges.left+1;
+                    moveLeft|=p.getX()==edges.right-1;
+                }
+            }
+        }
+        ok(lower&&upper&&moveRight&&moveLeft,"fixture missed fractional clamps or one-pixel alternatives");
+        ok(calls==before,"loading or selecting a stored continuation endpoint used chart geometry");
+        forbid=false;
+    }
+
+    static void multiBlockHold()throws Exception{
+        settings();BlockAreaSet.clear();
+        Chart chart=chart(Collections.singletonList(n(1,3,.1,2.5,.4)));
+        GesturePlan prepared=GesturePlan.prepareForImport(chart,profile(),V,B,null);
+        byte[] encoded=prepared.encodePrepared("long-hold");
+        int count=prepared.preparedSampleCount();
+        ok(prepared.events.size()==1&&count>2048,"fixture should span two full blocks and a short tail");
+        PreparedTrajectory.inspectPrepared(new java.io.ByteArrayInputStream(encoded),encoded.length,profile(),V,B,"long-hold");
+        GesturePlan restored=GesturePlan.decodePrepared(chart,profile(),V,B,encoded,"long-hold");
+        ok(Arrays.equals(encoded,restored.encodePrepared("long-hold")),"block decode changed stored samples");
+
+        // Mark the last record of block 1 unavailable. The next block's first
+        // record still claims to continue from it. Keep the SHA footer valid.
+        int sampleStart=encoded.length-32-(count+7)/8-count*15;
+        java.nio.ByteBuffer damaged=java.nio.ByteBuffer.wrap(encoded);
+        int index=sampleStart+1023*15;
+        damaged.putFloat(index,Float.NaN).putFloat(index+4,Float.NaN);
+        damaged.put(index+8,(byte)0).putChar(index+9,(char)0).putChar(index+11,(char)0).putChar(index+13,(char)0x7fff);
+        damaged.put(index+15+8,(byte)1);
+        java.security.MessageDigest sha=java.security.MessageDigest.getInstance("SHA-256");
+        sha.update(encoded,0,encoded.length-32);
+        System.arraycopy(sha.digest(),0,encoded,encoded.length-32,32);
+        boolean rejected=false;
+        try{PreparedTrajectory.inspectPrepared(new java.io.ByteArrayInputStream(encoded),encoded.length,profile(),V,B,"long-hold");}
+        catch(IOException expected){rejected=true;}
+        ok(rejected,"streaming import accepted an invalid cross-block connection");
+        rejected=false;
+        try{GesturePlan.decodePrepared(chart,profile(),V,B,encoded,"long-hold");}
+        catch(IOException expected){rejected=true;}
+        ok(rejected,"playback accepted an invalid cross-block connection");
+    }
+
+    public static void main(String[] args)throws Exception{for(boolean root:new boolean[]{false,true})preparedPlayback(root);invalidation();gaps();primitiveMergeAndInactiveSpan();residentPeek();accessibilityEndpoints();multiBlockHold();InputBackend.rootEnabled=false;System.out.println("PASS "+checks+" dense trajectory checks: cache-hit zero geometry calls, native Root/AOSP playback, exact continuation endpoints, digest corruption, settings/viewport/fingerprint invalidation, random salt, cancellation and explicit noise gaps.");}
 }

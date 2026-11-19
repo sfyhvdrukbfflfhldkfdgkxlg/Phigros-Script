@@ -1,10 +1,13 @@
 package io.github.phiscript.assets;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.content.Context;
 import android.util.AtomicFile;
 import io.github.phiscript.RuntimeState;
 import io.github.phiscript.engine.Chart;
 import io.github.phiscript.engine.BlockAreaSet;
+import io.github.phiscript.input.PreparedChartStore;
 import org.json.*;
 import java.io.*;
 import java.net.URLEncoder;
@@ -24,32 +27,32 @@ public final class SwordaltSource {
     private SwordaltSource(){}
     public static boolean scripts(JSONObject catalog){return catalog.optInt("phiscriptSwordaltScripts",0)==1;}
     private static int limit(JSONObject catalog){return scripts(catalog)?256*1024*1024:MAX_JSON;}
-    private static String label(JSONObject catalog){return scripts(catalog)?"Swordalt 脚本":"Swordalt 原谱";}
+    private static String label(JSONObject catalog){return scripts(catalog)?tr("Swordalt 脚本"):tr("Swordalt 原谱");}
     public static File directory(Context c){File f=new File(c.getFilesDir(),"phigros-swordalt-v1");f.mkdirs();return f;}
     public static File cacheDirectory(Context c){File f=new File(directory(c),"charts");f.mkdirs();return f;}
     private static void check(AtomicBoolean cancel)throws IOException{ChartDownload.check(cancel);}
     private static byte[] read(InputStream in,int max,AtomicBoolean cancel)throws IOException{
         try(InputStream input=in;ByteArrayOutputStream out=new ByteArrayOutputStream()){
-            byte[] b=new byte[16384];int n;while((n=input.read(b))!=-1){check(cancel);if(out.size()+(long)n>max)throw new IOException("谱面数据超过大小限制");out.write(b,0,n);}check(cancel);return out.toByteArray();
+            byte[] b=new byte[16384];int n;while((n=input.read(b))!=-1){check(cancel);if(out.size()+(long)n>max)throw new IOException(tr("谱面数据超过大小限制"));out.write(b,0,n);}check(cancel);return out.toByteArray();
         }
     }
     private static void atomic(File file,byte[] bytes)throws IOException{AtomicFile a=new AtomicFile(file);FileOutputStream out=a.startWrite();try{out.write(bytes);a.finishWrite(out);}catch(IOException error){a.failWrite(out);throw error;}}
     public static JSONObject validate(JSONObject catalog)throws Exception{
-        if(catalog.optInt("phiscriptSwordaltCatalog")!=1||!REPOSITORY.equals(catalog.optString("repository")))throw new IOException("不是支持的 Swordalt 原谱目录");
-        if(!catalog.getString("chartCommit").matches("[0-9a-f]{40}"))throw new IOException("谱面版本编号无效");
-        if(catalog.has("phiscriptSwordaltScripts")&&!scripts(catalog))throw new IOException("脚本目录版本不支持");
-        JSONArray entries=catalog.getJSONArray("entries");if(entries.length()<1||entries.length()>10000)throw new IOException("目录数量无效");
+        if(catalog.optInt("phiscriptSwordaltCatalog")!=1||!REPOSITORY.equals(catalog.optString("repository")))throw new IOException(tr("不是支持的 Swordalt 原谱目录"));
+        if(!catalog.getString("chartCommit").matches("[0-9a-f]{40}"))throw new IOException(tr("谱面版本编号无效"));
+        if(catalog.has("phiscriptSwordaltScripts")&&!scripts(catalog))throw new IOException(tr("脚本目录版本不支持"));
+        JSONArray entries=catalog.getJSONArray("entries");if(entries.length()<1||entries.length()>10000)throw new IOException(tr("目录数量无效"));
         Set<String> paths=new HashSet<>();long sum=0;
         for(int i=0;i<entries.length();i++){
             JSONObject e=entries.getJSONObject(i);String path=e.getString("path");String[] pieces=path.split("/",-1);
-            if(pieces.length!=2||pieces[0].isEmpty()||pieces[0].equals(".")||pieces[0].equals("..")||path.contains("\\")||!pieces[1].matches("(EZ|HD|IN|AT|SP)\\.json")||!paths.add(path))throw new IOException("谱面路径无效或重复");
-            for(int j=0;j<path.length();j++)if(Character.isISOControl(path.charAt(j)))throw new IOException("谱面路径包含控制字符");
-            if(!e.getString("sha1").matches("[0-9a-f]{40}")||!e.getString("difficulty").concat(".json").equals(pieces[1]))throw new IOException("谱面校验信息无效");
-            long size=e.getLong("bytes");if(size<1||size>limit(catalog))throw new IOException("谱面大小超出支持范围");sum+=size;
-            if(scripts(catalog)&&(!e.getString("sourceSha1").matches("[0-9a-f]{40}")||e.getLong("sourceBytes")<1||e.getLong("sourceBytes")>MAX_JSON))throw new IOException("脚本原始数据校验信息无效");
-            String title=e.getString("title");if(title.trim().isEmpty()||title.length()>300)throw new IOException("曲名无效");
+            if(pieces.length!=2||pieces[0].isEmpty()||pieces[0].equals(".")||pieces[0].equals("..")||path.contains("\\")||!pieces[1].matches("(EZ|HD|IN|AT|SP)\\.json")||!paths.add(path))throw new IOException(tr("谱面路径无效或重复"));
+            for(int j=0;j<path.length();j++)if(Character.isISOControl(path.charAt(j)))throw new IOException(tr("谱面路径包含控制字符"));
+            if(!e.getString("sha1").matches("[0-9a-f]{40}")||!e.getString("difficulty").concat(".json").equals(pieces[1]))throw new IOException(tr("谱面校验信息无效"));
+            long size=e.getLong("bytes");if(size<1||size>limit(catalog))throw new IOException(tr("谱面大小超出支持范围"));sum+=size;
+            if(scripts(catalog)&&(!e.getString("sourceSha1").matches("[0-9a-f]{40}")||e.getLong("sourceBytes")<1||e.getLong("sourceBytes")>MAX_JSON))throw new IOException(tr("脚本原始数据校验信息无效"));
+            String title=e.getString("title");if(title.trim().isEmpty()||title.length()>300)throw new IOException(tr("曲名无效"));
         }
-        if(sum>MAX_LIBRARY)throw new IOException("谱库原始数据超过 4 GiB");return catalog;
+        if(sum>MAX_LIBRARY)throw new IOException(tr("谱库原始数据超过 4 GiB"));return catalog;
     }
     public static JSONObject saved(Context c)throws Exception{
         File f=new File(directory(c),"catalog.json");
@@ -67,46 +70,59 @@ public final class SwordaltSource {
     private static long cacheBytes(Context c){long total=0;File[] list=cacheDirectory(c).listFiles();if(list!=null)for(File file:list)if(file.getName().endsWith(".json"))total+=file.length();return total;}
     private static void store(Context c,JSONObject catalog,JSONObject entry,byte[] bytes)throws Exception{
         File f=new File(cacheDirectory(c),key(catalog,entry)+".json");long size=cacheBytes(c)-(f.exists()?f.length():0)+bytes.length;
-        if(size>MAX_CACHE)throw new IOException("Swordalt 缓存超过 8 GiB，请在设置中删除旧谱面");
+        if(size>MAX_CACHE)throw new IOException(tr("Swordalt 缓存超过 8 GiB，请在设置中删除旧谱面"));
         atomic(f,bytes);JSONObject meta=new JSONObject().put("source",label(catalog)).put("title",entry.getString("title")).put("level",entry.getString("difficulty")).put("bytes",bytes.length).put("sha1",entry.getString("sha1")).put("path",entry.getString("path")).put("noiseCount",entry.optInt("noiseCount",-1));
         atomic(new File(cacheDirectory(c),key(catalog,entry)+".meta"),meta.toString().getBytes(StandardCharsets.UTF_8));
     }
     public static byte[] data(Context c,JSONObject catalog,JSONObject entry,AtomicBoolean cancel)throws Exception{
-        check(cancel);File f=new File(cacheDirectory(c),key(catalog,entry)+".json");
-        if(f.isFile()){
-            byte[] bytes=read(new FileInputStream(f),limit(catalog),cancel);
-            if(verified(bytes,entry)){RuntimeState.INSTANCE.log("读取已导入的 "+label(catalog)+"："+entry.getString("title")+" / "+entry.getString("difficulty"));return bytes;}
-            RuntimeState.INSTANCE.log("Swordalt 谱面缓存校验未通过，重新下载");
-        }
-        RuntimeState.INSTANCE.log("下载 Swordalt 原谱与噪域："+entry.getString("title")+" / "+entry.getString("difficulty"));final long[] logged={0};
+        byte[] cached=cached(c,catalog,entry,cancel);
+        if(cached!=null)return cached;
+        RuntimeState.INSTANCE.log(tr("下载 Swordalt 原谱与噪域：")+entry.getString("title")+" / "+entry.getString("difficulty"));final long[] logged={0};
         byte[] bytes=ChartDownload.get(rawUrl(catalog.getString("chartCommit"),entry.getString("path")),MAX_JSON,cancel,(done,total)->{
-            if(System.currentTimeMillis()-logged[0]>1000){logged[0]=System.currentTimeMillis();RuntimeState.INSTANCE.log("下载原谱 "+entry.optString("title")+"："+(done/1024)+" KiB");}
+            if(System.currentTimeMillis()-logged[0]>1000){logged[0]=System.currentTimeMillis();RuntimeState.INSTANCE.log(tr("下载原谱 ")+entry.optString("title")+"："+(done/1024)+" KiB");}
         });
         check(cancel);
         if(scripts(catalog)){
-            if(bytes.length!=entry.getLong("sourceBytes")||!blobHash(bytes).equals(entry.getString("sourceSha1")))throw new IOException("脚本来源长度或 Git 数据校验失败");
+            if(bytes.length!=entry.getLong("sourceBytes")||!blobHash(bytes).equals(entry.getString("sourceSha1")))throw new IOException(tr("脚本来源长度或 Git 数据校验失败"));
             bytes=PgrScriptConverter.convert(bytes,entry,catalog);check(cancel);
         }
-        if(!verified(bytes,entry))throw new IOException("谱面长度或 Git 数据校验失败，未导入");
+        if(!verified(bytes,entry))throw new IOException(tr("谱面长度或 Git 数据校验失败，未导入"));
         // Verify the JSON and noise metadata before committing the exact downloaded bytes.
-        JSONObject json=new JSONObject(new String(bytes,StandardCharsets.UTF_8));if(scripts(catalog)?json.optInt("phiscriptFormat")!=1:!json.has("judgeLineList")||!json.has("formatVersion"))throw new IOException("下载内容不是支持的谱面格式");
-        if(json.has("blockAreaList")&&json.optJSONArray("blockAreaList")==null)throw new IOException("噪域列表格式无效");
+        JSONObject json=new JSONObject(new String(bytes,StandardCharsets.UTF_8));if(scripts(catalog)?json.optInt("phiscriptFormat")!=1:!json.has("judgeLineList")||!json.has("formatVersion"))throw new IOException(tr("下载内容不是支持的谱面格式"));
+        if(json.has("blockAreaList")&&json.optJSONArray("blockAreaList")==null)throw new IOException(tr("噪域列表格式无效"));
         store(c,catalog,entry,bytes);return bytes;
     }
-    public static Chart loadChart(Context c,JSONObject catalog,JSONObject entry,AtomicBoolean cancel)throws Exception{
-        byte[] bytes=data(c,catalog,entry,cancel);check(cancel);Chart chart=SharedChartImport.parseJson(new String(bytes,StandardCharsets.UTF_8));check(cancel);
-        io.github.phiscript.input.PreparedChartStore.prepareImported(c,chart,bytes,16.0/9,false,cancel);
-        RuntimeState.INSTANCE.log(label(catalog)+"就绪："+entry.getString("title")+" / "+entry.getString("difficulty")+"；噪域 "+BlockAreaSet.count(chart)+" 个");return chart;
+    private static byte[] cached(Context c,JSONObject catalog,JSONObject entry,AtomicBoolean cancel)throws Exception{
+        check(cancel);
+        File file=new File(cacheDirectory(c),key(catalog,entry)+".json");
+        if(!file.isFile()||file.length()!=entry.getLong("bytes"))return null;
+        byte[] bytes;
+        try{bytes=read(new AtomicFile(file).openRead(),limit(catalog),cancel);}
+        catch(IOException invalid){check(cancel);return null;}
+        return verified(bytes,entry)?bytes:null;
     }
-    static JSONObject entry(JSONObject catalog,String path)throws Exception{JSONArray a=catalog.getJSONArray("entries");for(int i=0;i<a.length();i++)if(path.equals(a.getJSONObject(i).getString("path")))return a.getJSONObject(i);throw new IOException("未找到唯一的谱面路径");}
+    public static Chart loadChart(Context c,JSONObject catalog,JSONObject entry,AtomicBoolean cancel)throws Exception{
+        return loadChart(c,catalog,entry,cancel,true);
+    }
+    static Chart loadChart(Context c,JSONObject catalog,JSONObject entry,AtomicBoolean cancel,boolean importing)throws Exception{
+        byte[] bytes=importing?data(c,catalog,entry,cancel):cached(c,catalog,entry,cancel);
+        if(bytes==null)throw ExternalCharts.chartNotDownloaded(entry.getString("title"),entry.getString("difficulty"));
+        check(cancel);
+        Chart chart=SharedChartImport.parseJson(new String(bytes,StandardCharsets.UTF_8));
+        check(cancel);
+        if(importing)PreparedChartStore.prepareImported(c,chart,bytes,16.0/9,false,cancel);
+        else PreparedChartStore.bind(chart,c,bytes);
+        return chart;
+    }
+    static JSONObject entry(JSONObject catalog,String path)throws Exception{JSONArray a=catalog.getJSONArray("entries");for(int i=0;i<a.length();i++)if(path.equals(a.getJSONObject(i).getString("path")))return a.getJSONObject(i);throw new IOException(tr("未找到唯一的谱面路径"));}
     private static JSONObject getJson(String url,AtomicBoolean cancel)throws Exception{return new JSONObject(new String(ChartDownload.get(url,MAX_CATALOG,cancel,null),StandardCharsets.UTF_8));}
     private static String getText(String revision,String path,AtomicBoolean cancel)throws Exception{return new String(ChartDownload.get(rawUrl(revision,path),MAX_CATALOG,cancel,null),StandardCharsets.UTF_8);}
     private static Map<String,String[]> rows(String text){Map<String,String[]> result=new LinkedHashMap<>();for(String line:text.split("\\r?\\n")){String[] cols=line.split("\\t",-1);if(cols.length>1)result.put(cols[0].trim(),cols);}return result;}
     public static JSONObject refresh(Context c,AtomicBoolean cancel)throws Exception{
         String api="https://api.github.com/repos/"+REPOSITORY+"/";
         String chart=getJson(api+"branches/chart",cancel).getJSONObject("commit").getString("sha");String info=getJson(api+"branches/info",cancel).getJSONObject("commit").getString("sha");
-        if(!chart.matches("[0-9a-f]{40}")||!info.matches("[0-9a-f]{40}"))throw new IOException("资源版本编号无效");
-        JSONObject tree=getJson(api+"git/trees/"+chart+"?recursive=1",cancel);if(tree.optBoolean("truncated",false))throw new IOException("资源目录未完整返回");
+        if(!chart.matches("[0-9a-f]{40}")||!info.matches("[0-9a-f]{40}"))throw new IOException(tr("资源版本编号无效"));
+        JSONObject tree=getJson(api+"git/trees/"+chart+"?recursive=1",cancel);if(tree.optBoolean("truncated",false))throw new IOException(tr("资源目录未完整返回"));
         Map<String,String[]> songs=rows(getText(info,"info.tsv",cancel)),difficulties=rows(getText(info,"difficulty.tsv",cancel));String version=getText(info,"version.txt",cancel).trim();
         Map<String,JSONObject> old=new HashMap<>();try{JSONArray prior=saved(c).getJSONArray("entries");for(int i=0;i<prior.length();i++)old.put(prior.getJSONObject(i).getString("path"),prior.getJSONObject(i));}catch(Exception ignored){}
         JSONArray entries=new JSONArray(),list=tree.getJSONArray("tree");String[] ranks={"EZ","HD","IN","AT"};
@@ -130,17 +146,17 @@ public final class SwordaltSource {
         JSONObject catalog=null;Map<String,JSONObject> entries=new HashMap<>();Set<String> seenNames=new HashSet<>(),imported=new HashSet<>();long inflated=0;int count=0;
         try(ZipInputStream zip=new ZipInputStream(source)){
             ZipEntry item;while((item=zip.getNextEntry())!=null){check(cancel);String name=item.getName();
-                if(++count>10000||name.startsWith("/")||name.contains("\\"))throw new IOException("离线包路径或数量无效");
-                for(String p:name.split("/"))if(p.equals(".")||p.equals(".."))throw new IOException("离线包包含不安全路径");
-                if(!seenNames.add(name))throw new IOException("离线包包含重复路径");
+                if(++count>10000||name.startsWith("/")||name.contains("\\"))throw new IOException(tr("离线包路径或数量无效"));
+                for(String p:name.split("/"))if(p.equals(".")||p.equals(".."))throw new IOException(tr("离线包包含不安全路径"));
+                if(!seenNames.add(name))throw new IOException(tr("离线包包含重复路径"));
                 boolean metadata=name.equals("swordalt-catalog.json"),chart=name.startsWith("charts/")&&name.endsWith(".json");int limit=metadata?MAX_CATALOG:catalog!=null?limit(catalog):MAX_JSON;
                 ByteArrayOutputStream out=metadata||chart?new ByteArrayOutputStream():null;long entryBytes=0;byte[] buffer=new byte[16384];int n;
-                while((n=zip.read(buffer))!=-1){check(cancel);entryBytes+=n;inflated+=n;if(entryBytes>limit||inflated>MAX_LIBRARY)throw new IOException("离线包解压数据超过限制");if(out!=null)out.write(buffer,0,n);}
-                if(metadata){if(catalog!=null||!imported.isEmpty())throw new IOException("离线包目录顺序无效");catalog=validate(new JSONObject(new String(out.toByteArray(),StandardCharsets.UTF_8)));JSONArray list=catalog.getJSONArray("entries");for(int i=0;i<list.length();i++){JSONObject e=list.getJSONObject(i);entries.put(e.getString("path"),e);}}
-                else if(chart){if(catalog==null)throw new IOException("离线包缺少前置目录");String path=name.substring(7);JSONObject e=entries.get(path);if(e==null||!imported.add(path))throw new IOException("离线包中有未登记或重复谱面");byte[] bytes=out.toByteArray();if(!verified(bytes,e))throw new IOException("离线谱面校验失败："+path);store(c,catalog,e,bytes);if(imported.size()%20==0)RuntimeState.INSTANCE.log("导入 Swordalt 原谱："+imported.size()+" / "+entries.size());}
+                while((n=zip.read(buffer))!=-1){check(cancel);entryBytes+=n;inflated+=n;if(entryBytes>limit||inflated>MAX_LIBRARY)throw new IOException(tr("离线包解压数据超过限制"));if(out!=null)out.write(buffer,0,n);}
+                if(metadata){if(catalog!=null||!imported.isEmpty())throw new IOException(tr("离线包目录顺序无效"));catalog=validate(new JSONObject(new String(out.toByteArray(),StandardCharsets.UTF_8)));JSONArray list=catalog.getJSONArray("entries");for(int i=0;i<list.length();i++){JSONObject e=list.getJSONObject(i);entries.put(e.getString("path"),e);}}
+                else if(chart){if(catalog==null)throw new IOException(tr("离线包缺少前置目录"));String path=name.substring(7);JSONObject e=entries.get(path);if(e==null||!imported.add(path))throw new IOException(tr("离线包中有未登记或重复谱面"));byte[] bytes=out.toByteArray();if(!verified(bytes,e))throw new IOException(tr("离线谱面校验失败：")+path);store(c,catalog,e,bytes);if(imported.size()%20==0)RuntimeState.INSTANCE.log(tr("导入 Swordalt 原谱：")+imported.size()+" / "+entries.size());}
                 zip.closeEntry();
             }
         }
-        check(cancel);if(catalog==null||imported.size()!=entries.size())throw new IOException("离线包谱面不完整，未启用新目录");saveCatalog(c,catalog);return catalog;
+        check(cancel);if(catalog==null||imported.size()!=entries.size())throw new IOException(tr("离线包谱面不完整，未启用新目录"));saveCatalog(c,catalog);return catalog;
     }
 }

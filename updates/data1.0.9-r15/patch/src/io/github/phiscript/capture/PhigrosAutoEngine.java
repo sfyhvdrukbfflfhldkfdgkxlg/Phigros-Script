@@ -1,5 +1,7 @@
 package io.github.phiscript.capture;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import io.github.phiscript.RuntimeState;
 import io.github.phiscript.SessionSettings;
 import io.github.phiscript.assets.SessionChartSource;
@@ -13,7 +15,7 @@ public final class PhigrosAutoEngine {
     private final PhiraSessionEngine engine;
     private final PhigrosCourseEngine course;
     // Kept for binary compatibility with the original capture classes.
-    public static final class ServiceChanged extends IllegalStateException {public ServiceChanged(){super("无障碍连接已变化");}}
+    public static final class ServiceChanged extends IllegalStateException {public ServiceChanged(){super(tr("无障碍连接已变化"));}}
     public PhigrosAutoEngine(TouchService service,FrameStore frames,SessionSettings settings,boolean preview,AtomicBoolean stop,RecognitionOverlay overlay)throws Exception{
         service.selectGame(TouchService.GAME_PACKAGE);
         if(!preview&&io.github.phiscript.root.ModeRouting.course(new io.github.phiscript.AppSettings(service))){

@@ -71,7 +71,7 @@ public final class PerformanceReplay {
                     }
                 }
             };
-            GesturePlan.preflight(chart, service, VIEW);
+            service.prepareChart(chart,VIEW);
             ChartMultiTouchPlayer.play(service, chart, EPOCH, VIEW, new AtomicBoolean(),
                 message -> { status.add(message); return kotlin.Unit.INSTANCE; },
                 new AtomicBoolean(), new AtomicBoolean());

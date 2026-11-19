@@ -1,5 +1,7 @@
 package io.github.phiscript.root;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.app.*;
 import android.widget.*;
 import io.github.phiscript.AppSettings;
@@ -25,12 +27,12 @@ public final class RecognitionSettings {
         if(RootPanel.blocked(activity))return;
         AppSettings prefs=new AppSettings(activity);boolean phigros=!ModeRouting.needsPhira(prefs);LinearLayout form=new LinearLayout(activity);form.setOrientation(1);
         int pad=Math.round(20*activity.getResources().getDisplayMetrics().density);form.setPadding(pad,pad,pad,pad);
-        TextView help=new TextView(activity);help.setText("Phigros 与 Phira 读谱均从重试按下时建立时钟。起始延迟请在“重试校准”设置；这里的全局偏移和触控偏移按所选游戏分别保存。Phigros 重试位置由三键菜单识别。");form.addView(help);
-        CheckBox automatic=new CheckBox(activity);automatic.setText("按谱面比例计算居中玩法视口");automatic.setChecked(prefs.flag("phiraAutomaticViewport",true));form.addView(automatic);
+        TextView help=new TextView(activity);help.setText(tr("Phigros 与 Phira 读谱均从重试按下时建立时钟。起始延迟请在“重试校准”设置；这里的全局偏移和触控偏移按所选游戏分别保存。Phigros 重试位置由三键菜单识别。"));form.addView(help);
+        CheckBox automatic=new CheckBox(activity);automatic.setText(tr("按谱面比例计算居中玩法视口"));automatic.setChecked(prefs.flag("phiraAutomaticViewport",true));form.addView(automatic);
         Map<String,EditText> edits=new LinkedHashMap<>();
-        for(String[] field:FIELDS){TextView label=new TextView(activity);label.setText(field[1]);form.addView(label);EditText edit=new EditText(activity);edit.setSingleLine(true);edit.setText(io.github.phiscript.GameTiming.read(prefs,phigros,field[0],field[2]));form.addView(edit);edits.put(field[0],edit);}
+        for(String[] field:FIELDS){TextView label=new TextView(activity);label.setText(tr(field[1]));form.addView(label);EditText edit=new EditText(activity);edit.setSingleLine(true);edit.setText(io.github.phiscript.GameTiming.read(prefs,phigros,field[0],field[2]));form.addView(edit);edits.put(field[0],edit);}
         ScrollView scroll=new ScrollView(activity);scroll.addView(form);
-        AlertDialog dialog=UiDesign.dialog(activity,"识别区域与设备设置").setView(scroll).setNegativeButton("取消",null).setPositiveButton("保存",null).create();
+        AlertDialog dialog=UiDesign.dialog(activity,tr("识别区域与设备设置")).setView(scroll).setNegativeButton(tr("取消"),null).setPositiveButton(tr("保存"),null).create();
         dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
             if(RootPanel.blocked(activity))return;
             try{
@@ -40,9 +42,9 @@ public final class RecognitionSettings {
                 prefs.saveFlag("phiraAutomaticViewport",automatic.isChecked());
                 for(Map.Entry<String,EditText> edit:edits.entrySet())prefs.save(io.github.phiscript.GameTiming.key(phigros,edit.getKey()),edit.getValue().getText().toString().trim());
                 dialog.dismiss();
-            }catch(Exception error){Toast.makeText(activity,error.getMessage()==null?"参数无效":error.getMessage(),Toast.LENGTH_LONG).show();}
+            }catch(Exception error){Toast.makeText(activity,error.getMessage()==null?tr("参数无效"):tr(error.getMessage()),Toast.LENGTH_LONG).show();}
         }));UiDesign.show(dialog);
     }
     private static String value(Map<String,EditText> edits,String key){return edits.get(key).getText().toString().trim();}
-    private static void range(Map<String,EditText> edits,String key,int min,int max){int value=Integer.parseInt(value(edits,key));if(value<min||value>max){String message="请输入 "+min+"～"+max+" 毫秒";edits.get(key).setError(message);throw new IllegalArgumentException(message);}}
+    private static void range(Map<String,EditText> edits,String key,int min,int max){int value=Integer.parseInt(value(edits,key));if(value<min||value>max){String message=tr("请输入 ")+min+"～"+max+tr(" 毫秒");edits.get(key).setError(message);throw new IllegalArgumentException(message);}}
 }

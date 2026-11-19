@@ -1,5 +1,7 @@
 package io.github.phiscript.root;
 
+import static io.github.phiscript.i18n.AdditionalEnglish.tr;
+
 import android.content.Context;
 import android.os.SystemClock;
 import java.util.ArrayList;
@@ -26,7 +28,7 @@ public final class RootWarmup implements AutoCloseable {
         },"phi-root-auto-warm");keepalive.setDaemon(true);keepalive.start();
     }
     public long tap(float x,float y,int count,int interval,AtomicBoolean stop)throws Exception{
-        if(!Float.isFinite(x)||!Float.isFinite(y)||x<0||x>1||y<0||y>1||count<1||count>2)throw new IllegalArgumentException("菜单点击参数无效");
+        if(!Float.isFinite(x)||!Float.isFinite(y)||x<0||x>1||y<0||y>1||count<1||count>2)throw new IllegalArgumentException(tr("菜单点击参数无效"));
         synchronized(lock){
             check();
             long firstDown=-1;
@@ -41,10 +43,10 @@ public final class RootWarmup implements AutoCloseable {
             return firstDown;
         }
     }
-    public void check()throws Exception{if(failure!=null)throw new IllegalStateException("Root 预连接失败",failure);}
+    public void check()throws Exception{if(failure!=null)throw new IllegalStateException(tr("Root 预连接失败"),failure);}
     public RootClient take()throws Exception{
         check();synchronized(lock){waiting.set(false);}keepalive.interrupt();keepalive.join(1200);
-        if(keepalive.isAlive())throw new IllegalStateException("Root 预连接尚未释放，已取消演奏");
+        if(keepalive.isAlive())throw new IllegalStateException(tr("Root 预连接尚未释放，已取消演奏"));
         check();handedOff=true;return client;
     }
     public void close(){waiting.set(false);keepalive.interrupt();if(!handedOff)client.close();}
