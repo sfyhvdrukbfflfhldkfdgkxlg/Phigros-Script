@@ -123,7 +123,7 @@ public final class HomeScreen {
         expand.setContentDescription(w("展开运行记录","Expand activity log"));expand.setBackground(UiDesign.ripple(activity,CARD,10));
         expand.setOnClickListener(v->{boolean open=!UiMotion.expanded(details);UiMotion.toggle(details,open);expand.setText(open?w("运行记录  −","Activity log  −"):w("运行记录  ＋","Activity log  +"));expand.setContentDescription(open?w("收起运行记录","Collapse activity log"):w("展开运行记录","Expand activity log"));});UiMotion.bindPress(expand);diagnostics.addView(details,new LinearLayout.LayoutParams(-1,-2));
         for(TextView v:new TextView[]{oldStatus,oldAccess,oldLog})if(v!=null){if(v.getParent() instanceof ViewGroup)((ViewGroup)v.getParent()).removeView(v);v.setTextColor(MUTED);v.setTextSize(12);v.setPadding(0,dp(8),0,dp(8));details.addView(v,new LinearLayout.LayoutParams(-1,-2));}
-        text(root,"Phigros Script  /  data1.1.1",11,MUTED,false).setPadding(0,dp(22),0,0);update();
+        text(root,"Phigros Script  /  data1.1.2",11,MUTED,false).setPadding(0,dp(22),0,0);update();
     }
     private void triad(LinearLayout parent,String platform,String[] labels,Runnable[] actions,String[] tags){
         ChartActions row=new ChartActions(activity);parent.addView(row,params(-1,-2,10));
@@ -201,8 +201,14 @@ public final class HomeScreen {
     }
     private void downloadCharts(){
         if(RootPanel.blocked(activity))return;
-        UiDesign.show(UiDesign.dialog(activity,w("下载 Phigros 谱面","Get Phigros charts")).setItems(new String[]{w("Swordalt · 原谱与噪域","Swordalt · Charts & noise areas"),w("小飞机 · 新谱库（feyajI8g）","Feijipan · New library (feyajI8g)"),w("小飞机 · 上次谱库","Feijipan · Previous library"),w("联网链接 / 更新目录","Online link / Update catalog")},(d,i)->{
-            if(i==0)io.github.phiscript.assets.SwordaltLibraryUi.open(activity);else if(i==1)io.github.phiscript.assets.ExternalCharts.useNewShare(activity);else if(i==2)io.github.phiscript.assets.ExternalCharts.useCloud(activity);else io.github.phiscript.assets.ExternalCharts.network(activity);
+        UiDesign.show(UiDesign.dialog(activity,w("下载 Phigros 谱面","Get Phigros charts")).setItems(new String[]{
+            w("Google 云盘 · 识别后自动下载","Google Drive · Download on song recognition"),
+            w("Swordalt · 原谱与离线包","Swordalt · Original charts and offline ZIPs"),
+            w("从链接导入谱面","Import from a link")
+        },(d,i)->{
+            if(i==0)io.github.phiscript.assets.ExternalCharts.useDrive(activity);
+            else if(i==1)io.github.phiscript.assets.SwordaltLibraryUi.open(activity);
+            else io.github.phiscript.assets.ExternalCharts.network(activity);
         }).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).create());
     }
     private void importCharts(){

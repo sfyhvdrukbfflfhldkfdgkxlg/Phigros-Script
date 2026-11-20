@@ -17,6 +17,13 @@ public final class CourseClockRegression {
     public static void main(String[] args)throws Exception{
         Chart chart=chart();Viewport view=new Viewport(0,0,1000,600);
         for(long epoch:new long[]{10000,60000,110000}){PhigrosCourseClock clock=new PhigrosCourseClock(chart,epoch,1000,600,view);long result=observe(clock,epoch,false,false,false);ok(Math.abs(result-epoch)<=10,"native-script crossing clock: "+result+" != "+epoch);}
+        java.io.ByteArrayOutputStream timeline=new java.io.ByteArrayOutputStream();
+        io.github.phiscript.input.PlaybackTimeline.write(new java.io.DataOutputStream(timeline),chart,view);
+        Chart restored=io.github.phiscript.input.PlaybackTimeline.read(new java.io.DataInputStream(new java.io.ByteArrayInputStream(timeline.toByteArray())));
+        for(long epoch:new long[]{10000,60000,110000}){
+            long result=observe(new PhigrosCourseClock(restored,epoch,1000,600,view),epoch,false,false,false);
+            ok(Math.abs(result-epoch)<=10,"standalone course timeline lost calibration at "+epoch);
+        }
         ok(observe(new PhigrosCourseClock(chart,10000,1000,600,view),10000,true,false,false)<0,"stationary notes authorized input");
         ok(observe(new PhigrosCourseClock(chart,10000,1000,600,view),10000,false,true,false)<0,"wrong note kinds matched first chord");
         ok(observe(new PhigrosCourseClock(chart,10000,1000,600,view),10000,false,false,true)<0,"rapid judge-line motion treated as stable crossing velocity");

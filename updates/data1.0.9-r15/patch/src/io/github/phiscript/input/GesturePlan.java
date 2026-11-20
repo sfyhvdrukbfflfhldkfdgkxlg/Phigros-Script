@@ -44,12 +44,19 @@ public final class GesturePlan {
     }
     public byte[] encodePrepared(String fingerprint)throws IOException{if(precomputed==null)throw new IOException(tr("谱面轨迹尚未预计算"));return PreparedTrajectory.encode(this,precomputed,fingerprint);}
     public static GesturePlan decodePrepared(Chart chart,GestureProfile profile,Viewport viewport,TouchBounds bounds,byte[] data,String fingerprint)throws IOException{
-        TapMod.reload();GesturePlan plan=PreparedTrajectory.decode(chart,profile,viewport,bounds,data,fingerprint);cache(chart,profile,viewport,bounds,plan,true);return plan;
+        if(data==null)throw new IOException(tr("预计算文件大小无效"));
+        return decodePrepared(chart,profile,viewport,bounds,new java.io.ByteArrayInputStream(data),data.length,fingerprint);
+    }
+    static GesturePlan decodePrepared(Chart chart,GestureProfile profile,Viewport viewport,TouchBounds bounds,java.io.InputStream in,long length,String fingerprint)throws IOException{
+        TapMod.reload();
+        GesturePlan plan=PreparedTrajectory.readPrepared(chart,profile,viewport,bounds,in,length,fingerprint);
+        cache(chart,profile,viewport,bounds,plan,true);
+        return plan;
     }
     static GesturePlan fromPrepared(List<TouchEvent> events,int[] metrics,PreparedTrajectory prepared){
         GesturePlan plan=new GesturePlan(events,new IdentityHashMap<>(),metrics[0],metrics[1],metrics[2]);plan.denseDragSections=metrics[3];plan.denseDragNotes=metrics[4];plan.unavailableNotes=metrics[5];plan.precomputed=prepared;return plan;
     }
-    private static void cache(Chart chart,GestureProfile profile,Viewport viewport,TouchBounds bounds,GesturePlan plan,boolean ready){
+    static void cache(Chart chart,GestureProfile profile,Viewport viewport,TouchBounds bounds,GesturePlan plan,boolean ready){
         Cached item=new Cached(profile,plan,viewport,bounds);item.prepared=ready;
         synchronized(CACHE){
             int samples=plan.preparedSampleCount();for(Map.Entry<Chart,Cached> old:CACHE.entrySet())if(old.getKey()!=chart)samples+=old.getValue().plan.preparedSampleCount();

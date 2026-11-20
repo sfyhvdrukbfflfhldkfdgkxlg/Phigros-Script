@@ -1,0 +1,66 @@
+{
+  "version": "data1.1.2",
+  "version_code": 11002,
+  "base_sha256": "d7d38b37f3ba821261c5c9917366c5600d7432c5836a1b8fb4e2b27bba58c5b8",
+  "patch_tree": "9ff4c16d035bace2fc485f3335038d643e2469eb",
+  "assets": {
+    "PhigrosScript_data1.1.2.apk": {
+      "size": 48689627,
+      "sha256": "f07915831f919d1bfa97e8de8c144d1ac239c45c14a265efbdcd23b75fdf9f18"
+    },
+    "PhigrosScript_data1.1.2_Source.zip": {
+      "size": 1446144,
+      "sha256": "d678ca2332f11603c39e17661b165a83719c34a0b16cb4cd6b6684406bb96ccb"
+    }
+  },
+  "parts": [
+    {
+      "size": 196608,
+      "sha256": "9e843a37788b7360118ea1353198e052b61de927a066923def7980a0a6d56d6f"
+    },
+    {
+      "size": 196608,
+      "sha256": "990eb4a7fd0f198c635b820cb7770f7b6da3cea3cb92e90b0bad6a680d7d52b4"
+    },
+    {
+      "size": 196608,
+      "sha256": "5f033c0914f2f08c185dc0df603d93ebcd39186607115c7f1815760f8e3ff981"
+    },
+    {
+      "size": 196608,
+      "sha256": "3b0dbfbdc7895076f5d18866fa009790b3bacdd78e874faf733bc3445d21fe4e"
+    },
+    {
+      "size": 196608,
+      "sha256": "9f66c62cf30f2d04768296f38409a5ad854329dc4548a59bf9565f04394c5cbe"
+    },
+    {
+      "size": 196608,
+      "sha256": "ca23a0571073cece3918ecd103ecbf1eed7ff717e7f8f2d53b3c61ddc9289aef"
+    },
+    {
+      "size": 196608,
+      "sha256": "6e00a718eca7db7c62b50c09bb1dc5801d74f3e06378c6099285dc28dc4b89bc"
+    },
+    {
+      "size": 196608,
+      "sha256": "31054929645d122881397b97d224eda5f7de7524f03808327e8ecfffdf9b7504"
+    },
+    {
+      "size": 196608,
+      "sha256": "43e7d7c075d83bab581feda5cc30a22f3c5dda7ed2519e1e66933c295b6b7657"
+    },
+    {
+      "size": 196608,
+      "sha256": "097962e82f5dce1cacd996214088b5935e87a05398d0d488ad0122e91be9b77b"
+    },
+    {
+      "size": 196608,
+      "sha256": "50a12f9436c3cf390b88097dc887bbe3745f6990716d844f9e0ec7d780eccc07"
+    },
+    {
+      "size": 188910,
+      "sha256": "d8e26fa5aa3f175a6dac2b50cf004056bef025912389acc465ede6c082a7ca4e"
+    }
+  ]
+}

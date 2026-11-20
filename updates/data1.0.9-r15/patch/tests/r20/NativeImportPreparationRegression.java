@@ -42,6 +42,19 @@ public final class NativeImportPreparationRegression {
     }
     private static File[] prepared(Context c){File[] f=new File(c.getFilesDir(),"prepared-touch-v1").listFiles(x->x.getName().endsWith(".ptg"));return f==null?new File[0]:f;}
     private static GesturePlan playback(Chart chart,Context c){return GesturePlan.forPlayback(chart,GestureProfile.read(c),V,B);}
+    private static void playDetached(Chart chart)throws Exception{
+        try{
+            for(boolean root:new boolean[]{false,true}){
+                io.github.phiscript.root.InputBackend.rootEnabled=root;
+                android.os.SystemClock.now=100000;
+                TouchService service=new TouchService();
+                ChartMultiTouchPlayer.play(service,chart,100000,V,new java.util.concurrent.atomic.AtomicBoolean(),
+                    status->kotlin.Unit.INSTANCE,new java.util.concurrent.atomic.AtomicBoolean(),new java.util.concurrent.atomic.AtomicBoolean());
+                if(root)ok(!io.github.phiscript.root.RootClient.last.heads.isEmpty()&&io.github.phiscript.root.RootClient.last.active.isEmpty(),"standalone Root playback did not send and release its contacts");
+                else ok(service.sends>0&&service.roots.isEmpty(),"standalone accessibility playback did not send and release its contacts");
+            }
+        }finally{io.github.phiscript.root.InputBackend.rootEnabled=false;TouchService.Companion.current=null;}
+    }
     private static void requirePreparation(Chart chart,Context c,String label){
         try{playback(chart,c);throw new AssertionError(label+" computed coordinates during playback");}
         catch(IllegalStateException expected){
@@ -53,11 +66,23 @@ public final class NativeImportPreparationRegression {
         settings();Context c=new Context();File original=pack(c,"Native Import Preparation");byte[] originalBytes=Files.readAllBytes(original.toPath());
         PhiraLibrary library=PhiraLibrary.Companion.importFiles(c,Collections.singletonList(Uri.fromFile(original)),s->kotlin.Unit.INSTANCE);
         ok(library.getEntries().size()==1&&prepared(c).length==1,"actual native importFiles did not persist prepared trajectory");PhiraEntry entry=library.getEntries().get(0);File cache=prepared(c)[0];byte[] encoded=Files.readAllBytes(cache.toPath());
-        GesturePlan.clearPrepared();Chart loaded=PhiraLibrary.Companion.restore(c).load(entry.getId(),entry.getLevel());
+        File source=new File(c.getFilesDir(),"phira/charts/"+entry.getId()+".json");
+        File saved=new File(c.getCacheDir(),"imported-chart.saved");
+        Chart originalChart=library.load(entry.getId(),entry.getLevel());
+        Files.move(source.toPath(),saved.toPath());
+        GesturePlan.clearPrepared();RuntimeState.logs.clear();
+        SessionChartSource session=SessionChartSource.phira(c,PhiraLibrary.Companion.restore(c));
+        Chart loaded=session.load(entry.getId(),entry.getLevel());
         ok(playback(loaded,c).hasPreparedTrajectory(),"actual native Phira load did not install dense prepared plan");ok(playback(loaded,c).preparedSampleCount()>100,"native import lost sustained samples");long salt=TapMod.preparationSalt(loaded);
         ok(Arrays.equals(encoded,Files.readAllBytes(cache.toPath())),"native load rewrote valid disk cache instead of reuse");
-        GesturePlan.clearPrepared();Chart again=PhiraLibrary.Companion.restore(c).load(entry.getId());ok(playback(again,c).hasPreparedTrajectory()&&TapMod.preparationSalt(again)==salt,"native reloaded chart did not recover prepared salt/path");
+        ok(loaded.getDurationSeconds()==originalChart.getDurationSeconds()&&loaded.getOffsetSeconds()==originalChart.getOffsetSeconds(),"standalone timing differs from imported chart");
+        playDetached(loaded);
+        ok(RuntimeState.logs.stream().noneMatch(s->s.contains("正在预计算")),"session started the planner");
+        GesturePlan.clearPrepared();Chart again=session.load(entry.getId(),entry.getLevel());ok(playback(again,c).hasPreparedTrajectory()&&TapMod.preparationSalt(again)==salt,"reloaded chart did not recover prepared salt/path");
         byte[] corrupt=encoded.clone();corrupt[corrupt.length/2]^=1;Files.write(cache.toPath(),corrupt);GesturePlan.clearPrepared();
+        try{session.load(entry.getId(),entry.getLevel());throw new AssertionError("corruption passed before retry");}
+        catch(IOException expected){ok(expected.getMessage().contains("预计算触点"),"missing preparation hint");}
+        Files.move(saved.toPath(),source.toPath());
         Chart damaged=PhiraLibrary.Companion.restore(c).load(entry.getId());
         requirePreparation(damaged,c,"corrupt Phira coordinate cache");
         ok(Arrays.equals(corrupt,Files.readAllBytes(cache.toPath())),"playback rewrote the damaged coordinate file");
@@ -69,7 +94,15 @@ public final class NativeImportPreparationRegression {
         AppSettings.values.remove("tap_noise_clock_guard_ms");
         ok(Arrays.equals(originalBytes,Files.readAllBytes(original.toPath())),"native preparation changed original PEZ");
         Context local=ExternalCharts.localStorage(c);PhiraLibrary localLibrary=PhiraLibrary.Companion.importFiles(local,Collections.singletonList(Uri.fromFile(original)),s->kotlin.Unit.INSTANCE);
-        ok(prepared(local).length==1&&prepared(c).length==1,"native Phigros import did not use isolated persisted preparation");Chart localChart=localLibrary.load(localLibrary.getEntries().get(0).getId());ok(playback(localChart,local).hasPreparedTrajectory(),"native local Phigros load lacked prepared plan");
+        ok(prepared(local).length==1&&prepared(c).length==1,"native Phigros import did not use isolated persisted preparation");
+        PhiraEntry localEntry=localLibrary.getEntries().get(0);
+        Files.delete(new File(local.getFilesDir(),"phira/charts/"+localEntry.getId()+".json").toPath());
+        Method adapt=ExternalCharts.class.getDeclaredMethod("fromLocal",Context.class,PhiraLibrary.class);adapt.setAccessible(true);
+        ChartLibrary packages=(ChartLibrary)adapt.invoke(null,c,PhiraLibrary.Companion.restore(local));
+        ChartLocation location=packages.getLocations().get(0);
+        SessionChartSource phigros=SessionChartSource.phigros(c,packages,new java.util.concurrent.atomic.AtomicBoolean());
+        Chart localChart=phigros.load(SessionChartSource.id(location),location.getDifficulty());
+        ok(playback(localChart,local).hasPreparedTrajectory(),"Phigros package could not run from its standalone cache");
     }
     private static void committedSourceSurvivesCancelledPreparation()throws Exception{
         settings();CancelPreparationContext c=new CancelPreparationContext();File original=pack(c,"Native Cancelled Preparation");byte[] before=Files.readAllBytes(original.toPath());
@@ -93,9 +126,14 @@ public final class NativeImportPreparationRegression {
         ok(chart.getNotes().size()==7,"native ChartLibrary cached parse lost fixture");
         requirePreparation(chart,c,"unprepared native Phigros chart");
         ok(prepared(c).length==0,"native ChartLibrary load prepared coordinates implicitly");
-        PreparedChartStore.prepareBound(c,chart,16.0/9,false,null);
+        rejectUnavailableDownload(library,location,"unprepared APK");
+        ExternalCharts.importSelected(c,library,location.getSongId(),location.getDifficulty(),null);
         ok(prepared(c).length==1&&playback(chart,c).hasPreparedTrajectory(),"explicit preparation did not persist native Phigros coordinates");
-        byte[] encoded=Files.readAllBytes(prepared(c)[0].toPath());GesturePlan.clearPrepared();Chart again=library.load("native.fixture","IN");ok(playback(again,c).hasPreparedTrajectory()&&Arrays.equals(encoded,Files.readAllBytes(prepared(c)[0].toPath())),"native ChartLibrary cached reload did not reuse encoded trajectory");ok(Arrays.equals(json,Files.readAllBytes(cached.toPath())),"preparation changed native source chart cache");
+        byte[] encoded=Files.readAllBytes(prepared(c)[0].toPath());GesturePlan.clearPrepared();
+        ok(Arrays.equals(json,Files.readAllBytes(cached.toPath())),"preparation changed native source chart cache");
+        Files.delete(cached.toPath());
+        Chart again=ExternalCharts.loadSelected(library,"native.fixture","IN",null);
+        ok(playback(again,c).hasPreparedTrajectory()&&Arrays.equals(encoded,Files.readAllBytes(prepared(c)[0].toPath())),"native APK did not reopen the prepared timeline independently");
     }
     private static void rejectUnavailableDownload(ChartLibrary library,ChartLocation where,String label)throws Exception{
         try{
@@ -123,14 +161,17 @@ public final class NativeImportPreparationRegression {
         JSONObject meta=new JSONObject().put("title","Prepared fixture").put("level","IN")
             .put("bytes",json.length).put("sha256",PreparedChartStore.digest(json));
         Files.write(new File(directory,"testShare-17.meta").toPath(),meta.toString().getBytes(StandardCharsets.UTF_8));
-        Chart fromCloud=ExternalCharts.loadSelected(cloud,location.getSongId(),location.getDifficulty(),null);
-        requirePreparation(fromCloud,c,"Feijipan source without coordinates");
+        rejectUnavailableDownload(cloud,location,"Feijipan source without coordinates");
         ExternalCharts.importSelected(c,cloud,location.getSongId(),location.getDifficulty(),null);
+        Files.delete(source.toPath());GesturePlan.clearPrepared();
+        Chart fromCloud=ExternalCharts.loadSelected(cloud,location.getSongId(),location.getDifficulty(),null);
         ok(playback(fromCloud,c).hasPreparedTrajectory(),"explicit Feijipan prepare failed to cache coordinates");
-        byte[] changed=json.clone();changed[0]^=1;
-        Files.write(source.toPath(),changed);
-        rejectUnavailableDownload(cloud,location,"Feijipan integrity failure");
-        ok(Arrays.equals(changed,Files.readAllBytes(source.toPath())),"playback rewrote a damaged Feijipan source");
+        File cloudMeta=new File(directory,"testShare-17.meta");
+        Files.write(new File(cloudMeta+".bak").toPath(),Files.readAllBytes(cloudMeta.toPath()));
+        Files.write(new File(cloudMeta+".new").toPath(),new byte[]{0});
+        Method delete=ExternalCharts.class.getDeclaredMethod("deleteCacheFiles",Context.class,List.class);delete.setAccessible(true);
+        ok((int)delete.invoke(null,c,Collections.singletonList(source))==0&&!new File(cloudMeta+".bak").exists()&&!new File(cloudMeta+".new").exists(),"deletion retained a playable chart binding");
+        rejectUnavailableDownload(cloud,location,"deleted Feijipan entry");
 
         byte[] sha1=MessageDigest.getInstance("SHA-1").digest(concat(("blob "+json.length+'\0').getBytes(StandardCharsets.US_ASCII),json));
         StringBuilder hash=new StringBuilder();
@@ -146,11 +187,15 @@ public final class NativeImportPreparationRegression {
         String stem=PreparedChartStore.digest((revision+"/Fixture/IN.json").getBytes(StandardCharsets.UTF_8));
         File swordaltFile=new File(SwordaltSource.cacheDirectory(c),stem+".json");
         Files.write(swordaltFile.toPath(),json);
+        rejectUnavailableDownload(swordalt,swordaltLocation,"unprepared Swordalt source");
+        ExternalCharts.importSelected(c,swordalt,swordaltLocation.getSongId(),swordaltLocation.getDifficulty(),null);
+        Files.delete(swordaltFile.toPath());GesturePlan.clearPrepared();
         Chart cached=ExternalCharts.loadSelected(swordalt,swordaltLocation.getSongId(),swordaltLocation.getDifficulty(),null);
-        ok(cached.getNotes().size()==7,"Swordalt verified cache failed to load");
-        Files.write(swordaltFile.toPath(),changed);
-        rejectUnavailableDownload(swordalt,swordaltLocation,"Swordalt integrity failure");
-        ok(Arrays.equals(changed,Files.readAllBytes(swordaltFile.toPath())),"playback rewrote a damaged Swordalt source");
+        ok(cached.getNotes().size()==7&&playback(cached,c).hasPreparedTrajectory(),"Swordalt standalone cache failed to load");
+        File metadata=new File(swordaltFile.getParentFile(),stem+".meta");
+        JSONObject changed=new JSONObject(new String(Files.readAllBytes(metadata.toPath()),StandardCharsets.UTF_8));
+        changed.put("sha1","ffffffffffffffffffffffffffffffffffffffff");Files.write(metadata.toPath(),changed.toString().getBytes(StandardCharsets.UTF_8));
+        rejectUnavailableDownload(swordalt,swordaltLocation,"Swordalt edition mismatch");
     }
     private static byte[] concat(byte[] first,byte[] second)throws IOException{
         ByteArrayOutputStream out=new ByteArrayOutputStream(first.length+second.length);

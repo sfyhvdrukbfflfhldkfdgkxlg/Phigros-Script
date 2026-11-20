@@ -3,6 +3,9 @@ package io.github.phiscript.engine;
 import static io.github.phiscript.i18n.AdditionalEnglish.tr;
 
 import android.util.Log;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,6 +26,9 @@ public final class BlockAreaSet {
     private boolean singleInvert;
     private static final Map<Object, BlockAreaSet> MAP = Collections.synchronizedMap(new WeakHashMap());
     private static final BlockAreaSet EMPTY = new BlockAreaSet(new BlockArea[0], new BlockArea[0]);
+    private static final int AREA_HEADER_BYTES = 6 * Double.BYTES + 3 * Integer.BYTES;
+    private static final int KEY_BYTES = 3 * Double.BYTES + 2;
+    private static final int ANCHORED_KEY_BYTES = KEY_BYTES + 2 * Double.BYTES;
 
     private BlockAreaSet(BlockArea[] blockAreaArr, BlockArea[] blockAreaArr2) {
         this.normal = blockAreaArr;
@@ -183,6 +189,116 @@ public final class BlockAreaSet {
     }
 
     public static boolean hasMetadata(Object obj){BlockAreaSet b=MAP.get(obj);return b!=null&&b!=EMPTY;}
+
+    /** Numeric noise timeline for checking the actual submission time of prepared touches. */
+    public static void writeCompiled(DataOutputStream out, Chart chart) throws IOException {
+        BlockAreaSet set = MAP.get(chart);
+        if (set == null || set == EMPTY) {
+            out.writeByte(0);
+            return;
+        }
+        out.writeByte(set.singleInvert ? 2 : 1);
+        out.writeInt(set.normal.length);
+        out.writeInt(set.subtract.length);
+        for (BlockArea[] group : new BlockArea[][] {set.normal, set.subtract}) {
+            for (BlockArea area : group) {
+                out.writeDouble(area.minX);
+                out.writeDouble(area.maxX);
+                out.writeDouble(area.minY);
+                out.writeDouble(area.maxY);
+                out.writeDouble(area.appear);
+                out.writeDouble(area.disappear);
+                writeTrack(out, area.move, null);
+                writeTrack(out, area.scale, area.scaleAnchor);
+                writeTrack(out, area.rotate, area.rotateAnchor);
+            }
+        }
+    }
+
+    private static void writeTrack(DataOutputStream out, Track track, Anchors anchors) throws IOException {
+        out.writeInt(track.time.length);
+        for (int i = 0; i < track.time.length; i++) {
+            out.writeDouble(track.time[i]);
+            out.writeDouble(track.x[i]);
+            out.writeDouble(track.y[i]);
+            out.writeByte(track.easeX[i]);
+            out.writeByte(track.easeY[i]);
+            if (anchors != null) {
+                out.writeDouble(anchors.x[i]);
+                out.writeDouble(anchors.y[i]);
+            }
+        }
+    }
+
+    /** Reads from the enclosing length-bounded plan buffer. Only bind after the whole section validates. */
+    public static void readCompiled(DataInputStream in, Chart chart) throws IOException {
+        int flags = in.readUnsignedByte();
+        if (flags == 0) {
+            MAP.put(chart, EMPTY);
+            return;
+        }
+        int normalCount = in.readInt();
+        int subtractCount = in.readInt();
+        long count = (long) normalCount + subtractCount;
+        if (flags > 2 || normalCount < 0 || subtractCount < 0 || count > 32768 ||
+                count * AREA_HEADER_BYTES > in.available()) throw invalidCompiled();
+        BlockArea[] normal = new BlockArea[normalCount];
+        BlockArea[] subtract = new BlockArea[subtractCount];
+        for (BlockArea[] group : new BlockArea[][] {normal, subtract}) {
+            for (int i = 0; i < group.length; i++) {
+                double minX = readFinite(in), maxX = readFinite(in);
+                double minY = readFinite(in), maxY = readFinite(in);
+                double appear = readFinite(in), disappear = readFinite(in);
+                if (maxX < minX || maxY < minY) throw invalidCompiled();
+                double cx = (minX + maxX) * .5, cy = (minY + maxY) * .5;
+                Track move = readTrack(in, readKeyCount(in, KEY_BYTES), cx, cy, null);
+                Anchors scaleAnchor = new Anchors(readKeyCount(in, ANCHORED_KEY_BYTES), cx, cy);
+                Track scale = readTrack(in, scaleAnchor.time.length, 1, 1, scaleAnchor);
+                Anchors rotateAnchor = new Anchors(readKeyCount(in, ANCHORED_KEY_BYTES), cx, cy);
+                Track rotate = readTrack(in, rotateAnchor.time.length, 0, 0, rotateAnchor);
+                group[i] = new BlockArea(minX, maxX, minY, maxY, appear, disappear, group == subtract,
+                        move, scale, rotate, scaleAnchor, rotateAnchor);
+            }
+        }
+        BlockAreaSet set = new BlockAreaSet(normal, subtract);
+        set.singleInvert = flags == 2;
+        MAP.put(chart, set);
+    }
+
+    private static int readKeyCount(DataInputStream in, int bytesPerKey) throws IOException {
+        int count = in.readInt();
+        if (count < 0 || (long) count * bytesPerKey > in.available()) throw invalidCompiled();
+        return count;
+    }
+
+    private static Track readTrack(DataInputStream in, int count, double x, double y, Anchors anchors) throws IOException {
+        Track track = new Track(count, x, y);
+        for (int i = 0; i < count; i++) {
+            track.time[i] = readFinite(in);
+            track.x[i] = readFinite(in);
+            track.y[i] = readFinite(in);
+            track.easeX[i] = in.readUnsignedByte();
+            track.easeY[i] = in.readUnsignedByte();
+            if ((i > 0 && track.time[i] < track.time[i - 1]) || track.easeX[i] > 14 || track.easeY[i] > 14)
+                throw invalidCompiled();
+            if (anchors != null) {
+                anchors.time[i] = track.time[i];
+                anchors.x[i] = readFinite(in);
+                anchors.y[i] = readFinite(in);
+            }
+        }
+        return track;
+    }
+
+    private static double readFinite(DataInputStream in) throws IOException {
+        double value = in.readDouble();
+        if (!Double.isFinite(value)) throw invalidCompiled();
+        return value;
+    }
+
+    private static IOException invalidCompiled() {
+        return new IOException(tr("噪域列表格式无效"));
+    }
 
     public static int count(Object obj) {
         BlockAreaSet blockAreaSet = obj == null ? null : MAP.get(obj);

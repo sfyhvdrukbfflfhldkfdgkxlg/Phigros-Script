@@ -6,8 +6,6 @@ import android.content.Context;
 import android.graphics.RectF;
 import android.os.Looper;
 import android.util.AtomicFile;
-import android.util.DisplayMetrics;
-import android.view.WindowManager;
 import io.github.phiscript.AppSettings;
 import io.github.phiscript.RuntimeState;
 import io.github.phiscript.SessionSettings;
@@ -31,6 +29,9 @@ public final class PreparedChartStore {
     public static final int MAX_FILES=64;
     private static final Map<Chart,Binding> sources=Collections.synchronizedMap(new WeakHashMap<Chart,Binding>());
     private static final Object diskLock=new Object();
+    private static final Viewport CLOUD_VIEW=new Viewport(0,0,1920,1080);
+    private static final TouchBounds CLOUD_BOUNDS=new TouchBounds(0,0,1919,1079);
+    private static final String CLOUD_SETTINGS="gesture-noise-v2|true|true|0x1.18p5|0x1.8p2|0x1.f4p10|4|12|true|true";
     private static final ThreadLocal<ImportGeometry> importBatch=new ThreadLocal<>();
     private static final class Geometry {
         final Viewport viewport;final TouchBounds bounds;
@@ -40,8 +41,8 @@ public final class PreparedChartStore {
     private static final class ImportGeometry {
         final Context context;final int width,height;final boolean portrait;final SessionSettings settings;final GestureProfile profile;final Map<String,Geometry> variants=new HashMap<>();
         ImportGeometry(Context context){
-            this.context=context;TapMod.init(context);DisplayMetrics metrics=new DisplayMetrics();((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);width=Math.max(metrics.widthPixels,metrics.heightPixels);height=Math.min(metrics.widthPixels,metrics.heightPixels);
-            portrait=metrics.widthPixels<metrics.heightPixels;
+            this.context=context;TapMod.init(context);int[] size=ChartMultiTouchPlayer.dimensions(context);
+            width=Math.max(size[0],size[1]);height=Math.min(size[0],size[1]);portrait=size[0]<size[1];
             if(width<2||height<2)throw new IllegalStateException(tr("无法读取横屏尺寸，请在开始前重新计算触点"));settings=new AppSettings(context).snapshot();profile=GestureProfile.read(context);
         }
         Geometry get(double aspect,boolean force){String key=settings.getPhiraAutomaticViewport()?Double.toHexString(aspect)+"|"+force:"fixed";Geometry geometry=variants.get(key);if(geometry!=null)return geometry;Viewport viewport;
@@ -60,6 +61,11 @@ public final class PreparedChartStore {
     }
     public static void bind(Chart chart,String json){if(chart!=null&&json!=null)sources.put(chart,new Binding(digest(json.getBytes(StandardCharsets.UTF_8)),null));}
     public static void bind(Chart chart,Context context,byte[] bytes){sources.put(chart,new Binding(digest(bytes),context.getApplicationContext()));}
+    public static String fingerprint(Chart chart){
+        Binding binding=sources.get(chart);
+        if(binding==null)throw new IllegalStateException(tr("无法读取谱面指纹"));
+        return binding.fingerprint;
+    }
     private static void check(AtomicBoolean cancel){if(Thread.currentThread().isInterrupted()||cancel!=null&&cancel.get())throw new java.util.concurrent.CancellationException(tr("已取消触点预计算"));PhiraImportControl.check();}
     private static boolean ownedPath(File path)throws IOException{
         return !Files.isSymbolicLink(path.toPath())&&path.getAbsoluteFile().equals(path.getCanonicalFile());
@@ -80,15 +86,84 @@ public final class PreparedChartStore {
         for(float n:new float[]{v.getLeft(),v.getTop(),v.getWidth(),v.getHeight(),b.left,b.top,b.right,b.bottom})value+="|"+Float.toHexString(n);
         return digest(value.getBytes(StandardCharsets.UTF_8));
     }
-    private static byte[] read(File target)throws IOException{
-        try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(file)){
-            long length=file.getChannel().size();
-            if(length>PreparedTrajectory.MAX_BYTES)throw new IOException(tr("预计算文件过大"));
-            byte[] bytes=new byte[(int)length];
-            in.readFully(bytes);
-            if(in.read()!=-1)throw new IOException(tr("预计算文件大小无效"));
-            return bytes;
+    private static GesturePlan restore(File target,String fingerprint,Chart chart,GestureProfile profile,Viewport view,TouchBounds bounds)throws IOException{
+        try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(new BufferedInputStream(file))){
+            PlaybackArchive archive=PlaybackArchive.readHeader(in,file.getChannel().size(),fingerprint);
+            return GesturePlan.decodePrepared(chart,profile,view,bounds,in,archive.trackLength,fingerprint);
         }
+    }
+    /** A matching data1.1.1 file already contains the final pixels. Upgrade it during explicit preparation. */
+    private static byte[] legacyTracks(File target)throws IOException{
+        try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(new BufferedInputStream(file))){
+            in.mark(4);
+            if(in.readInt()!=PreparedTrajectory.MAGIC)return null;
+            long length=file.getChannel().size();
+            if(length<64||length>PreparedTrajectory.MAX_BYTES)throw new IOException(tr("预计算文件大小无效"));
+            in.reset();
+            byte[] tracks=new byte[(int)length];
+            in.readFully(tracks);
+            return tracks;
+        }
+    }
+    /** Called after selection. Open the exact imported generation before retry or course calibration starts. */
+    public static Chart openPlayback(Context context,String fingerprint,double aspect,boolean force)throws IOException{
+        if(fingerprint==null||!fingerprint.matches("[0-9a-f]{64}"))throw new IOException(notPrepared());
+        ImportGeometry window=playbackWindow(context);
+        Geometry geometry=window.get(aspect,force);
+        synchronized(diskLock){
+            File target=file(context,fingerprint+"."+key(window.profile,geometry.viewport,geometry.bounds)+".ptg");
+            try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(new BufferedInputStream(file))){
+                PlaybackArchive archive=PlaybackArchive.readHeader(in,file.getChannel().size(),fingerprint);
+                Chart chart=archive.chart();
+                GesturePlan plan=GesturePlan.decodePrepared(chart,window.profile,geometry.viewport,geometry.bounds,in,archive.trackLength,fingerprint);
+                sources.put(chart,new Binding(fingerprint,context.getApplicationContext()));
+                target.setLastModified(System.currentTimeMillis());
+                RuntimeState.INSTANCE.log(tr("读取预计算触点：")+plan.preparedSampleCount()+tr(" 个采样"));
+                return chart;
+            }catch(IOException invalid){throw new IOException(notPrepared(),invalid);}
+        }
+    }
+    private static ImportGeometry playbackWindow(Context context){
+        TouchService service=TouchService.Companion.getCurrent();
+        return new ImportGeometry(service!=null&&service.getGameForeground()?service:context);
+    }
+    static void checkCloudGeometry(GestureProfile profile,Viewport view,String signature)throws IOException{
+        if(!GestureProfile.read(null).equals(profile)||!CLOUD_SETTINGS.equals(signature)){
+            throw new IOException(io.github.phiscript.root.UiDesign.words(
+                    "云端轨迹使用默认手势和噪域设置。请在 Swordalt 谱库按当前设置准备这张谱面。",
+                    "Cloud tracks use the default gesture and noise settings. Prepare this chart in the Swordalt library to use your settings."));
+        }
+        // Native judge-line rotations use viewport width for both axes. Stretching a
+        // 16:9 track to a tablet or a custom aspect would move hits off the judge line.
+        double expected=view.getHeight()*16.0/9;
+        if(Math.abs(view.getWidth()-expected)>.5){
+            throw new IOException(io.github.phiscript.root.UiDesign.words(
+                    "云端轨迹需要 16:9 玩法视口。请使用 16:9 视口，或在 Swordalt 谱库按当前视口准备谱面。",
+                    "Cloud tracks require a 16:9 play area. Select a 16:9 viewport or prepare the chart in Swordalt for your current viewport."));
+        }
+    }
+    public static void checkCloudProfile(Context context)throws IOException{
+        ImportGeometry window=playbackWindow(context);
+        checkCloudGeometry(window.profile,window.get(16.0/9,false).viewport,TapMod.preparationSignature());
+    }
+    /** Install a server-prepared timeline and touch tracks for the current device, without a raw chart. */
+    public static Chart installCloud(Context context,String fingerprint,InputStream archiveData,long archiveBytes,AtomicBoolean cancel)throws IOException{
+        ImportGeometry window=playbackWindow(context);
+        Geometry geometry=window.get(16.0/9,false);
+        checkCloudGeometry(window.profile,geometry.viewport,TapMod.preparationSignature());
+        check(cancel);
+        DataInputStream in=new DataInputStream(new BufferedInputStream(archiveData));
+        PlaybackArchive archive=PlaybackArchive.readHeader(in,archiveBytes,fingerprint);
+        Chart chart=archive.chart();
+        GesturePlan plan=PreparedTrajectory.readCloud(chart,window.profile,CLOUD_VIEW,CLOUD_BOUNDS,in,archive.trackLength,fingerprint,geometry.viewport,geometry.bounds,cancel);
+        check(cancel);
+        byte[] tracks=plan.encodePrepared(fingerprint);
+        if(tracks.length!=archive.trackLength)throw new IOException(tr("预计算文件大小无效"));
+        File target=file(context,fingerprint+"."+key(window.profile,geometry.viewport,geometry.bounds)+".ptg");
+        write(context,target,archive,fingerprint,tracks,cancel);
+        GesturePlan.cache(chart,window.profile,geometry.viewport,geometry.bounds,plan,true);
+        sources.put(chart,new Binding(fingerprint,context.getApplicationContext()));
+        return chart;
     }
     private static List<File> files(Context context)throws IOException{
         File[] entries=directory(context).listFiles();Set<String> names=new TreeSet<>();
@@ -97,15 +172,14 @@ public final class PreparedChartStore {
     }
     private static long storedBytes(File target){return target.length()+new File(target+".new").length()+new File(target+".bak").length();}
     private static boolean exists(File target){return target.exists()||new File(target+".new").exists()||new File(target+".bak").exists();}
-    private static void write(Context context,File target,byte[] bytes,AtomicBoolean cancel)throws IOException{
-        if(bytes.length>PreparedTrajectory.MAX_BYTES)throw new IOException(tr("预计算文件超过容量"));
+    private static void write(Context context,File target,PlaybackArchive archive,String fingerprint,byte[] tracks,AtomicBoolean cancel)throws IOException{
         synchronized(diskLock){
-            check(cancel);List<File> prior=files(context);prior.remove(target);prior.sort((a,b)->Long.compare(a.lastModified(),b.lastModified()));long total=bytes.length;
+            check(cancel);List<File> prior=files(context);prior.remove(target);prior.sort((a,b)->Long.compare(a.lastModified(),b.lastModified()));long total=archive.size();
             for(File f:prior)total+=storedBytes(f);int count=prior.size()+1;
             for(File f:prior){if(total<=MAX_DISK_BYTES&&count<=MAX_FILES)break;long length=storedBytes(f);new AtomicFile(f).delete();if(exists(f))throw new IOException(tr("预计算缓存空间不足，无法清理旧条目"));total-=length;count--;}
             if(total>MAX_DISK_BYTES||count>MAX_FILES)throw new IOException(tr("预计算缓存超过容量"));
             AtomicFile atomic=new AtomicFile(target);FileOutputStream stream=atomic.startWrite();
-            try{check(cancel);stream.write(bytes);check(cancel);atomic.finishWrite(stream);}
+            try{check(cancel);archive.write(stream,fingerprint,tracks);check(cancel);atomic.finishWrite(stream);}
             catch(IOException|RuntimeException failure){atomic.failWrite(stream);throw failure;}
         }
     }
@@ -123,7 +197,7 @@ public final class PreparedChartStore {
                     TapMod.init(source.context);
                     File target=file(source.context,source.fingerprint+"."+key(profile,viewport,bounds)+".ptg");
                     if(exists(target)){
-                        GesturePlan ready=GesturePlan.decodePrepared(chart,profile,viewport,bounds,read(target),source.fingerprint);
+                        GesturePlan ready=restore(target,source.fingerprint,chart,profile,viewport,bounds);
                         target.setLastModified(System.currentTimeMillis());
                         return ready;
                     }
@@ -140,22 +214,40 @@ public final class PreparedChartStore {
             :tr("触点坐标缺失或已不匹配屏幕或设置。请在曲库打开「预计算触点」，准备这张谱面后再开始。");
     }
     public static GesturePlan ensure(Context context,Chart chart,GestureProfile profile,Viewport viewport,TouchBounds bounds,AtomicBoolean cancel){
-        check(cancel);TapMod.init(context);GesturePlan memory=GesturePlan.cachedPrepared(chart,profile,viewport,bounds);if(memory!=null)return memory;Binding source=sources.get(chart);
+        check(cancel);TapMod.init(context);Binding source=sources.get(chart);
         if(source==null)return GesturePlan.prepareForImport(chart,profile,viewport,bounds,cancel);
         File target;
         try{target=file(context,source.fingerprint+"."+key(profile,viewport,bounds)+".ptg");}
         catch(IOException failure){throw new IllegalStateException(tr("无法保存预计算触点"),failure);}
+        GesturePlan ready=null;
+        byte[] tracks=null;
         synchronized(diskLock){
-            if(target.exists()||new File(target+".bak").exists())try{
-                GesturePlan ready=GesturePlan.decodePrepared(chart,profile,viewport,bounds,read(target),source.fingerprint);check(cancel);target.setLastModified(System.currentTimeMillis());
-                RuntimeState.INSTANCE.log(tr("读取预计算触点：")+ready.preparedSampleCount()+tr(" 个采样"));return ready;
-            }catch(IOException invalid){new AtomicFile(target).delete();RuntimeState.INSTANCE.log(tr("触点缓存失效，重新计算：")+invalid.getMessage());}
+            if(exists(target))try{
+                tracks=legacyTracks(target);
+                if(tracks==null){
+                    ready=restore(target,source.fingerprint,chart,profile,viewport,bounds);
+                    check(cancel);target.setLastModified(System.currentTimeMillis());
+                    RuntimeState.INSTANCE.log(tr("读取预计算触点：")+ready.preparedSampleCount()+tr(" 个采样"));return ready;
+                }
+                ready=GesturePlan.decodePrepared(chart,profile,viewport,bounds,tracks,source.fingerprint);
+                check(cancel);
+                RuntimeState.INSTANCE.log(io.github.phiscript.i18n.UiText.english()
+                    ?"Upgrading the timeline using saved touch coordinates."
+                    :"正在复用已有触点坐标，升级演奏时间轴。");
+            }catch(IOException invalid){
+                tracks=null;
+                RuntimeState.INSTANCE.log(tr("触点缓存失效，重新计算：")+invalid.getMessage());
+            }
         }
-        RuntimeState.INSTANCE.log(tr("正在预计算点击、长按与噪域安全轨迹…"));
-        GesturePlan ready=GesturePlan.prepareForImport(chart,profile,viewport,bounds,cancel);
+        if(ready==null){
+            RuntimeState.INSTANCE.log(tr("正在预计算点击、长按与噪域安全轨迹…"));
+            ready=GesturePlan.prepareForImport(chart,profile,viewport,bounds,cancel);
+        }
         try{
             check(cancel);
-            write(context,target,ready.encodePrepared(source.fingerprint),cancel);
+            if(tracks==null)tracks=ready.encodePrepared(source.fingerprint);
+            PlaybackArchive archive=PlaybackArchive.compile(chart,viewport,tracks.length);
+            write(context,target,archive,source.fingerprint,tracks,cancel);
         }catch(IOException failure){
             GesturePlan.discardPrepared(chart);
             throw new IllegalStateException(tr("无法保存预计算触点"),failure);
@@ -212,7 +304,10 @@ public final class PreparedChartStore {
     }
     private static boolean verified(Context context,String fingerprint,GestureProfile profile,Geometry geometry){
         try{synchronized(diskLock){check(null);File target=file(context,fingerprint+"."+key(profile,geometry.viewport,geometry.bounds)+".ptg");if(!target.exists()&&!new File(target+".bak").exists())return false;
-            try(InputStream in=new AtomicFile(target).openRead()){PreparedTrajectory.inspectPrepared(in,target.length(),profile,geometry.viewport,geometry.bounds,fingerprint);}check(null);target.setLastModified(System.currentTimeMillis());return true;
+            try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(new BufferedInputStream(file))){
+                PlaybackArchive archive=PlaybackArchive.readHeader(in,file.getChannel().size(),fingerprint);
+                PreparedTrajectory.inspectPrepared(in,archive.trackLength,profile,geometry.viewport,geometry.bounds,fingerprint);
+            }check(null);target.setLastModified(System.currentTimeMillis());return true;
         }}catch(IOException invalid){return false;}
     }
     public static long[] statistics(Context context)throws IOException{

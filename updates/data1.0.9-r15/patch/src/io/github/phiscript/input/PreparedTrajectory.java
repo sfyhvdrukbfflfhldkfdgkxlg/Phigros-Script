@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * are explicit; lookup never evaluates a chart or searches a noise region. */
 public final class PreparedTrajectory {
     public static final int VERSION=3,STEP_MS=4,MAX_SAMPLES=2500000,MAX_BYTES=40*1024*1024;
-    private static final int MAGIC=0x50544731;
+    static final int MAGIC=0x50544731;
     final IdentityHashMap<TouchEvent,Track> tracks=new IdentityHashMap<>();
     final String settings;final long salt;final Viewport view;final TouchBounds bounds;
     final GestureProfile profile;
@@ -284,27 +284,153 @@ public final class PreparedTrajectory {
         }
     }
 
-    /** Verifies a stored generation without constructing Chart/Track/sample arrays. */
-    public static void inspectPrepared(InputStream source,long length,GestureProfile profile,Viewport view,TouchBounds bounds,String fingerprint)throws IOException{
-        if(length<64||length>MAX_BYTES)throw new IOException(tr("预计算文件大小无效"));
-        BufferedInputStream buffered=new BufferedInputStream(source,16384);final long[] left={length-32};
-        InputStream body=new FilterInputStream(buffered){public int read()throws IOException{if(left[0]==0)return -1;int b=super.read();if(b<0)throw new EOFException();left[0]--;return b;}public int read(byte[] b,int off,int len)throws IOException{if(left[0]==0)return -1;int n=super.read(b,off,(int)Math.min(len,left[0]));if(n<0)throw new EOFException();left[0]-=n;return n;}};
-        MessageDigest hash;try{hash=MessageDigest.getInstance("SHA-256");}catch(Exception error){throw new IOException(error);}
-        // Hash whole blocks even when DataInputStream requests individual sample bytes.
-        DataInputStream in=new DataInputStream(new BufferedInputStream(new java.security.DigestInputStream(body,hash),16384));
-        if(in.readInt()!=MAGIC||in.readInt()!=VERSION||!in.readUTF().equals(fingerprint)||!in.readUTF().equals(TapMod.preparationSignature()))throw new IOException(tr("预计算版本、谱面或设置不匹配"));in.readLong();
-        ByteArrayOutputStream geometry=new ByteArrayOutputStream();writeGeometry(new DataOutputStream(geometry),profile,view,bounds);byte[] expected=geometry.toByteArray(),actual=new byte[expected.length];in.readFully(actual);if(!Arrays.equals(expected,actual))throw new IOException(tr("预计算屏幕设置不匹配"));
-        for(int i=0;i<6;i++){int metric=in.readInt();if(metric<0||metric>10000000)throw new IOException(tr("预计算统计损坏"));}
-        int count=in.readInt(),total=0,lastId=Integer.MIN_VALUE;long lastStart=Long.MIN_VALUE;if(count<0||count>100000)throw new IOException(tr("预计算触点数量无效"));
-        PixelAxis horizontal=new PixelAxis(bounds.left,bounds.right),vertical=new PixelAxis(bounds.top,bounds.bottom);
-        ByteBuffer block=ByteBuffer.allocate(SAMPLES_PER_BLOCK*SAMPLE_BYTES);
-        for(int n=0;n<count;n++){
-            if(Thread.currentThread().isInterrupted())throw new java.util.concurrent.CancellationException(tr("已取消触点缓存检查"));
-            int id=in.readInt();long start=in.readLong(),end=in.readLong();if(start<Integer.MIN_VALUE||end>Integer.MAX_VALUE||end<=start||start<lastStart||start==lastStart&&id<lastId)throw new IOException(tr("预计算时间顺序损坏"));lastStart=start;lastId=id;in.readBoolean();in.readBoolean();int samples=in.readInt();if(samples!=end-start+1||samples>MAX_SAMPLES-total)throw new IOException(tr("预计算采样数量无效"));total+=samples;
-            readSamples(in,samples,null,horizontal,vertical,block);
-            readBoundaries(in,samples,null);
+    /** The checksum follows the track body in the same stream. */
+    private static final class TrackBody extends FilterInputStream {
+        int remaining;
+        TrackBody(InputStream in,int length){super(in);remaining=length;}
+        @Override public int read()throws IOException{
+            if(remaining==0)return -1;
+            int value=super.read();
+            if(value<0)throw new EOFException();
+            remaining--;
+            return value;
         }
-        if(in.read()!=-1)throw new IOException(tr("预计算文件含多余数据"));byte[] footer=new byte[32];new DataInputStream(buffered).readFully(footer);if(buffered.read()!=-1||!MessageDigest.isEqual(hash.digest(),footer))throw new IOException(tr("预计算文件校验失败"));
+        @Override public int read(byte[] bytes,int offset,int length)throws IOException{
+            if(length==0)return 0;
+            if(remaining==0)return -1;
+            int n=super.read(bytes,offset,Math.min(length,remaining));
+            if(n<0)throw new EOFException();
+            remaining-=n;
+            return n;
+        }
+    }
+
+    /** Import verification uses the same decoder, without retaining sample arrays. */
+    public static void inspectPrepared(InputStream source,long length,GestureProfile profile,Viewport view,TouchBounds bounds,String fingerprint)throws IOException{
+        readPrepared(null,profile,view,bounds,source,length,fingerprint);
+    }
+    static GesturePlan readPrepared(Chart chart,GestureProfile profile,Viewport view,TouchBounds bounds,InputStream source,long length,String fingerprint)throws IOException{
+        return readPrepared(chart,profile,view,bounds,source,length,fingerprint,null,null,null);
+    }
+    /** The archive has already routed each touch. Convert its reference pixels once during the download. */
+    static GesturePlan readCloud(Chart chart,GestureProfile profile,Viewport reference,TouchBounds referenceBounds,InputStream source,long length,String fingerprint,Viewport view,TouchBounds bounds,AtomicBoolean cancel)throws IOException{
+        return readPrepared(chart,profile,reference,referenceBounds,source,length,fingerprint,view,bounds,cancel);
+    }
+    private static GesturePlan readPrepared(Chart chart,GestureProfile profile,Viewport view,TouchBounds bounds,InputStream source,long length,String fingerprint,Viewport destination,TouchBounds destinationBounds,AtomicBoolean cancel)throws IOException{
+        if(length<64||length>MAX_BYTES)throw new IOException(tr("预计算文件大小无效"));
+        BufferedInputStream buffered=new BufferedInputStream(source,16384);
+        TrackBody body=new TrackBody(buffered,(int)length-32);
+        MessageDigest hash;
+        try{hash=MessageDigest.getInstance("SHA-256");}catch(java.security.NoSuchAlgorithmException error){throw new IOException(error);}
+        DataInputStream in=new DataInputStream(new java.security.DigestInputStream(body,hash));
+
+        if(in.readInt()!=MAGIC||in.readInt()!=VERSION||!in.readUTF().equals(fingerprint))throw new IOException(tr("谱面预计算版本或指纹不匹配"));
+        String settings=in.readUTF();
+        long salt=in.readLong();
+        if(!settings.equals(TapMod.preparationSignature()))throw new IOException(tr("触控设置已改变，需要重新预计算"));
+        ByteArrayOutputStream geometry=new ByteArrayOutputStream();
+        writeGeometry(new DataOutputStream(geometry),profile,view,bounds);
+        byte[] actual=new byte[geometry.size()];
+        in.readFully(actual);
+        if(!Arrays.equals(geometry.toByteArray(),actual))throw new IOException(tr("预计算屏幕设置不匹配"));
+        int[] metrics=new int[6];
+        for(int i=0;i<metrics.length;i++){
+            metrics[i]=in.readInt();
+            if(metrics[i]<0||metrics[i]>10000000)throw new IOException(tr("预计算统计损坏"));
+        }
+        int count=in.readInt();
+        if(count<0||count>100000||26L*count>body.remaining)throw new IOException(tr("预计算触点数量无效"));
+        Map<Integer,Note> notes=new HashMap<>();
+        if(chart!=null)for(Note note:chart.getNotes()){
+            if(notes.put(note.getId(),note)!=null)throw new IOException(tr("谱面音符编号不唯一"));
+        }
+        PreparedTrajectory prepared=new PreparedTrajectory(profile,destination==null?view:destination,
+                destination==null?bounds:destinationBounds,settings,salt);
+        PixelAxis inputX=new PixelAxis(bounds.left,bounds.right),inputY=new PixelAxis(bounds.top,bounds.bottom);
+        List<TouchEvent> events=new ArrayList<>();
+        ByteBuffer block=ByteBuffer.allocate(SAMPLES_PER_BLOCK*SAMPLE_BYTES);
+        long lastStart=Long.MIN_VALUE;
+        int total=0,lastId=Integer.MIN_VALUE;
+        int emptyTracks=0;
+        for(int n=0;n<count;n++){
+            int id=in.readInt();
+            long start=in.readLong(),end=in.readLong();
+            if(start<Integer.MIN_VALUE||end>Integer.MAX_VALUE||end<=start||start<lastStart||start==lastStart&&id<lastId)
+                throw new IOException(tr("预计算时间顺序损坏"));
+            lastStart=start;
+            lastId=id;
+            int continuous=in.readUnsignedByte(),flick=in.readUnsignedByte(),samples=in.readInt();
+            if(continuous>1||flick>1||samples!=end-start+1||samples>MAX_SAMPLES-total)
+                throw new IOException(tr("预计算采样数量无效"));
+            if((long)SAMPLE_BYTES*samples+(samples+7)/8>body.remaining)throw new EOFException();
+            total+=samples;
+            Track track=null;
+            if(chart!=null){
+                Note note=notes.get(id);
+                if(note==null)throw new IOException(tr("预计算音符已改变"));
+                TouchEvent event=new TouchEvent(note,start,end);
+                track=new Track();
+                track.continuous=continuous==1;
+                track.flick=flick==1;
+                track.start=(int)start;
+                track.allocate(samples);
+                events.add(event);
+                prepared.tracks.put(event,track);
+            }
+            readSamples(in,samples,track,inputX,inputY,block);
+            readBoundaries(in,samples,track);
+            if(destination!=null&&!prepared.mapCloudTrack(track,chart,view,cancel))emptyTracks++;
+            if(track!=null)track.index();
+        }
+        if(body.remaining!=0)throw new IOException(tr("预计算文件含多余数据"));
+        byte[] footer=new byte[32];
+        new DataInputStream(buffered).readFully(footer);
+        if(buffered.read()!=-1||!MessageDigest.isEqual(hash.digest(),footer))throw new IOException(tr("预计算文件校验失败"));
+        if(chart==null)return null;
+        if(count>0&&emptyTracks==count)throw new IOException(io.github.phiscript.root.UiDesign.words(
+                "本机触控边界内没有可用的云端手势，请在 Swordalt 谱库按本机设置准备这张谱面。",
+                "No cloud gesture fits your touch bounds. Prepare this chart locally in the Swordalt library."));
+        TapMod.preparationSalt(chart,salt);
+        return GesturePlan.fromPrepared(events,metrics,prepared);
+    }
+    private boolean mapCloudTrack(Track track,Chart chart,Viewport source,AtomicBoolean cancel)throws IOException{
+        float scaleX=view.getWidth()/source.getWidth(),scaleY=view.getHeight()/source.getHeight();
+        boolean hasNoise=TapMod.avoids(chart),previousClipped=false;
+        boolean playable=false;
+        Point previous=null;
+        for(int i=0;i<track.x.length;i++){
+            if((i&255)==0)cancelled(cancel);
+            if(!Float.isFinite(track.x[i])){previous=null;previousClipped=false;continue;}
+            float x=view.getLeft()+(track.x[i]-source.getLeft())*scaleX;
+            float y=view.getTop()+(track.y[i]-source.getTop())*scaleY;
+            track.x[i]=bounds.x(x);track.y[i]=bounds.y(y);
+            boolean clipped=track.x[i]!=x||track.y[i]!=y;
+            if(hasNoise){
+                Point current=new Point(track.x[i],track.y[i]);
+                long time=(long)track.start+i;
+                // Clipping at a system inset changes the certified segment. Do not publish a
+                // modified contact across a noise region, even if both endpoints remain clear.
+                if((clipped||previousClipped)&&BlockAreaSet.overlaps(chart,time-1-TapMod.noiseLookBackMs(),time+TapMod.noiseLookAheadMs())){
+                    if(!TapMod.clearAt(chart,view,current,time/1000.0)){
+                        track.x[i]=track.y[i]=Float.NaN;
+                        track.aospX[i]=track.aospY[i]=0;
+                        track.aospAlternate[i]=NO_ALTERNATE;
+                        track.connected[i]=0;
+                        previous=null;previousClipped=false;
+                        continue;
+                    }
+                    if(track.connected[i]!=0&&previous!=null){
+                        try{TapMod.segment(chart,view,previous,current,time-1,time);}
+                        catch(TapMod.NoSafePoint blocked){track.connected[i]=0;}
+                    }
+                }
+                if(previous==null)track.connected[i]=0;
+                previous=current;previousClipped=clipped;
+            }
+            track.prepareAccessibility(i,horizontal,vertical);
+            playable=true;
+        }
+        return playable;
     }
     static byte[] encode(GesturePlan plan,PreparedTrajectory p,String fingerprint)throws IOException{
         if(fingerprint==null||fingerprint.isEmpty()||fingerprint.length()>512)throw new IOException(tr("谱面指纹无效"));
@@ -335,34 +461,6 @@ public final class PreparedTrajectory {
         }
         encoded.put(digest(encoded.array(),encoded.position()));
         return encoded.array();
-    }
-    static GesturePlan decode(Chart chart,GestureProfile profile,Viewport view,TouchBounds bounds,byte[] encoded,String fingerprint)throws IOException{
-        if(encoded==null||encoded.length<64||encoded.length>MAX_BYTES)throw new IOException(tr("预计算文件大小无效"));
-        int bodyLength=encoded.length-32;
-        byte[] sum=Arrays.copyOfRange(encoded,bodyLength,encoded.length);
-        if(!MessageDigest.isEqual(digest(encoded,bodyLength),sum))throw new IOException(tr("预计算文件校验失败"));
-        DataInputStream in=new DataInputStream(new ByteArrayInputStream(encoded,0,bodyLength));
-        if(in.readInt()!=MAGIC||in.readInt()!=VERSION||!in.readUTF().equals(fingerprint))throw new IOException(tr("谱面预计算版本或指纹不匹配"));
-        String settings=in.readUTF();long salt=in.readLong();if(!settings.equals(TapMod.preparationSignature()))throw new IOException(tr("触控设置已改变，需要重新预计算"));
-        ByteArrayOutputStream geometry=new ByteArrayOutputStream();writeGeometry(new DataOutputStream(geometry),profile,view,bounds);byte[] expected=geometry.toByteArray(),actual=new byte[expected.length];in.readFully(actual);if(!Arrays.equals(expected,actual))throw new IOException(tr("屏幕或手势设置已改变，需要重新预计算"));
-        int[] metrics=new int[6];for(int i=0;i<metrics.length;i++){metrics[i]=in.readInt();if(metrics[i]<0||metrics[i]>10000000)throw new IOException(tr("预计算统计损坏"));}
-        int count=in.readInt();if(count<0||count>100000)throw new IOException(tr("预计算触点数量无效"));
-        Map<Integer,Note> notes=new HashMap<>();for(Note note:chart.getNotes())if(notes.put(note.getId(),note)!=null)throw new IOException(tr("谱面音符编号不唯一"));
-        PreparedTrajectory prepared=new PreparedTrajectory(profile,view,bounds,settings,salt);List<TouchEvent> events=new ArrayList<>();int total=0;long lastStart=Long.MIN_VALUE;int lastId=Integer.MIN_VALUE;
-        ByteBuffer block=ByteBuffer.allocate(SAMPLES_PER_BLOCK*SAMPLE_BYTES);
-        for(int n=0;n<count;n++){
-            Note note=notes.get(in.readInt());long start=in.readLong(),end=in.readLong();if(note==null||start<Integer.MIN_VALUE||end>Integer.MAX_VALUE||end<=start)throw new IOException(tr("预计算音符已改变"));
-            if(start<lastStart||start==lastStart&&note.getId()<lastId)throw new IOException(tr("预计算手势顺序损坏"));lastStart=start;lastId=note.getId();
-            TouchEvent event=new TouchEvent(note,start,end);Track track=new Track();track.continuous=in.readBoolean();track.flick=in.readBoolean();int samples=in.readInt();if(samples!=end-start+1||samples>MAX_SAMPLES-total)throw new IOException(tr("预计算采样数量无效"));total+=samples;
-            if((long)SAMPLE_BYTES*samples+(samples+7)/8>in.available())throw new EOFException();
-            track.start=(int)start;
-            track.allocate(samples);
-            readSamples(in,samples,track,prepared.horizontal,prepared.vertical,block);
-            readBoundaries(in,samples,track);
-            track.index();events.add(event);prepared.tracks.put(event,track);
-        }
-        if(in.available()!=0)throw new IOException(tr("预计算文件含多余数据"));
-        GesturePlan plan=GesturePlan.fromPrepared(events,metrics,prepared);TapMod.preparationSalt(chart,salt);return plan;
     }
     private static byte[] digest(byte[] data,int length)throws IOException{
         try{MessageDigest sha=MessageDigest.getInstance("SHA-256");sha.update(data,0,length);return sha.digest();}

@@ -31,21 +31,33 @@ public final class PreparedStoreRegression {
     private static File directory(Context c){return new File(c.getFilesDir(),"prepared-touch-v1");}
     private static File[] caches(Context c){File[] f=directory(c).listFiles(x->x.getName().endsWith(".ptg"));return f==null?new File[0]:f;}
     private static byte[] bytes(String value){return value.getBytes(StandardCharsets.UTF_8);}
+    private static byte[] tracks(byte[] archive,String fingerprint)throws IOException{
+        DataInputStream in=new DataInputStream(new ByteArrayInputStream(archive));
+        byte[] tracks=new byte[PlaybackArchive.readHeader(in,archive.length,fingerprint).trackLength];
+        in.readFully(tracks);
+        return tracks;
+    }
     private static void cancelled(Work work,String why)throws Exception{boolean rejected=false;try{work.run();}catch(IllegalStateException expected){rejected=true;}ok(rejected,why);}
     private static void settings(){AppSettings.values.clear();AppSettings.edges=AppSettings.inward=false;AppSettings.smart=AppSettings.catchDrags=AppSettings.flicks=AppSettings.combos=true;AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");TapMod.init(new Context());forbid=false;cancelDuring=null;GesturePlan.clearPrepared();}
     private static void diskLifecycle()throws Exception{
         settings();Context context=context("lifecycle");byte[] source=bytes("small-source-chart-v1");File original=new File(context.getFilesDir(),"source.json");Files.write(original.toPath(),source);
         Chart first=bound(context,source);GesturePlan prepared=PreparedChartStore.ensure(context,first,PROFILE,V,B,null);long salt=TapMod.preparationSalt(first);
         ok(prepared.hasPreparedTrajectory()&&prepared.preparedSampleCount()>10,"real store did not prepare dense trajectory");ok(caches(context).length==1,"cache was not persisted");File target=caches(context)[0];byte[] valid=Files.readAllBytes(target.toPath());
-        try(InputStream stream=new ByteArrayInputStream(valid)){PreparedTrajectory.inspectPrepared(stream,valid.length,PROFILE,V,B,PreparedChartStore.digest(source));}ok(true,"streaming inspection rejected real encoded cache");
-        byte[] inspectionCorrupt=valid.clone();inspectionCorrupt[inspectionCorrupt.length-40]^=1;boolean inspectionRejected=false;try{PreparedTrajectory.inspectPrepared(new ByteArrayInputStream(inspectionCorrupt),inspectionCorrupt.length,PROFILE,V,B,PreparedChartStore.digest(source));}catch(IOException expected){inspectionRejected=true;}ok(inspectionRejected,"streaming inspection accepted corrupted sample/footer");
-        inspectionRejected=false;try{PreparedTrajectory.inspectPrepared(new ByteArrayInputStream(valid),valid.length,PROFILE,new Viewport(0,0,1200,600),B,PreparedChartStore.digest(source));}catch(IOException expected){inspectionRejected=true;}ok(inspectionRejected,"streaming inspection ignored geometry key");
+        byte[] coordinates=tracks(valid,PreparedChartStore.digest(source));
+        try(InputStream stream=new ByteArrayInputStream(coordinates)){PreparedTrajectory.inspectPrepared(stream,coordinates.length,PROFILE,V,B,PreparedChartStore.digest(source));}ok(true,"streaming inspection rejected real encoded cache");
+        byte[] inspectionCorrupt=coordinates.clone();inspectionCorrupt[inspectionCorrupt.length-40]^=1;boolean inspectionRejected=false;try{PreparedTrajectory.inspectPrepared(new ByteArrayInputStream(inspectionCorrupt),inspectionCorrupt.length,PROFILE,V,B,PreparedChartStore.digest(source));}catch(IOException expected){inspectionRejected=true;}ok(inspectionRejected,"streaming inspection accepted corrupted sample/footer");
+        inspectionRejected=false;try{PreparedTrajectory.inspectPrepared(new ByteArrayInputStream(coordinates),coordinates.length,PROFILE,new Viewport(0,0,1200,600),B,PreparedChartStore.digest(source));}catch(IOException expected){inspectionRejected=true;}ok(inspectionRejected,"streaming inspection ignored geometry key");
+        // data1.1.1 stored the same track body under this key, without a standalone timeline.
+        Files.write(target.toPath(),coordinates);GesturePlan.clearPrepared();int upgradeStart=calls;
+        PreparedChartStore.ensure(context,bound(context,source),PROFILE,V,B,null);
+        ok(calls-upgradeStart==1,"legacy upgrade should read the one course anchor only");
+        ok(Arrays.equals(coordinates,tracks(Files.readAllBytes(target.toPath()),PreparedChartStore.digest(source))),"legacy upgrade rewrote the saved touch coordinates");
         GesturePlan.clearPrepared();Chart second=bound(context,source);forbid=true;int before=calls;GesturePlan restored;
         try{restored=PreparedChartStore.ensure(context,second,PROFILE,V,B,null);}finally{forbid=false;}
         ok(calls==before&&restored.preparedSampleCount()==prepared.preparedSampleCount(),"disk restore recalculated or changed samples");ok(TapMod.preparationSalt(second)==salt,"disk restore lost persisted random salt");
         byte[] corrupt=valid.clone();corrupt[corrupt.length/2]^=1;Files.write(target.toPath(),corrupt);GesturePlan.clearPrepared();Chart damaged=bound(context,source);before=calls;
         GesturePlan repaired=PreparedChartStore.ensure(context,damaged,PROFILE,V,B,null);ok(calls>before&&repaired.hasPreparedTrajectory(),"corrupt cache did not recompute");ok(!Arrays.equals(corrupt,Files.readAllBytes(target.toPath())),"corrupt cache was not replaced");
-        GesturePlan decoded=GesturePlan.decodePrepared(damaged,PROFILE,V,B,Files.readAllBytes(target.toPath()),PreparedChartStore.digest(source));ok(decoded.preparedSampleCount()==repaired.preparedSampleCount(),"repaired cache failed real decoder");
+        GesturePlan decoded=GesturePlan.decodePrepared(damaged,PROFILE,V,B,tracks(Files.readAllBytes(target.toPath()),PreparedChartStore.digest(source)),PreparedChartStore.digest(source));ok(decoded.preparedSampleCount()==repaired.preparedSampleCount(),"repaired cache failed real decoder");
         PreparedChartStore.ensure(context,bound(context,source),PROFILE,new Viewport(0,0,1200,600),new TouchBounds(0,0,1199,599),null);ok(caches(context).length==2,"viewport key reused physical coordinates");
         AppSettings.values.put("tap_noise_clock_guard_ms","24");PreparedChartStore.ensure(context,bound(context,source),PROFILE,V,B,null);ok(caches(context).length==3,"guard key reused stale paths");
         AppSettings.values.put("tap_noise_clock_guard_ms","0");AppSettings.inward=true;PreparedChartStore.ensure(context,bound(context,source),PROFILE,V,B,null);ok(caches(context).length==4,"inward flick key reused stale paths");AppSettings.inward=false;

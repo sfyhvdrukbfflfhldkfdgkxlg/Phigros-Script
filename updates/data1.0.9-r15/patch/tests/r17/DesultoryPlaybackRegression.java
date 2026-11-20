@@ -57,10 +57,11 @@ public final class DesultoryPlaybackRegression {
     static float[] arc(List<float[]> points,double fraction){double total=0;for(int i=1;i<points.size();i++)total+=Math.hypot(points.get(i)[0]-points.get(i-1)[0],points.get(i)[1]-points.get(i-1)[1]);double left=total*fraction;for(int i=1;i<points.size();i++){float[] a=points.get(i-1),b=points.get(i);double length=Math.hypot(b[0]-a[0],b[1]-a[1]);if(length>0&&left<=length){double f=left/length;return new float[]{(float)(a[0]+(b[0]-a[0])*f),(float)(a[1]+(b[1]-a[1])*f)};}left-=length;}return points.get(points.size()-1);}
     public static void main(String[] args)throws Exception{
         if(args.length==0)throw new IllegalArgumentException("Supply pinned Desultory Signals original AT/IN PGR JSON paths");
-        boolean random=false;int inputStart=0;String clockGuard="0";
+        boolean random=false,standalone=false;int inputStart=0;String clockGuard="0";
         while(inputStart<args.length && args[inputStart].startsWith("--")){
             String option=args[inputStart++];
             if(option.equals("--random"))random=true;
+            else if(option.equals("--standalone"))standalone=true;
             else if(option.startsWith("--clock-guard="))clockGuard=option.substring("--clock-guard=".length());
             else throw new IllegalArgumentException("Unknown option: "+option);
         }
@@ -69,8 +70,21 @@ public final class DesultoryPlaybackRegression {
         for(int input=inputStart;input<args.length;input++){String filename=args[input];byte[] raw=Files.readAllBytes(Paths.get(filename));JSONObject json=new JSONObject(new String(raw,StandardCharsets.UTF_8));Reference ref=new Reference(json);Chart chart=SharedChartImport.parseJson(new String(raw,StandardCharsets.UTF_8));
             if(BlockAreaSet.count(chart)!=ref.areas.length)throw new AssertionError("metadata lost before player");
             SystemClock.now=EPOCH;TouchService service=new TouchService();long[] samples={0},violations={0};double[] firstViolation={-1};
-            long preparationBegan=System.nanoTime();service.prepareChart(chart,V);long preparationMs=(System.nanoTime()-preparationBegan)/1000000;
-            GesturePlan planned=GesturePlan.obtain(chart,GestureProfile.read(service),V,TouchSafety.read(service,1000,600,V).bounds,false);
+            long preparationBegan=System.nanoTime(),openMs=0;
+            if(standalone){
+                android.content.Context.root=Files.createTempDirectory("desultory-standalone").toFile();
+                PreparedChartStore.prepareImported(service,chart,raw,16.0/9,false,null);
+            }else service.prepareChart(chart,V);
+            long preparationMs=(System.nanoTime()-preparationBegan)/1000000;
+            if(standalone){
+                String fingerprint=PreparedChartStore.fingerprint(chart);
+                GesturePlan.clearPrepared();
+                long opened=System.nanoTime();
+                chart=PreparedChartStore.openPlayback(service,fingerprint,16.0/9,false);
+                openMs=(System.nanoTime()-opened)/1000000;
+                if(BlockAreaSet.count(chart)!=ref.areas.length)throw new AssertionError("standalone archive lost the noise timeline");
+            }
+            GesturePlan planned=GesturePlan.forPlayback(chart,GestureProfile.read(service),V,TouchSafety.read(service,1000,600,V).bounds);
             int preparedSamples=-1;
             try{preparedSamples=((Number)GesturePlan.class.getMethod("preparedSampleCount").invoke(planned)).intValue();if(preparedSamples<=0)throw new AssertionError("dense preparation was bypassed");}
             catch(NoSuchMethodException olderRelease){/* R17-R19 do not expose prepared paths. */}
@@ -78,7 +92,7 @@ public final class DesultoryPlaybackRegression {
                 for(GestureDescription.StrokeDescription s:g.strokes)for(long ms=0;ms<=s.duration;ms++){float[] p=arc(s.path.points,ms/(double)s.duration);double time=(base+s.start+ms)/1000.0;samples[0]++;if(ref.blocked(p[0],p[1],time)){violations[0]++;if(firstViolation[0]<0){firstViolation[0]=time;System.out.println("FIRST_BLOCKED "+filename+" time="+time+" x="+p[0]+" y="+p[1]);}}}
             };
             ChartMultiTouchPlayer.play(service,chart,EPOCH,V,new AtomicBoolean(),s->{if(s.contains("输入统计")||s.startsWith("噪域提交复核"))System.out.println(s);return kotlin.Unit.INSTANCE;},new AtomicBoolean(),new AtomicBoolean());
-            System.out.println("REPLAY "+Paths.get(filename).getFileName()+" random="+random+" clockGuardMs="+clockGuard+" notes="+chart.getNotes().size()+" unavailableNotes="+planned.unavailableNotes+" planContacts="+planned.events.size()+" preparedSamples="+preparedSamples+" preflightMs="+preparationMs+" areas="+ref.areas.length+" duration="+chart.getDurationSeconds()+" sends="+service.sends+" peak="+service.peak+" DOWN="+service.downs.size()+" arcSamples="+samples[0]+" blocked="+violations[0]+" released="+service.roots.isEmpty());
+            System.out.println("REPLAY "+Paths.get(filename).getFileName()+" standalone="+standalone+" random="+random+" clockGuardMs="+clockGuard+" notes="+chart.getNotes().size()+" unavailableNotes="+planned.unavailableNotes+" planContacts="+planned.events.size()+" preparedSamples="+preparedSamples+" preparationMs="+preparationMs+" openMs="+openMs+" areas="+ref.areas.length+" duration="+chart.getDurationSeconds()+" sends="+service.sends+" peak="+service.peak+" DOWN="+service.downs.size()+" arcSamples="+samples[0]+" blocked="+violations[0]+" released="+service.roots.isEmpty());
             if(violations[0]!=0||service.frameworkFailed||!service.roots.isEmpty())throw new AssertionError("actual accessibility trajectory entered native noise or leaked contacts");
         }
     }

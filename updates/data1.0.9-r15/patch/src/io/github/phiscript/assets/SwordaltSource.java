@@ -71,7 +71,10 @@ public final class SwordaltSource {
     private static void store(Context c,JSONObject catalog,JSONObject entry,byte[] bytes)throws Exception{
         File f=new File(cacheDirectory(c),key(catalog,entry)+".json");long size=cacheBytes(c)-(f.exists()?f.length():0)+bytes.length;
         if(size>MAX_CACHE)throw new IOException(tr("Swordalt 缓存超过 8 GiB，请在设置中删除旧谱面"));
-        atomic(f,bytes);JSONObject meta=new JSONObject().put("source",label(catalog)).put("title",entry.getString("title")).put("level",entry.getString("difficulty")).put("bytes",bytes.length).put("sha1",entry.getString("sha1")).put("path",entry.getString("path")).put("noiseCount",entry.optInt("noiseCount",-1));
+        atomic(f,bytes);writeMetadata(c,catalog,entry,bytes.length,PreparedChartStore.digest(bytes));
+    }
+    private static void writeMetadata(Context c,JSONObject catalog,JSONObject entry,int size,String fingerprint)throws Exception{
+        JSONObject meta=new JSONObject().put("source",label(catalog)).put("title",entry.getString("title")).put("level",entry.getString("difficulty")).put("bytes",size).put("sha256",fingerprint).put("sha1",entry.getString("sha1")).put("path",entry.getString("path")).put("noiseCount",entry.optInt("noiseCount",-1));
         atomic(new File(cacheDirectory(c),key(catalog,entry)+".meta"),meta.toString().getBytes(StandardCharsets.UTF_8));
     }
     public static byte[] data(Context c,JSONObject catalog,JSONObject entry,AtomicBoolean cancel)throws Exception{
@@ -105,13 +108,29 @@ public final class SwordaltSource {
         return loadChart(c,catalog,entry,cancel,true);
     }
     static Chart loadChart(Context c,JSONObject catalog,JSONObject entry,AtomicBoolean cancel,boolean importing)throws Exception{
-        byte[] bytes=importing?data(c,catalog,entry,cancel):cached(c,catalog,entry,cancel);
-        if(bytes==null)throw ExternalCharts.chartNotDownloaded(entry.getString("title"),entry.getString("difficulty"));
+        if(catalog.optInt("phiscriptCloudPlans")==1)return CloudPlanSource.load(c,entry,cancel);
+        if(!importing){
+            check(cancel);
+            File metadata=new File(cacheDirectory(c),key(catalog,entry)+".meta");
+            String fingerprint;
+            try{
+                JSONObject meta=new JSONObject(new String(read(new AtomicFile(metadata).openRead(),65536,cancel),StandardCharsets.UTF_8));
+                if(!entry.getString("sha1").equals(meta.optString("sha1"))||!entry.getString("path").equals(meta.optString("path"))
+                        ||entry.getLong("bytes")!=meta.optLong("bytes",-1))throw new IOException();
+                fingerprint=meta.getString("sha256");
+            }catch(IOException|JSONException invalid){
+                check(cancel);
+                throw ExternalCharts.chartNotDownloaded(entry.getString("title"),entry.getString("difficulty"));
+            }
+            return PreparedChartStore.openPlayback(c,fingerprint,16.0/9,false);
+        }
+        byte[] bytes=data(c,catalog,entry,cancel);
         check(cancel);
         Chart chart=SharedChartImport.parseJson(new String(bytes,StandardCharsets.UTF_8));
         check(cancel);
-        if(importing)PreparedChartStore.prepareImported(c,chart,bytes,16.0/9,false,cancel);
-        else PreparedChartStore.bind(chart,c,bytes);
+        PreparedChartStore.prepareImported(c,chart,bytes,16.0/9,false,cancel);
+        // Also index pre-upgrade offline packs whose metadata only had the Git blob hash.
+        writeMetadata(c,catalog,entry,bytes.length,PreparedChartStore.fingerprint(chart));
         return chart;
     }
     static JSONObject entry(JSONObject catalog,String path)throws Exception{JSONArray a=catalog.getJSONArray("entries");for(int i=0;i<a.length();i++)if(path.equals(a.getJSONObject(i).getString("path")))return a.getJSONObject(i);throw new IOException(tr("未找到唯一的谱面路径"));}

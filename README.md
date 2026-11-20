@@ -2,17 +2,17 @@
 
 <img src="updates/data1.0.9-r15/patch/icon/icon.svg" width="112" alt="Phigros Script 图标">
 
-本分支版本为 **data1.1.1**，versionCode 为 **11001**。导入时生成逐毫秒的落点和无障碍续接端点。Phira 默认重试延迟为 715 毫秒，默认不叠加谱面自带偏移。Phigros 默认为 1700 毫秒。[升级与使用说明](updates/data1.1.1/README.md)
+本分支版本为 **data1.1.2**，versionCode 为 **11002**。确认歌曲后从导入缓存读取时间轴和逐毫秒触点，支持在原谱 JSON 离线后演奏。Phira 默认重试延迟为 715 毫秒，默认不叠加谱面自带偏移。Phigros 默认为 1700 毫秒。[升级与使用说明](updates/data1.1.2/README.md)
 
 [GitHub 发行版](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases) · [data1.1.0 使用与构建](updates/data1.1.0/README.md) · [data1.1.0 验证记录](updates/data1.1.0/TESTING.md)
 
-Phigros 与 Phira / Phira Pro 支持导入谱面自动演奏。谱面导入或下载后提前计算点击、长按与滑动轨迹；演奏时查表，按实际提交时刻复查噪域，优先选择合法安全空隙中心。已有有效缓存直接复用，复杂红键规划跳过必定无法使用的候选分支。
+Phigros 默认使用云端预处理谱库。确认曲目和难度后，首次只下载该谱的时间轴、触点与噪域数据，下次可离线演奏。Phira 与本地导入的谱面在准备阶段生成触点。遇到噪域时保留可安全通过的拖动、长按和红键手势，只调整受阻的路径。两个小飞机谱库入口已隐藏。
 
 Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导入删除与 Phira 管理并列显示。课题模式三首歌逐首校准；录屏提供 720p / 1080p、30 / 60fps 档位。界面采用统一卡片与图标，自定义动效统一线性，演奏时停止动效。
 
 支持 Root 与无障碍输入。验证覆盖最终签名 APK 的实际代码、原谱及 Android 主机模型；Android 真机界面、判定与录屏性能仍需实测，不保证任意谱面全连或满分。
 
-data1.1.1 的补丁源码和构建入口位于 [updates/data1.0.9-r15/patch/build_111.py](updates/data1.0.9-r15/patch/build_111.py)。根目录保留旧版 Alpha Gradle 工程。
+data1.1.2 的补丁源码和构建入口位于 [updates/data1.0.9-r15/patch/build_112.py](updates/data1.0.9-r15/patch/build_112.py)。根目录保留旧版 Alpha Gradle 工程。
 
 <details>
 <summary>原 Alpha 版本说明</summary>

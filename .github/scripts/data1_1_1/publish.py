@@ -30,7 +30,8 @@ def api(method, path, *, body=None, upload=None, optional=False):
     request = Request(f"https://{host}/repos/{REPO}/{path}", method=method, headers=headers, data=data)
     try:
         with urlopen(request, timeout=180) as response:
-            return json.load(response)
+            data = response.read()
+            return json.loads(data) if data else None
     except HTTPError as error:
         if optional and error.code == 404:
             return None

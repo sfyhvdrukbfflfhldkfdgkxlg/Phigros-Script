@@ -7,11 +7,11 @@ import io.github.phiscript.input.PreparedChartStore;
 import org.json.*;import java.io.*;import java.nio.charset.StandardCharsets;import java.lang.reflect.*;import java.security.MessageDigest;import java.util.*;import java.util.concurrent.atomic.AtomicBoolean;import java.util.regex.*;import kotlin.Unit;
 /** Adapts cloud metadata and local PEZ/ZIP libraries to the existing OCR/playback pipeline. */
 public final class ExternalCharts {
-    private static final String PREF="phigros_library_source",DEFAULT_SHARE=FeijipanSource.NEW_SHARE;
+    private static final String PREF="phigros_library_source";
     private static final int PICK=42371;
     private static final AtomicBoolean busy=new AtomicBoolean();
     private static final Map<ChartLibrary,Adapter> adapters=Collections.synchronizedMap(new WeakHashMap<ChartLibrary,Adapter>());
-    private static ChartLibrary cloud,local,previous,swordalt;
+    private static ChartLibrary cloud,local,previous,swordalt,drive;
     private static final Pattern NAME=Pattern.compile("^(.+) - (EZ|HD|IN|AT|SP) \\[[^\\]]+\\]\\.(?:json|pez|zip)$",Pattern.CASE_INSENSITIVE);
     private static final class Entry{String id,title,level,name,display;PhiraEntry local;JSONObject resource;List<String> aliases=new ArrayList<>();boolean auto=true;Entry(String i,String t,String l,String n,String d){id=i;title=t;level=l;name=n;display=d;}}
     private static final class Adapter{Context context;String share;int expectedCharts;JSONObject swordaltCatalog;PhiraLibrary imported;List<Entry> entries;List<SongCandidate> songs;Map<String,Entry> choices=new LinkedHashMap<>();}
@@ -43,7 +43,7 @@ public final class ExternalCharts {
     private static File base(Context c){File d=new File(c.getFilesDir(),"phigros-cloud-v1");d.mkdirs();return d;}
     private static File cache(Context c){File d=new File(base(c),"charts");d.mkdirs();return d;}
     private static void atomic(File target,byte[] bytes)throws IOException{AtomicFile f=new AtomicFile(target);FileOutputStream out=f.startWrite();try{out.write(bytes);f.finishWrite(out);}catch(Exception e){f.failWrite(out);throw e;}}
-    private static ChartLibrary wrap(Adapter a)throws Exception{
+    private static ChartLibrary wrap(Adapter a,String sourceName)throws Exception{
         Map<String,List<Entry>> grouped=new TreeMap<>();for(Entry e:a.entries)grouped.computeIfAbsent(e.title,k->new ArrayList<>()).add(e);
         List<ChartLocation> locations=new ArrayList<>();List<SongCandidate> songs=new ArrayList<>();List<String> paths=new ArrayList<>();
         for(Map.Entry<String,List<Entry>> group:grouped.entrySet()){
@@ -61,7 +61,7 @@ public final class ExternalCharts {
         a.songs=songs;final PackageSnapshot snapshot=new PackageSnapshot("io.github.phiscript.external",a.swordaltCatalog!=null?a.swordaltCatalog.getString("chartCommit"):a.share==null?"PEZ/ZIP":a.share,1L,0L,paths);
         ChartSource source=new ChartSource(){public PackageSnapshot inspect(){return snapshot;}public List<String> entries(PackageSnapshot s){return paths;}public byte[] read(PackageSnapshot s,String e,int max){throw new IllegalStateException(tr("外部谱库只能按选中歌曲读取"));}};
         Constructor<ChartLibrary> ctor=ChartLibrary.class.getDeclaredConstructor(Context.class,PackageSnapshot.class,List.class,ChartSource.class,String.class);ctor.setAccessible(true);
-        ChartLibrary result=ctor.newInstance(a.context,snapshot,locations,source,a.swordaltCatalog!=null?(SwordaltSource.scripts(a.swordaltCatalog)?tr("Swordalt · 脚本与噪域"):tr("Swordalt · 原谱与噪域")):a.share==null?"Phigros · PEZ/ZIP":tr("小飞机 · 联网谱库"));adapters.put(result,a);return result;
+        ChartLibrary result=ctor.newInstance(a.context,snapshot,locations,source,sourceName);adapters.put(result,a);return result;
     }
     public static ChartLibrary fromCatalog(Context c,JSONObject j)throws Exception{
         Adapter a=new Adapter();a.context=c.getApplicationContext();a.share=j.getString("share");if(!a.share.matches("[A-Za-z0-9]{4,32}"))throw new IllegalArgumentException(tr("分享编号无效"));a.entries=new ArrayList<>();JSONArray array=j.getJSONArray("entries");Set<String> ids=new HashSet<>(),paths=new HashSet<>();a.expectedCharts=j.optInt("expectedCharts",array.length());
@@ -77,22 +77,26 @@ public final class ExternalCharts {
                 e.auto=e.resource.optBoolean("siteVisible",true);JSONArray aliases=e.resource.optJSONArray("aliases");if(aliases!=null)for(int n=0;n<aliases.length();n++)if(!aliases.optString(n).trim().isEmpty())e.aliases.add(aliases.getString(n));
             }else if(j.optInt("phiscriptFeijipanCatalog")==1)throw new IllegalStateException(tr("目录缺少谱面校验信息"));
             a.entries.add(e);}
-        return wrap(a);
+        return wrap(a,tr("小飞机 · 联网谱库"));
     }
     public static ChartLibrary fromSwordaltCatalog(Context context,JSONObject catalog)throws Exception{
+        String name=SwordaltSource.scripts(catalog)?tr("Swordalt · 脚本与噪域"):tr("Swordalt · 原谱与噪域");
+        return fromSwordaltCatalog(context,catalog,name);
+    }
+    private static ChartLibrary fromSwordaltCatalog(Context context,JSONObject catalog,String sourceName)throws Exception{
         SwordaltSource.validate(catalog);Adapter a=new Adapter();a.context=context.getApplicationContext();a.share="swordalt";a.swordaltCatalog=catalog;a.entries=new ArrayList<>();
         JSONArray rows=catalog.getJSONArray("entries");for(int i=0;i<rows.length();i++){
             JSONObject row=rows.getJSONObject(i);String title=row.getString("title"),rank=row.getString("difficulty");
             Entry e=new Entry(hash(row.getString("path")),title,rank,title+" - "+rank+" ["+row.optString("level","?")+"].json",title);e.resource=row;e.auto=row.optBoolean("siteVisible",true);
             JSONArray names=row.optJSONArray("aliases");if(names!=null)for(int j=0;j<names.length();j++)if(!names.optString(j).trim().isEmpty())e.aliases.add(names.getString(j));a.entries.add(e);
         }
-        return wrap(a);
+        return wrap(a,sourceName);
     }
     private static ChartLibrary fromLocal(Context c,PhiraLibrary imported)throws Exception{
         Adapter a=new Adapter();a.context=c.getApplicationContext();a.imported=imported;a.entries=new ArrayList<>();
         for(PhiraEntry p:imported.getEntries()){String title=p.getTitle(),level=p.getLevel();Matcher fn=NAME.matcher(title+".json");if(fn.matches()){title=fn.group(1);level=fn.group(2);}else{Matcher m=Pattern.compile("(?i)(?:^|[^A-Z])(EZ|HD|IN|AT|SP)(?=$|[^A-Z])").matcher(level);if(m.find())level=m.group(1).toUpperCase(Locale.ROOT);}
             Entry e=new Entry(p.getId(),title,level,title,title);e.local=p;a.entries.add(e);}
-        return wrap(a);
+        return wrap(a,"Phigros · PEZ/ZIP");
     }
     public static List<SongCandidate> songs(ChartLibrary lib){Adapter a=adapters.get(lib);return a==null?null:a.songs;}
     public static PhiraEntry sessionEntry(ChartLibrary library,ChartLocation location,String id,SongCandidate song){
@@ -112,14 +116,19 @@ public final class ExternalCharts {
             "The local chart for %s / %s is missing or damaged. Open Prepare touch points in the chart library and prepare this Phigros chart before playing.");
         return new IOException(String.format(Locale.ROOT,message,title,level));
     }
+    private static JSONObject cloudMetadata(Entry entry,File metadataFile)throws IOException,JSONException{
+        JSONObject meta=new JSONObject(new String(read(new AtomicFile(metadataFile).openRead(),65536),StandardCharsets.UTF_8));
+        if(!entry.title.equals(meta.optString("title"))||!entry.level.equals(meta.optString("level"))
+                ||!meta.optString("sha256").matches("[0-9a-f]{64}")
+                ||entry.resource!=null&&(!entry.resource.getString("sha1").equals(meta.optString("sha1"))
+                ||!entry.resource.getString("path").equals(meta.optString("path"))))throw chartNotDownloaded(entry.title,entry.level);
+        return meta;
+    }
     private static byte[] readCloudCache(Entry entry,File chartFile,File metadataFile,AtomicBoolean cancel)throws IOException{
         ChartDownload.check(cancel);
         if(!chartFile.isFile()||!metadataFile.isFile())return null;
         try{
-            JSONObject meta=new JSONObject(new String(read(new AtomicFile(metadataFile).openRead(),65536),StandardCharsets.UTF_8));
-            if(!entry.title.equals(meta.optString("title"))||!entry.level.equals(meta.optString("level")))return null;
-            if(entry.resource!=null&&(!entry.resource.getString("sha1").equals(meta.optString("sha1"))||
-                !entry.resource.getString("path").equals(meta.optString("path"))))return null;
+            JSONObject meta=cloudMetadata(entry,metadataFile);
             int size=meta.optInt("bytes",-1);
             if(size<=0||size>64*1024*1024||chartFile.length()!=size)return null;
             byte[] bytes=read(new AtomicFile(chartFile).openRead(),size);
@@ -135,23 +144,28 @@ public final class ExternalCharts {
         ChartDownload.check(cancel);
         Adapter a=adapters.get(lib);if(a==null)return null;Entry e=a.choices.get(song+"\n"+level);if(e==null)throw new IllegalStateException(tr("未找到唯一的曲名/难度，请手动选择同名谱面"));
         if(a.imported!=null){try{
+            if(!importing)return ((PreparedLibrary)(Object)a.imported).openPrepared(e.local.getId(),e.local.getLevel());
             Chart chart=a.imported.load(e.local.getId(),e.local.getLevel());
-            if(importing)io.github.phiscript.input.PreparedChartStore.prepareBound(localStorage(a.context),chart,e.local.getAspectRatio(),e.local.getForceAspectRatio(),cancel);
+            PreparedChartStore.prepareBound(localStorage(a.context),chart,e.local.getAspectRatio(),e.local.getForceAspectRatio(),cancel);
             return chart;
         }catch(Exception error){throw new IllegalStateException(phigrosMessage(error.getMessage()),error);}}
         if(a.swordaltCatalog!=null)return SwordaltSource.loadChart(a.context,a.swordaltCatalog,e.resource,cancel,importing);
         String stem=a.share+"-"+e.id;
         File directory=cache(a.context);
         File destination=new File(directory,stem+".json"),metadata=new File(directory,stem+".meta");
+        if(!importing){
+            String fingerprint;
+            try{fingerprint=cloudMetadata(e,metadata).getString("sha256");}
+            catch(IOException|JSONException invalid){throw chartNotDownloaded(e.title,e.level);}
+            return PreparedChartStore.openPlayback(a.context,fingerprint,16.0/9,false);
+        }
         byte[] cached=readCloudCache(e,destination,metadata,cancel);
         if(cached!=null){
             Chart chart=SharedChartImport.parseJson(new String(cached,StandardCharsets.UTF_8));
             ChartDownload.check(cancel);
-            if(importing)PreparedChartStore.prepareImported(a.context,chart,cached,16.0/9,false,cancel);
-            else PreparedChartStore.bind(chart,a.context,cached);
+            PreparedChartStore.prepareImported(a.context,chart,cached,16.0/9,false,cancel);
             return chart;
         }
-        if(!importing)throw chartNotDownloaded(e.title,e.level);
         RuntimeState.INSTANCE.log(UiDesign.words("下载谱面：","Downloading chart: ")+e.title+" / "+e.level);
         final long[] logged={0};
         byte[] data=FeijipanSource.download(a.share,e.id,cancel,(done,total)->{if(System.currentTimeMillis()-logged[0]>1000){logged[0]=System.currentTimeMillis();RuntimeState.INSTANCE.log(tr("正在下载 ")+e.title+"："+(done/1024)+" KiB"+(total>0?" / "+(total/1024)+" KiB":""));}});
@@ -171,13 +185,40 @@ public final class ExternalCharts {
         PreparedChartStore.prepareImported(a.context,chart,bytes,16.0/9,false,cancel);
         RuntimeState.INSTANCE.log(tr("下载并校验完成：")+e.title+" / "+e.level+tr("；噪域 ")+io.github.phiscript.engine.BlockAreaSet.count(chart)+tr(" 个"));return chart;
     }
-    public static Chart loadSelected(ChartLibrary lib,String song,String level,AtomicBoolean cancel)throws Exception{Chart c=load(lib,song,level,cancel);return c==null?lib.load(song,level):c;}
+    public static Chart loadSelected(ChartLibrary lib,String song,String level,AtomicBoolean cancel)throws Exception{
+        Chart chart=load(lib,song,level,cancel);
+        return chart!=null?chart:((PreparedLibrary)(Object)lib).openPrepared(song,level);
+    }
+    public static IllegalStateException selectionChanged(){
+        return new IllegalStateException(UiDesign.words("谱面来源或难度已变化，请重新选择。","The chart source or difficulty changed. Select the chart again."));
+    }
+    private static String apkIdentity(ChartLibrary library,String song,String level)throws Exception{
+        ChartLocation selected=null;
+        for(ChartLocation location:library.getLocations()){
+            if(!song.equals(location.getSongId())||!level.equals(location.getDifficulty()))continue;
+            if(selected!=null)throw selectionChanged();
+            selected=location;
+        }
+        if(selected==null)throw selectionChanged();
+        // Use the package version, update time and paths covered by the native snapshot key.
+        String snapshot=ChartLibraryKt.chartCacheKey(library.getSnapshot(),library.getSourceLabel());
+        return hash(new JSONArray().put(snapshot).put(song).put(level).put(selected.getBundleEntry()).put(selected.getAssetKey()).toString());
+    }
+    public static Chart openPreparedApk(Context context,ChartSource reader,ChartLibrary lib,String song,String level)throws Exception{
+        if(!lib.getSnapshot().equals(reader.inspect()))throw selectionChanged();
+        String key=apkIdentity(lib,song,level);
+        String fingerprint=context.getSharedPreferences("prepared_apk_sources",Context.MODE_PRIVATE).getString(key,"");
+        return PreparedChartStore.openPlayback(context,fingerprint,16.0/9,false);
+    }
     public static Chart importSelected(Context context,ChartLibrary lib,String song,String level,AtomicBoolean cancel)throws Exception{
         Chart chart=load(lib,song,level,cancel,true);
         if(chart!=null)return chart;
         ChartDownload.check(cancel);
         chart=lib.load(song,level);
-        io.github.phiscript.input.PreparedChartStore.prepareBound(context,chart,16.0/9,false,cancel);
+        PreparedChartStore.prepareBound(context,chart,16.0/9,false,cancel);
+        if(!context.getSharedPreferences("prepared_apk_sources",Context.MODE_PRIVATE).edit()
+                .putString(apkIdentity(lib,song,level),PreparedChartStore.fingerprint(chart)).commit())
+            throw new IOException(tr("无法保存预计算触点"));
         return chart;
     }
     public static boolean isCloud(ChartLibrary lib){Adapter a=adapters.get(lib);return a!=null&&a.share!=null;}
@@ -203,12 +244,32 @@ public final class ExternalCharts {
         if(!exists)atomic(saved,catalog.toString().getBytes(StandardCharsets.UTF_8));return library;
     }
     public static boolean ensurePhigrosSelected(Activity a){
-        try{AppSettings prefs=new AppSettings(a);String source=prefs.text(PREF,"cloud");if("apk".equals(source))return true;
-            if("swordalt".equals(source)){if(swordalt==null)swordalt=fromSwordaltCatalog(a,SwordaltSource.saved(a));activate(a,swordalt,"swordalt");}
+        try{AppSettings prefs=new AppSettings(a);String source=prefs.text(PREF,"drive");if("apk".equals(source))return true;
+            if("drive".equals(source))activate(a,driveLibrary(a),"drive");
+            else if("swordalt".equals(source)){if(swordalt==null)swordalt=fromSwordaltCatalog(a,SwordaltSource.saved(a));activate(a,swordalt,"swordalt");}
             else if("cloud".equals(source)){if(cloud==null)cloud=restoreCloud(a);activate(a,cloud,"cloud");}
             else if("local".equals(source)){if(local==null){PhiraLibrary saved=PhiraLibrary.Companion.restore(new Storage(a));if(saved==null)throw new IllegalStateException(tr("没有已导入的 PEZ/ZIP 谱面"));local=fromLocal(a,saved);}activate(a,local,"local");}
             return true;
         }catch(Exception e){message(a,tr("Phigros 谱库未就绪"),phigrosMessage(e.getMessage()));return false;}
+    }
+    private static ChartLibrary driveLibrary(Context context)throws Exception{
+        if(drive==null){
+            byte[] bytes=read(context.getAssets().open(SwordaltSource.ASSET),4*1024*1024);
+            JSONObject catalog=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
+            catalog.put("phiscriptCloudPlans",1);
+            drive=fromSwordaltCatalog(context,catalog,"Google Drive");
+        }
+        return drive;
+    }
+    public static void useDrive(Activity a){
+        if(RootPanel.blocked(a))return;
+        try{
+            commitPhigros(a,driveLibrary(a),"drive");
+            HomeScreen.refresh(a);
+            message(a,UiDesign.words("Google 云盘谱库已启用","Google Drive library enabled"),
+                UiDesign.words("开始打谱并确认曲目后，将自动下载该难度的时间轴和触点。已缓存的谱面可以离线演奏。",
+                    "Start playback and confirm the song to download its timeline and touch points for the selected difficulty. Cached charts are available offline."));
+        }catch(Exception error){message(a,UiDesign.words("Google 云盘谱库不可用","Google Drive library unavailable"),error.getMessage());}
     }
     public static void useSwordalt(Activity a){if(RootPanel.blocked(a))return;try{if(swordalt==null)swordalt=fromSwordaltCatalog(a,SwordaltSource.saved(a));commitPhigros(a,swordalt,"swordalt");HomeScreen.refresh(a);message(a,tr("Swordalt 谱库已启用"),catalogPreparationTip());}catch(Exception e){message(a,tr("Swordalt 目录未就绪"),e.getMessage());}}
     static void swordaltWork(Activity a,String title,Job job){work(a,title,job,"swordalt");}
@@ -244,8 +305,8 @@ public final class ExternalCharts {
         worker[0]=new Thread(()->{ChartLibrary done=null;String error=null;try{done=job.run(cancel);}catch(OutOfMemoryError e){error=tr("设备可用内存不足，请关闭其他应用后分批导入。");}catch(Exception e){error=phigrosMessage(e.getMessage()==null?e.toString():e.getMessage());}final ChartLibrary result=done;final String failure=error;
             a.runOnUiThread(()->{busy.set(false);if(!a.isDestroyed())dialog.dismiss();if(result!=null){if("cloud".equals(mode))cloud=result;else if("swordalt".equals(mode))swordalt=result;else local=result;commitPhigros(a,result,mode);HomeScreen.refresh(a);message(a,title,"cloud".equals(mode)?tr("已保存并启用。")+availability(result):tr("已保存并启用 ")+result.getLocations().size()+tr(" 张谱面"));}else message(a,title,failure);HomeScreen.refresh(a);});},"phi-external-import");worker[0].start();
     }
-    public static void network(Activity a){if(RootPanel.blocked(a))return;EditText field=new EditText(a);field.setSingleLine(true);field.setText("https://share.feijipan.com/s/"+DEFAULT_SHARE);
-        UiDesign.show(UiDesign.dialog(a,tr("联网谱库 / 下载谱面")).setMessage(tr("小飞机分享链接只更新目录；JSON / PEZ / ZIP 直链下载后导入本地。")).setView(UiDesign.inputBox(a,null,field)).setPositiveButton(tr("连接"),(d,w)->{String link=field.getText().toString().trim();try{java.net.URI uri=new java.net.URI(link);if(!"https".equalsIgnoreCase(uri.getScheme()))throw new IllegalArgumentException(tr("请使用 HTTPS 链接"));
+    public static void network(Activity a){if(RootPanel.blocked(a))return;EditText field=new EditText(a);field.setSingleLine(true);field.setHint("https://…");
+        UiDesign.show(UiDesign.dialog(a,UiDesign.words("从链接导入谱面","Import from a link")).setMessage(UiDesign.words("输入 JSON、PEZ 或 ZIP 谱面的 HTTPS 下载链接。","Enter the HTTPS download link for a JSON, PEZ or ZIP chart.")).setView(UiDesign.inputBox(a,null,field)).setPositiveButton(tr("连接"),(d,w)->{String link=field.getText().toString().trim();try{java.net.URI uri=new java.net.URI(link);if(!"https".equalsIgnoreCase(uri.getScheme()))throw new IllegalArgumentException(tr("请使用 HTTPS 链接"));
             if("swordalt.github.io".equalsIgnoreCase(uri.getHost())&&uri.getPath().startsWith("/phigros-chart-downloader")){SwordaltLibraryUi.open(a);}
             else if("share.feijipan.com".equalsIgnoreCase(uri.getHost())){String path=uri.getPath();if(!path.matches("/s/[A-Za-z0-9]{4,32}/?"))throw new IllegalArgumentException(tr("分享链接格式不正确"));String id=path.split("/")[2];work(a,tr("连接联网谱库"),cancel->{JSONObject j=FeijipanSource.catalog(id,cancel);ChartLibrary lib=fromCatalog(a,j);ChartDownload.check(cancel);atomic(new File(base(a),"catalog.json"),j.toString().getBytes(StandardCharsets.UTF_8));return lib;},"cloud");}
             else work(a,tr("下载并导入谱面"),cancel->{byte[] bytes=ChartDownload.get(link,64*1024*1024,cancel,null);String name=uri.getPath()==null?"chart.pez":new File(uri.getPath()).getName();File file=File.createTempFile("download-","-"+name.replaceAll("[^A-Za-z0-9._-]","_"),a.getCacheDir());try{try(FileOutputStream out=new FileOutputStream(file)){out.write(namedPackage(bytes,name));}ChartDownload.check(cancel);PhiraLibrary imported;try(PhiraImportControl.Session ignored=PhiraImportControl.begin()){imported=PhiraLibrary.Companion.importFiles(new Storage(a),Collections.singletonList(Uri.fromFile(file)),s->{RuntimeState.INSTANCE.log(phigrosMessage(s));return Unit.INSTANCE;});}return fromLocal(a,imported);}finally{file.delete();}},"local");
@@ -265,8 +326,14 @@ public final class ExternalCharts {
     static int deleteCacheFiles(Context context,List<File> selected)throws IOException{
         Set<String> parents=new HashSet<>(Arrays.asList(cache(context).getCanonicalPath(),SwordaltSource.cacheDirectory(context).getCanonicalPath()));int failed=0;
         for(File f:selected){if(!parents.contains(f.getCanonicalFile().getParent())||!f.getName().endsWith(".json"))throw new IOException(tr("无效缓存文件"));
-            if(f.exists()&&!f.delete()){failed++;continue;}
-            File meta=new File(f.getParentFile(),f.getName().replace(".json",".meta"));if(meta.exists()&&!meta.delete())failed++;
+            String name=f.getName();
+            File meta=new File(f.getParentFile(),name.substring(0,name.length()-5)+".meta");
+            // The metadata can select a prepared chart even after the source JSON disappears.
+            // Delete its AtomicFile generations first so a backup cannot revive the selection.
+            new AtomicFile(meta).delete();
+            if(meta.exists()||new File(meta+".bak").exists()||new File(meta+".new").exists()){failed++;continue;}
+            new AtomicFile(f).delete();
+            if(f.exists()||new File(f+".bak").exists()||new File(f+".new").exists())failed++;
         }
         return failed;
     }

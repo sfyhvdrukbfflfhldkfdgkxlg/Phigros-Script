@@ -56,7 +56,7 @@ public final class TapMod {
     private static float value(String s,float d,float lo,float hi){try{float v=Float.parseFloat(s);return Float.isFinite(v)?Math.max(lo,Math.min(hi,v)):d;}catch(Exception e){return d;}}
     public static void begin(Chart c){reload();salts.put(c,random.nextLong());searchTimeouts.set(0);}
     /** Exact preparation inputs; changing the safe-gap algorithm invalidates old paths. */
-    public static String preparationSignature(){return "safe-gap-center-v1|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(vertical)+"|"+Float.toHexString(jitter)+"|"+Float.toHexString(escape)+"|"+guard.backMs+"|"+guard.aheadMs+"|"+preparationEdgeGuard()+"|"+preparationInwardFlick();}
+    public static String preparationSignature(){return "gesture-noise-v2|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(vertical)+"|"+Float.toHexString(jitter)+"|"+Float.toHexString(escape)+"|"+guard.backMs+"|"+guard.aheadMs+"|"+preparationEdgeGuard()+"|"+preparationInwardFlick();}
     public static boolean preparationEdgeGuard(){return app==null||new AppSettings(app).flag("gesture_edge_guard",true);}
     public static boolean preparationInwardFlick(){return app==null||new AppSettings(app).flag("gesture_flick_inward",true);}
     public static long preparationSalt(Chart c){synchronized(salts){Long salt=salts.get(c);if(salt==null){salt=random.nextLong();salts.put(c,salt);}return salt;}}
@@ -121,16 +121,13 @@ public final class TapMod {
         // lifted rather than left alive while an expensive search misses its tail.
         long deadline=avoids(c)&&Boolean.TRUE.equals(runtimeSearch.get())&&!Boolean.TRUE.equals(planning.get())?System.nanoTime()+SEARCH_BUDGET_MS*1000000L:Long.MAX_VALUE;
         Point start=new Point(bounds.x(p.getX()),bounds.y(p.getY()));
-        boolean initiallyClear=clearAt(c,v,start,time,timing,deadline)&&connects(c,v,previous,start,previousMs,time,deadline);
-        // Keep ordinary safe positions stable when no area is active nearby.
-        // During active noise even a nominally safe point may hug an edge, so
-        // resolve the composed safe interval before choosing its center.
-        if(initiallyClear&&(!avoids(c)||!BlockAreaSet.overlaps(c,Math.round(time*1000)-timing.backMs,Math.round(time*1000)+timing.aheadMs))){checkSearchBudget(deadline);return start;}
+        if(clearAt(c,v,start,time,timing,deadline)&&connects(c,v,previous,start,previousMs,time,deadline))
+            return start;
         Point d=normal(c,n,time,v);
         float nx=d.getX(),ny=d.getY();
         double max=v.getHeight()*escape/1000.0, radius=ContactPlanner.radius(v);
         double clipping=(start.getX()-p.getX())*ny-(start.getY()-p.getY())*nx;
-        Point best=null;double nearest=Double.POSITIVE_INFINITY,bestWidth=-1;boolean bestContains=false;
+        Point best=null;double nearest=Double.POSITIVE_INFINITY;
         for(int lane=0;lane<=24;lane++) {
             checkSearchBudget(deadline);
             double shift=lane==0?0:((lane+1)/2)*(radius/12)*(lane%2==0?-1:1);
@@ -147,40 +144,32 @@ public final class TapMod {
             BlockAreaSet.cutsAtChanges(c,v,origin,nx,ny,time-timing.back,time+timing.ahead,span[0],span[1],edges);
             checkDeadline(deadline);
             Collections.sort(edges);
-            List<double[]> gaps=new ArrayList<>();double open=Double.NaN,last=Double.NaN;boolean anyBlocked=false;
             for(int i=1;i<edges.size();i++){
-                checkSearchBudget(deadline);double lo=edges.get(i-1),hi=edges.get(i);if(hi-lo<.001)continue;
-                double mid=(lo+hi)*.5;Point sample=at(bounds,origin,nx,ny,mid);
-                boolean clear=clearAt(c,v,sample,time,timing,deadline);
-                if(clear){
-                    // A raw positive/inverted edge is not necessarily an edge
-                    // of the final XOR geometry. Join only if that boundary is
-                    // itself safe throughout the selected timing guard.
-                    if(!Double.isNaN(open)&&Math.abs(lo-last)<.001&&clearAt(c,v,at(bounds,origin,nx,ny,lo),time,timing,deadline))last=hi;
-                    else{if(!Double.isNaN(open))gaps.add(new double[]{open,last});open=lo;last=hi;}
-                }else{anyBlocked=true;if(!Double.isNaN(open)){gaps.add(new double[]{open,last});open=Double.NaN;}}
-            }
-            if(!Double.isNaN(open))gaps.add(new double[]{open,last});
-            // Completely cancelled or unrelated domains must not move a clear
-            // contact toward the viewport center just because raw edges exist.
-            if(lane==0&&!anyBlocked&&initiallyClear){checkSearchBudget(deadline);return start;}
-            for(double[] gap:gaps){
-                checkSearchBudget(deadline);double k=(gap[0]+gap[1])*.5,width=gap[1]-gap[0],dist=k*k+shift*shift;
-                boolean contains=initiallyClear&&lane==0&&gap[0]<=0&&gap[1]>=0;
-                // Prefer the already occupied safe component, then its widest
-                // alternative. The midpoint maximizes distance to both ends of
-                // that legal composed gap instead of stopping 2px from noise.
-                if(best!=null&&(bestContains&&!contains||bestContains==contains&&(width<bestWidth-.001||Math.abs(width-bestWidth)<.001&&dist>=nearest)))continue;
+                checkSearchBudget(deadline);
+                double lo=edges.get(i-1),hi=edges.get(i);
+                if(hi-lo<.001)continue;
+                // Follow the original gesture with the smallest displacement on this lane.
+                // The 2 px inset accommodates Android's integer touch coordinates.
+                double inset=Math.min(2,(hi-lo)*.5);
+                double k=Math.max(lo+inset,Math.min(0,hi-inset));
+                double dist=k*k+shift*shift;
+                if(dist>=nearest)continue;
                 Point point=at(bounds,origin,nx,ny,k);
-                if(clearAt(c,v,point,time,timing,deadline)&&connects(c,v,previous,point,previousMs,time,deadline)){checkSearchBudget(deadline);nearest=dist;best=point;bestWidth=width;bestContains=contains;}
+                if(clearAt(c,v,point,time,timing,deadline)&&connects(c,v,previous,point,previousMs,time,deadline)){
+                    best=point;nearest=dist;
+                }else if(previous!=null){
+                    // A moving edge may obstruct the nearest endpoint during the approach.
+                    // Try the previous finger's projection into this same interval.
+                    k=Math.max(lo+inset,Math.min((previous.getX()-origin.getX())*nx+(previous.getY()-origin.getY())*ny,hi-inset));
+                    dist=k*k+shift*shift;
+                    if(dist>=nearest)continue;
+                    point=at(bounds,origin,nx,ny,k);
+                    if(clearAt(c,v,point,time,timing,deadline)&&connects(c,v,previous,point,previousMs,time,deadline)){
+                        best=point;nearest=dist;
+                    }
+                }
             }
-            if(lane==0){
-                if(best!=null&&(!initiallyClear||bestContains))return best;
-                // Repositioning toward a center can cross an earlier moving
-                // edge even when keeping this already validated point is safe.
-                // Clearance preference must not turn that continuation into UP.
-                if(initiallyClear){checkSearchBudget(deadline);return start;}
-            }
+            if(lane==0&&best!=null)return best;
         }
         if(best!=null)return best;
         throw new NoSafePoint(tr("噪域内找不到可触控的同判定带落点"));

@@ -30,13 +30,11 @@ public final class NoiseSearchBudgetRegression {
         try{TapMod.runtimeWithinBounds(chart,note,.5,view,new Point(500,300),bounds,null,0);}
         catch(TapMod.NoSafePoint expected){yielded=expected.getMessage().contains("超时");}
         ok(yielded&&TapMod.searchTimeouts()==1,"expensive runtime search held the dispatch loop");
-        yielded=false;
-        try{TapMod.runtimeWithinBounds(chart,note,.5,view,new Point(100,100),bounds,null,0);}
-        catch(TapMod.NoSafePoint expected){yielded=expected.getMessage().contains("超时");}
-        ok(yielded&&TapMod.searchTimeouts()==2,"active-noise centering bypassed budget for a nominally clear point");
+        Point clear=TapMod.runtimeWithinBounds(chart,note,.5,view,new Point(100,100),bounds,null,0);
+        ok(clear.getX()==100&&clear.getY()==100&&TapMod.searchTimeouts()==1,"clear moving contact invoked the escape search");
         Point safe=TapMod.runtimeWithinBounds(chart,note,4,view,new Point(100,100),bounds,null,0);
         ok(safe.getX()==100&&safe.getY()==100,"inactive-noise safe contact was altered");
-        ok(TapMod.searchTimeouts()==2,"inactive-noise fast path consumed search budget");
-        System.out.println("PASS "+checks+" runtime-noise search budget checks: costly blocked/clear active-noise searches yield for release, unrestricted preflight and inactive-noise fast path.");
+        ok(TapMod.searchTimeouts()==1,"inactive-noise fast path consumed search budget");
+        System.out.println("PASS "+checks+" runtime-noise search budget checks: costly blocked searches yield for release, valid gestures continue, unrestricted preflight and inactive-noise fast path.");
     }
 }

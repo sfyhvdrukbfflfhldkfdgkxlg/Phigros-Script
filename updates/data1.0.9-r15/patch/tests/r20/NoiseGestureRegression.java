@@ -7,8 +7,8 @@ import java.util.*;
 import org.json.*;
 
 /** Exact composed interval fixtures, with an independent screen-space oracle.
- * A midpoint is a directional clearance choice, not a global 2D guarantee. */
-public final class NoiseSafeGapCenterRegression {
+ * Safe planned gestures stay in place; an obstructed path must move or lift. */
+public final class NoiseGestureRegression {
     private static int checks;
     private static final Viewport V=new Viewport(0,0,1000,600);
     private static final TouchBounds B=new TouchBounds(0,0,999,599);
@@ -37,13 +37,13 @@ public final class NoiseSafeGapCenterRegression {
     private static void clear(Chart c,Point p,double time){ok(TapMod.clearAt(c,V,p,time),"center was not clear over timing guard: "+p);ok(p.getX()>=B.left&&p.getX()<=B.right&&p.getY()>=B.top&&p.getY()<=B.bottom,"center escaped viewport");}
     private static void basic()throws Exception{
         Chart gap=strips(new Strip(-100,240,false),new Strip(360,700,false));
-        Point p=choose(gap,245);near(p.getY(),300,"safe point hugging upper edge was not centered");near(p.getX(),500,"normal lane shifted laterally");clear(gap,p,.5);
-        near(choose(gap,200).getY(),300,"blocked point stopped at near-boundary inset");
+        Point p=choose(gap,245);near(p.getY(),245,"clear gesture was shifted during active noise");near(p.getX(),500,"normal lane shifted laterally");clear(gap,p,.5);
+        near(choose(gap,200).getY(),242,"blocked point did not take the nearby safe route");
         Chart split=strips(new Strip(-100,240,false),new Strip(360,700,false),new Strip(290,310,false),new Strip(290,310,true));
-        near(choose(split,245).getY(),300,"raw cancelled XOR cuts split a composed gap");
+        near(choose(split,245).getY(),245,"raw cancelled XOR cuts split a composed gap");
         Chart cancelled=strips(new Strip(200,400,false),new Strip(200,400,true));near(choose(cancelled,245).getY(),245,"fully cancelled geometry moved an ordinary safe point");
         Chart parity=strips(new Strip(-100,240,false),new Strip(360,700,false),new Strip(290,310,true),new Strip(290,310,true));
-        near(choose(parity,245).getY(),300,"even subtract parity created a false gap boundary");
+        near(choose(parity,245).getY(),245,"even subtract parity created a false gap boundary");
         Chart narrow=strips(new Strip(-100,298,false),new Strip(302,700,false));Point n=choose(narrow,200);near(n.getY(),300,"usable 4px gap was discarded");clear(narrow,n,.5);
         Chart unrelated=chart(new Point(0,1),rect(50,100,100,500,false));near(choose(unrelated,245).getY(),245,"unrelated geometry recentered the viewport");
         Point unchanged=TapMod.withinBounds(gap,gap.getNotes().get(0),4,V,new Point(500,245),B);near(unchanged.getY(),245,"inactive domains changed a safe position");
@@ -51,7 +51,7 @@ public final class NoiseSafeGapCenterRegression {
     private static void continuityAndBand()throws Exception{
         Chart wall=strips(new Strip(270,330,false));Point previous=new Point(500,200);
         Point held=TapMod.withinBounds(wall,wall.getNotes().get(0),.508,V,new Point(500,400),B,previous,500);
-        near(held.getY(),135,"reachable hold component did not keep its center");TapMod.segment(wall,V,previous,held,500,508);checks++;
+        near(held.getY(),268,"hold did not remain on reachable side of the barrier");TapMod.segment(wall,V,previous,held,500,508);checks++;
         JSONObject flash=rect(-100,100,1100,120,false).put("appearTime",.520).put("enableTime",.520).put("disableTime",.530).put("disappearTime",.530);
         Chart earlier=chart(new Point(0,1),rect(-100,300,1100,330,false),flash);
         Point retained=TapMod.withinBounds(earlier,earlier.getNotes().get(0),.55,V,new Point(500,50),B,new Point(500,50),500);
@@ -72,27 +72,22 @@ public final class NoiseSafeGapCenterRegression {
         JSONObject upper=rect(-100,-100,1100,240,false).put("moveEvents",new JSONArray().put(move(0,1-10/600.0)).put(move(1,1-130/600.0)));
         // The source rectangle center is y=70; the track above centers at10..130.
         Chart c=chart(new Point(0,1),upper,rect(-100,360,1100,700,false));Point p=choose(c,245);
-        near(p.getY(),(241.44+360)/2,"moving temporal-guard edge was not used in the centered gap");clear(c,p,.5);
+        near(p.getY(),245,"moving noise recentered an already clear gesture");clear(c,p,.5);
         for(String profile:new String[]{"16","24"}){
             AppSettings.values.put("tap_noise_clock_guard_ms",profile);TapMod.reload();Point q=choose(c,245);clear(c,q,.5);
-            double edge=240+120*Integer.parseInt(profile)/1000.0;near(q.getY(),(edge+360)/2,"conservative guard midpoint "+profile);
+            near(q.getY(),245,"guard displaced a clear point "+profile);
         }
         AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.reload();
     }
     private static boolean blocked(Strip[] areas,double y){boolean normal=false;int inverted=0;for(Strip s:areas)if(y>=s.lo&&y<=s.hi){if(s.subtract)inverted++;else normal=true;}return normal^((inverted&1)!=0);}
     private static double oracle(Strip[] areas,double start){
-        TreeSet<Double> cuts=new TreeSet<>();cuts.add(0.0);cuts.add(599.0);
-        for(Strip s:areas){if(s.lo>0&&s.lo<599)cuts.add(s.lo);if(s.hi>0&&s.hi<599)cuts.add(s.hi);}
-        ArrayList<Double> edges=new ArrayList<>(cuts);ArrayList<double[]> gaps=new ArrayList<>();double open=Double.NaN,last=Double.NaN;boolean anyBlocked=false;
-        for(int i=1;i<edges.size();i++){
-            double lo=edges.get(i-1),hi=edges.get(i);boolean safe=!blocked(areas,(lo+hi)*.5);
-            if(safe){if(!Double.isNaN(open)&&lo==last&&!blocked(areas,lo))last=hi;else{if(!Double.isNaN(open))gaps.add(new double[]{open,last});open=lo;last=hi;}}
-            else{anyBlocked=true;if(!Double.isNaN(open)){gaps.add(new double[]{open,last});open=Double.NaN;}}
+        if(!blocked(areas,start)&&!blocked(areas,Math.round(start)))return start;
+        // Brute-force the nearest integer location with a 2px inset at each blocked edge.
+        double best=Double.NaN,dist=Double.POSITIVE_INFINITY;
+        for(int y=0;y<=599;y++){
+            if(blocked(areas,y)||blocked(areas,y-1)||blocked(areas,y+1))continue;
+            double d=Math.abs(y-start);if(d<dist){best=y;dist=d;}
         }
-        if(!Double.isNaN(open))gaps.add(new double[]{open,last});if(!anyBlocked&&!blocked(areas,start))return start;
-        double best=Double.NaN,width=-1,dist=Double.POSITIVE_INFINITY;boolean occupied=false;
-        for(double[] g:gaps){double mid=(g[0]+g[1])*.5,w=g[1]-g[0],d=Math.abs(mid-start);boolean contains=!blocked(areas,start)&&g[0]<start&&g[1]>start;
-            if(Double.isNaN(best)||contains&&!occupied||contains==occupied&&(w>width||w==width&&d<dist)){best=mid;width=w;dist=d;occupied=contains;}}
         return best;
     }
     private static void independentIntervals()throws Exception{
@@ -104,11 +99,25 @@ public final class NoiseSafeGapCenterRegression {
                 double start;boolean edge;do{start=10.25+r.nextInt(579);edge=false;for(Strip area:areas)if(Math.abs(start-area.lo)<1||Math.abs(start-area.hi)<1)edge=true;}while(edge);
                 double expected=oracle(areas,start);Point p=choose(c,start);
                 StringBuilder description=new StringBuilder();for(Strip area:areas)description.append(' ').append(area.lo).append("..").append(area.hi).append(area.subtract?'S':'N');
-                near(p.getY(),expected,"independent composed interval oracle trial "+trial+" start="+start+description);near(p.getX(),500,"full-width strips required unnecessary lateral movement");clear(c,p,.5);
-                double[] around={p.getY()-1,p.getY(),p.getY()+1};for(double y:around)if(y>=0&&y<=599)ok(!blocked(areas,y),"center lacked pixel rounding clearance");
+                ok(Math.abs(Math.abs(p.getY()-start)-Math.abs(expected-start))<=1.05,"not a near-original safe position on trial "+trial+" start="+start+description);near(p.getX(),500,"full-width strips required unnecessary lateral movement");clear(c,p,.5);
+                double[] around={p.getY(),Math.round(p.getY())};for(double y:around)if(y>=0&&y<=599)ok(!blocked(areas,y),"gesture touched a blocked pixel");
             }
         }
         System.out.println("Independent 720 composed-gap searches: "+((System.nanoTime()-started)/1000000)+" ms");
+    }
+    private static void gestureRoutes()throws Exception{
+        for(int type:new int[]{2,4}){
+            for(boolean crossed:new boolean[]{false,true}){
+                List<Note> notes=Arrays.asList(new Note(0,2,.5,.5,220,1,0,true,0),new Note(1,type,.68,.68,720,1,0,true,0));
+                Chart chart=Chart.Companion.fromNative$app_debug(notes,0,(n,t,v)->new Point((float)n.getPositionX(),300),(n,t,v)->new Point(0,1));
+                JSONObject area=crossed?rect(460,-100,530,700,false):rect(10,10,20,20,false);
+                BlockAreaSet.capture(new JSONObject().put("blockAreaList",new JSONArray().put(area)));BlockAreaSet.bind(chart);
+                GesturePlan plan=ContactPlanner.build(chart,V,B,new GestureProfile(true,70,.12f,true,true,true));
+                ok(plan.unavailableNotes==0,"missed eligible note");
+                ok(plan.events.size()==(crossed?2:1),"unexpected gesture continuity for type "+type+" barrier="+crossed+" count="+plan.events.size());
+                if(type==4)ok(plan.hasFlickPath(plan.events.get(plan.events.size()-1)),"red movement was lost");
+            }
+        }
     }
     private static void signature()throws Exception{
         Chart c=strips(new Strip(200,400,false));String signature=TapMod.preparationSignature();ok(signature.equals(TapMod.preparationSignature()),"preparation signature unstable");
@@ -120,7 +129,7 @@ public final class NoiseSafeGapCenterRegression {
     }
     public static void main(String[] args)throws Exception{
         AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.init(new Context());
-        basic();continuityAndBand();movingAndGuard();independentIntervals();signature();
-        System.out.println("PASS "+checks+" safe-gap center checks: composed XOR/parity, edge-safe midpoint, narrow gaps, moving guards, reachable holds, legal rotated bands, independent interval oracle and preparation cache inputs.");
+        basic();continuityAndBand();movingAndGuard();independentIntervals();gestureRoutes();signature();
+        System.out.println("PASS "+checks+" noise gesture checks: composed XOR/parity, original safe positions, narrow gaps, moving guards, reachable holds, legal rotated bands, independent interval oracle and preparation cache inputs.");
     }
 }

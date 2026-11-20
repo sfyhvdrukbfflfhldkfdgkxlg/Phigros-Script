@@ -1,6 +1,6 @@
-# Phigros Script APK patch · data1.1.1
+# Phigros Script APK patch · data1.1.2
 
-当前版本使用 `build_111.py` 和 `tests/run_111.py`。从仓库或源码 ZIP 的根目录进入 `updates/data1.0.9-r15`，将官方 R15 基线放到 `upload/baseline-r15.apk`。[data1.1.1 构建与验证命令](../../data1.1.1/README.md)和[工具布局](../DATA1.1.0.md)列出所需文件。
+当前版本使用 `build_112.py` 和 `tests/run_112.py`。从仓库或源码 ZIP 的根目录进入 `updates/data1.0.9-r15`，将官方 R15 基线放到 `upload/baseline-r15.apk`。[data1.1.2 构建与验证命令](../../data1.1.2/README.md)和[工具布局](../DATA1.1.0.md)列出所需文件。
 
 R16 的历史说明见 [R16.md](../R16.md)。下文保留 R15 及更早修订的背景，`build.sh`、旧源 APK SHA 和 versionCode 不适用于 data1.1.0。工具的相对布局仍可参考 Build layout；本版 `build_110.py` 会自行生成临时解包目录，不需要准备 `analysis/decoded` 或 `analysis/original.jar`。
 

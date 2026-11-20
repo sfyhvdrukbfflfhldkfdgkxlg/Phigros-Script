@@ -74,7 +74,7 @@ public final class SessionChartSource {
     }
     public Chart load(String id,String level)throws Exception{
         if(online!=null&&online.contains(id))return online.load(id,level);
-        if(phira!=null)return phira.load(id,level);
+        if(phira!=null)return ((PreparedLibrary)(Object)phira).openPrepared(id,level);
         ChartDownload.check(stop);ChartLocation location=locations.get(id);
         if(location==null||!location.getDifficulty().equals(level))throw new IllegalStateException(tr("Phigros 谱面已变化，请重新识别或选择"));
         Chart chart=ExternalCharts.loadSelected(phigros,location.getSongId(),location.getDifficulty(),stop);ChartDownload.check(stop);

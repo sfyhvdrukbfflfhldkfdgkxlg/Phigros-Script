@@ -1,0 +1,39 @@
+name: Publish verified data1.1.2 and prepared charts
+on:
+  push:
+    branches: [main]
+    paths:
+      - updates/data1.1.2/release-data/manifest.json
+      - .github/workflows/publish-data1-1-2.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data1-1-2
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/main'
+    runs-on: windows-2025
+    timeout-minutes: 150
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Restore signed APK and source archive
+        run: |
+          gh release download data1.0.9-r15 --repo "$env:GITHUB_REPOSITORY" --pattern PhigrosScript_data1.0.9-r15.apk --dir "$env:RUNNER_TEMP/base"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python .github/scripts/publish_data112.py restore "$env:RUNNER_TEMP/dist" "$env:RUNNER_TEMP/base/PhigrosScript_data1.0.9-r15.apk"
+      - name: Verify the chart files referenced by the APK
+        run: python .github/scripts/publish_data112.py mirror "$env:RUNNER_TEMP/dist" "$env:RUNNER_TEMP/chart-work"
+      - name: Publish release after checking every asset digest
+        run: python .github/scripts/publish_data112.py publish "$env:RUNNER_TEMP/dist"

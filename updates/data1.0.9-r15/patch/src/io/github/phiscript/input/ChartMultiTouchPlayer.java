@@ -159,13 +159,10 @@ public final class ChartMultiTouchPlayer {
                 }
                 int capacity=Math.min(strokeLimit, active.size()+channel.availableStarts());
                 long end = ChordPlanner.endOfBatch(events, cursor, active.size()+resume.size(), now, capacity);
-                // Android traverses a Path at constant arc length. In a moving
-                // noise window submit one checked straight leg per stroke, so
-                // its on-device position has the same timing as the safety test.
+                // Keep moving-noise batches short; the final pass checks the actual
+                // Android arc-length timing of every leg before dispatch.
                 boolean noiseWindow=TapMod.avoids(chart) && BlockAreaSet.overlaps(chart,now-TapMod.noiseLookBackMs(),end+TapMod.noiseLookAheadMs());
                 if(noiseWindow)end=Math.min(end,now+12);
-                // Android samples each stroke by arc length. Use one straight leg at a time around
-                // moving noise so the path checked below is the path sent to the framework.
                 if(TapMod.avoids(chart) && io.github.phiscript.engine.BlockAreaSet.overlaps(chart,now,end))
                     end=Math.min(end,Math.max(now+1,timing.chartAt(wall+8)));
                 for(TouchEvent held:active.keySet())end=plan.nextBoundary(held,now,end);
@@ -240,10 +237,12 @@ public final class ChartMultiTouchPlayer {
                         Point checkedPoint=from;long checkedTime=down;
                         // Sample moving/rotating judge lines within the chunk.
                         long upWall=Math.max(downWall+1,timing.wallAt(up));
-                        for (long sample = downWall + 8; !noiseWindow && sample < upWall; sample += 8) {
+                        long step=noiseWindow?4:8;
+                        for (long sample = downWall + step; sample < upWall; sample += step) {
                             long t=timing.chartAt(sample);
                             checkConstructionBudget(constructionDeadline);
-                            Point p = safety.point(plan,chart, e, t, viewport, screen, bounded);
+                            Point p = noiseWindow?safety.point(plan,chart,e,t,viewport,screen,bounded,checkedPoint,checkedTime)
+                                :safety.point(plan,chart,e,t,viewport,screen,bounded);
                             TapMod.segment(chart,viewport,checkedPoint,p,checkedTime,t,constructionDeadline);checkedPoint=p;checkedTime=t;
                             path.lineTo(p.getX(), p.getY());
                             pathPoints.add(p);
@@ -322,11 +321,15 @@ public final class ChartMultiTouchPlayer {
         }
     }
 
-    static int[] dimensions(TouchService service) {
-        WindowManager wm = (WindowManager) service.getSystemService(WindowManager.class);
+    static int[] dimensions(android.content.Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE);
         if (android.os.Build.VERSION.SDK_INT >= 30) {
-            android.graphics.Rect bounds = wm.getMaximumWindowMetrics().getBounds();
-            return new int[]{bounds.width(), bounds.height()};
+            try {
+                android.graphics.Rect bounds = wm.getMaximumWindowMetrics().getBounds();
+                if (bounds.width()>1 && bounds.height()>1) return new int[]{bounds.width(), bounds.height()};
+            } catch (UnsupportedOperationException unavailable) {
+                // Some application contexts only expose display metrics.
+            }
         }
         DisplayMetrics metrics = new DisplayMetrics();
         wm.getDefaultDisplay().getRealMetrics(metrics);

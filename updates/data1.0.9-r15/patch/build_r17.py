@@ -20,7 +20,7 @@ APK_NAME="PhigrosScript_data1.0.9-r17.apk"
 
 def build(base,key,cert,output,release="data1.0.9-r17",code=41):
     assert hashlib.sha256(base.read_bytes()).hexdigest()==previous.BASE_SHA256,"Expected exact official R15 APK"
-    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001))
+    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001),("data1.1.2",11002))
     sdk=ROOT/"tools/platform/android-35/android.jar"
     bt=ROOT/"tools/build-tools/android-15"
     ecj=ROOT/"tools/ecj.jar"
@@ -52,6 +52,9 @@ def build(base,key,cert,output,release="data1.0.9-r17",code=41):
             timing_111_hooks.apply(decoded)
             import update_111_hooks
             update_111_hooks.apply(decoded)
+        if code >= 11002:
+            import playback_112_hooks
+            playback_112_hooks.apply(decoded)
         after={str(p.relative_to(decoded)):hashlib.sha256(p.read_bytes()).hexdigest() for p in decoded.glob("smali*/**/*.smali")}
         changed=sorted(p for p in before.keys()|after.keys() if before.get(p)!=after.get(p))
         indexes=sorted({int(Path(p).parts[0].removeprefix("smali_classes")) for p in changed})
@@ -73,6 +76,19 @@ def build(base,key,cert,output,release="data1.0.9-r17",code=41):
         if code>=44:
             import r20_icon
             replacements.update(r20_icon.build(base,work/"icon"))
+        if code >= 11002:
+            catalog_name = "phigros-cloud-plans-v1.json"
+            catalog = (ROOT / "patch/assets" / catalog_name).read_bytes()
+            manifest = json.loads(catalog)
+            source_name = "phigros-swordalt-catalog-v1.json"
+            source = (ROOT / "patch/assets" / source_name).read_bytes()
+            charts = json.loads(source)
+            if (manifest.get("version") != 1 or manifest.get("chartCommit") != charts["chartCommit"]
+                    or set(manifest["entries"]) != {row["sha1"] for row in charts["entries"]}
+                    or not manifest.get("shards")):
+                raise ValueError("The prepared tracks do not cover the bundled Phigros catalog")
+            replacements["assets/" + source_name] = source
+            replacements["assets/" + catalog_name] = catalog
         all_classes=set()
         with ZipFile(base) as original:
             for name in original.namelist():

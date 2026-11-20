@@ -57,12 +57,9 @@ final class ContactPlanner {
         Point at(Chart c,long t,Viewport v,TouchBounds b){
             Map.Entry<Long,Anchor> a=keys.floorEntry(t);
             if(a==null)a=keys.firstEntry();
-            Point p=a.getValue().at(c,t,v,b);
             Map.Entry<Long,Anchor> next=keys.higherEntry(a.getKey());
-            if(next==null || t<=a.getKey() || a.getValue()==next.getValue())return p;
-            Point q=next.getValue().at(c,t,v,b);
-            float f=(t-a.getKey())/(float)(next.getKey()-a.getKey());
-            return new Point(p.getX()+(q.getX()-p.getX())*f,p.getY()+(q.getY()-p.getY())*f);
+            if(next==null)return a.getValue().at(c,t,v,b);
+            return bridgePoint(a.getValue(),a.getKey(),next.getValue(),next.getKey(),t,c,v,b);
         }
         long boundary(long now,long end){Long k=keys.higherKey(now);return k==null?end:Math.min(k,end);}
         void retain(long t){
@@ -115,6 +112,32 @@ final class ContactPlanner {
         finally{LAST_STATS.set(new long[]{planner.strokeRequests,planner.strokeComputations,planner.strokeCandidates,planner.bandRequests,planner.bandEvaluations,planner.noiseChecks,planner.lastRedHit});if(prev==null)TapMod.planning.remove();else TapMod.planning.set(prev);}
     }
     private boolean noise(long a,long b){return TapMod.avoids(chart) && BlockAreaSet.overlaps(chart,a,b);}
+    private static Point bridgePoint(Anchor from,long start,Anchor to,long end,long t,Chart chart,Viewport view,TouchBounds bounds){
+        if(t>=end)return to.at(chart,t,view,bounds);
+        Point p=from.at(chart,t,view,bounds);
+        if(t<=start||from==to)return p;
+        Point q=to.at(chart,t,view,bounds);
+        float f=(t-start)/(float)(end-start);
+        return new Point(p.getX()+(q.getX()-p.getX())*f,p.getY()+(q.getY()-p.getY())*f);
+    }
+    /** Only sever an inter-note gesture when its own path crosses active noise. */
+    private boolean bridgeClear(Anchor from,long start,Anchor to,long end){
+        if(!noise(start-TapMod.noiseLookBackMs(),end+TapMod.noiseLookAheadMs()))return true;
+        Point p=from.at(chart,start,view,bounds);
+        try{
+            if(from.pin&&to.pin||start>=end){
+                TapMod.segment(chart,view,p,to.at(chart,end,view,bounds),start,end);
+                return true;
+            }
+            for(long t=start;t<end;){
+                long next=Math.min(t+8,end);
+                Point q=bridgePoint(from,start,to,end,next,chart,view,bounds);
+                TapMod.segment(chart,view,p,q,t,next);
+                p=q;t=next;
+            }
+            return true;
+        }catch(TapMod.NoSafePoint blocked){return false;}
+    }
     private boolean covered(Note n,long t,Point p){
         bandRequests++;Band band=null;Map<Long,Band> memo=null;if(bands!=null){memo=bands.get(n);if(memo==null){memo=new HashMap<>();bands.put(n,memo);}band=memo.get(t);}
         if(band==null){bandEvaluations++;
@@ -165,13 +188,14 @@ final class ContactPlanner {
             // Extending an older finger retroactively holds it down through the
             // intervening notes. Prefer the finger that just played them.
             long idle=Math.max(0,time-r.end);
-            if(idle<shortestIdle || idle==shortestIdle && dist<shortest){
+            if((idle<shortestIdle || idle==shortestIdle && dist<shortest)
+                    &&bridgeClear(r.keys.lastEntry().getValue(),r.keys.lastKey(),target,time)){
                 shortestIdle=idle;shortest=dist;best=r;
             }
         }
         return best;
     }
-    private boolean mobileEligible(Route r,long time,long end,boolean red){long free=Math.max(r.free,r.pulse),gap=time-free;return gap>=0&&gap<=(red?360:1200)&&!noise(free,end)&&room(r,r.end,end,!red)&&(r.end>=time||(red?profile.connectFlicks||profile.combineShots:profile.connectDrags||profile.catchDrags));}
+    private boolean mobileEligible(Route r,long time,long end,boolean red){long free=Math.max(r.free,r.pulse),gap=time-free;return gap>=0&&gap<=(red?360:1200)&&room(r,r.end,end,!red)&&(r.end>=time||(red?profile.connectFlicks||profile.combineShots:profile.connectDrags||profile.catchDrags));}
     private boolean mayMobile(long time,long end,boolean red){for(Route r:live)if(mobileEligible(r,time,end,red))return true;return false;}
     private GesturePlan schedule(){
         List<TouchEvent> events=ChordPlanner.forChart(chart,false,false);
@@ -258,10 +282,9 @@ final class ContactPlanner {
             if(!fresh){
                 for(Route r:live){
                     long approach=Math.max(r.start,Math.max(r.pulse,start-RED_TAIL_MS));
-                    if(r.head.getType()!=3 || approach>=start || Math.round(r.head.getEndSeconds()*1000)<end+RED_TAIL_MS ||
-                       noise(approach,end+RED_TAIL_MS))continue;
+                    if(r.head.getType()!=3 || approach>=start || Math.round(r.head.getEndSeconds()*1000)<end+RED_TAIL_MS)continue;
                     Anchor base=new Anchor(r.head);Anchor[] stroke=stroke(base,n,start,end);
-                    if(stroke==null)continue;
+                    if(stroke==null||!bridgeClear(base,approach,stroke[0],start)||!bridgeClear(stroke[1],end,base,end+RED_TAIL_MS))continue;
                     r.keys.put(approach,base);r.keys.put(start,stroke[0]);r.keys.put(end,stroke[1]);r.keys.put(end+RED_TAIL_MS,base);
                     r.flick=true;r.pulse=end+RED_TAIL_MS;r.uses++;return;
                 }

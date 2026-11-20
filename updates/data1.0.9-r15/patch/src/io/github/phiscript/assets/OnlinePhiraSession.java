@@ -64,7 +64,7 @@ final class OnlinePhiraSession {
         PhiraEntry local=imported.get(id);
         if(local==null){RuntimeState.INSTANCE.log(tr("下载并导入 Phira #")+entry.id+"："+entry.title+" / "+entry.level);local=api.importEntry(context,entry,stop);imported.put(id,local);}
         PhiraLibrary library=RuntimeState.INSTANCE.getPhiraLibrary();if(library==null)throw new IllegalStateException(tr("Phira 导入谱库不可用"));
-        return library.load(local.getId(),local.getLevel());
+        return ((PreparedLibrary)(Object)library).openPrepared(local.getId(),local.getLevel());
     }
     boolean contains(String id){return remote.containsKey(id);}
 }
