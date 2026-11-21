@@ -1,0 +1,64 @@
+name: Add English notes to the published data1.1.2 release
+on:
+  create:
+  push:
+    branches: [docs/data112-release-english]
+permissions:
+  contents: read
+concurrency:
+  group: data112-release-english
+  cancel-in-progress: false
+jobs:
+  notes:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/docs/data112-release-english'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Append and verify English release notes
+        shell: python
+        run: |
+          import json
+          import os
+          from urllib.request import Request, urlopen
+
+          api = "https://api.github.com/repos/" + os.environ["GITHUB_REPOSITORY"]
+          headers = {"Authorization": "Bearer " + os.environ["GH_TOKEN"], "Content-Type": "application/json",
+                     "Accept": "application/vnd.github+json", "User-Agent": "Phigros-Script-release-notes"}
+
+          def request(path, body=None):
+              data = None if body is None else json.dumps(body).encode()
+              req = Request(api + path, headers=headers, data=data, method="GET" if body is None else "PATCH")
+              with urlopen(req, timeout=30) as reply:
+                  return json.load(reply)
+
+          tag = "data1.1.2"
+          published = request("/releases/tags/" + tag)
+          assert published["tag_name"] == tag and not published["draft"] and not published["prerelease"]
+          assert request("/releases/latest")["id"] == published["id"]
+          path = "/releases/" + str(published["id"])
+          original = published["body"]
+          english = (
+              "## English\n\n"
+              "After you confirm a Phigros song and difficulty, the app downloads its prepared timeline and touch "
+              "coordinates. The chart is cached on your device for offline playback. In noise sections, the "
+              "player keeps holds, drags and flicks continuous wherever the path is clear. The two Feijipan "
+              "cloud import options are hidden.\n\n"
+              "Install `PhigrosScript_data1.1.2.apk` from the release assets. The app downloads the chart data "
+              "it needs automatically. "
+              "[Upgrade and build guide (Chinese)](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/blob/data1.1.2/updates/data1.1.2/README.md)"
+          )
+          if english not in original:
+              assert original and "## English" not in original
+              final = original + "\n\n" + english
+              assert request(path)["body"] == original
+              request(path, {"body": final})
+          else:
+              final = original
+          updated = request(path)
+          assert updated["tag_name"] == tag and updated["body"] == final
+          for field in ("id", "target_commitish", "draft", "prerelease", "published_at"):
+              assert updated[field] == published[field]
+          print(updated["html_url"])
