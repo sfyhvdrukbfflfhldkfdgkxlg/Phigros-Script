@@ -47,6 +47,11 @@ public final class UiMotion {
         view.animate().alpha(1).translationY(0).setStartDelay(Math.min(5,Math.max(0,index))*35L)
             .setDuration(260).setInterpolator(new LinearInterpolator()).start();
     }
+    /** Keep the inactive page attached so its controls and scroll position survive tab switches. */
+    public static void switchPage(View previous,View next){
+        if(previous!=null){cancel(previous);previous.setVisibility(View.GONE);}
+        next.setVisibility(View.VISIBLE);enter(next,0);
+    }
     public static void bindPress(View view){
         lifecycle(view);
         view.setOnTouchListener((v,event)->{

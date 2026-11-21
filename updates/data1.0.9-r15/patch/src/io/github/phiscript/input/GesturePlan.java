@@ -69,7 +69,15 @@ public final class GesturePlan {
         if(Thread.currentThread().isInterrupted()||cancel!=null&&cancel.get())throw new IllegalStateException(tr("谱面轨迹预计算已取消"));
         TapMod.reload();synchronized(CACHE){Cached old=CACHE.get(chart);if(old!=null&&old.matches(chart,profile,viewport,bounds)&&old.plan.precomputed!=null){old.prepared=true;return old.plan;}}
         AtomicBoolean previousStop=TapMod.preparationStop.get();if(cancel==null)TapMod.preparationStop.remove();else TapMod.preparationStop.set(cancel);
-        try{TapMod.begin(chart);GesturePlan plan=ContactPlanner.build(chart,viewport,bounds,profile);plan.precomputed=PreparedTrajectory.prepare(chart,plan,profile,viewport,bounds,cancel);cache(chart,profile,viewport,bounds,plan,true);return plan;}
+        try{
+            TapMod.begin(chart);
+            GesturePlan routed=ContactPlanner.build(chart,viewport,bounds,profile);
+            PreparedTrajectory tracks=PreparedTrajectory.prepare(chart,routed,profile,viewport,bounds,cancel);
+            int[] metrics={routed.connectedGroups,routed.connectedNotes,routed.coveredDrags,routed.denseDragSections,routed.denseDragNotes,routed.unavailableNotes};
+            GesturePlan plan=tracks.finishDevice(chart,routed.events,metrics,cancel,routed);
+            cache(chart,profile,viewport,bounds,plan,true);
+            return plan;
+        }
         finally{if(previousStop==null)TapMod.preparationStop.remove();else TapMod.preparationStop.set(previousStop);}
     }
     public int unavailableNotes;

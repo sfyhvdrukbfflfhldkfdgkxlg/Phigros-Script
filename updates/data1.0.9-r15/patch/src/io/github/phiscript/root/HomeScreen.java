@@ -13,7 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import io.github.phiscript.AppSettings;
@@ -25,7 +27,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-/** One native home, one transport action. Reuses the Activity's live status/log fields. */
+/** Two native pages with independent scroll positions and one shared transport state. */
 public final class HomeScreen {
     private static final int BG=UiDesign.BG,CARD=UiDesign.SURFACE,INK=UiDesign.INK,MUTED=UiDesign.MUTED,ACCENT=UiDesign.ACCENT;
     private final Activity activity;
@@ -33,7 +35,11 @@ public final class HomeScreen {
     private TextView badge,summary,phigrosCount,phiraCount,permission,mode;
     private Button primary;
     private Switch recording;
-    private int primaryState=-1,cardIndex;private boolean motionPaused;
+    private static final int PERFORMANCE=0,LIBRARY=1;
+    private final ScrollView[] pages=new ScrollView[2];
+    private final TextView[] tabs=new TextView[2];
+    private int primaryState=-1,selectedPage=-1;
+    private boolean motionPaused;
     private final Runnable ticker=new Runnable(){public void run(){
         if(RootPanel.alive(activity)&&root.isAttachedToWindow()&&root.hasWindowFocus()){
             update();
@@ -53,7 +59,7 @@ public final class HomeScreen {
     public static void attach(Activity a){
         io.github.phiscript.i18n.UiText.attach(a);io.github.phiscript.GamePackages.init(a);
         LinearLayout root=find(a.findViewById(android.R.id.content));if(root==null||root.getTag() instanceof HomeScreen)return;
-        HomeScreen home=new HomeScreen(a,root);root.setTag(home);home.scrollable();home.build();
+        HomeScreen home=new HomeScreen(a,root);root.setTag(home);home.unwrapRoot();home.build();
         io.github.phiscript.assets.ExternalCharts.attach(a);
         root.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener(){
             public void onViewAttachedToWindow(View v){home.observeFocus();}
@@ -67,10 +73,12 @@ public final class HomeScreen {
         if(root.isAttachedToWindow())home.observeFocus();
     }
     public static void refresh(Activity a){LinearLayout root=find(a.findViewById(android.R.id.content));if(root!=null&&root.getTag() instanceof HomeScreen)((HomeScreen)root.getTag()).update();}
-    private void scrollable(){
-        if(root.getParent() instanceof android.widget.ScrollView||!(root.getParent() instanceof ViewGroup))return;
-        ViewGroup parent=(ViewGroup)root.getParent();int index=parent.indexOfChild(root);ViewGroup.LayoutParams p=root.getLayoutParams();parent.removeView(root);
-        android.widget.ScrollView scroll=new android.widget.ScrollView(activity);scroll.setFillViewport(true);scroll.addView(root,new android.widget.ScrollView.LayoutParams(-1,-2));parent.addView(scroll,index,p);
+    private void unwrapRoot(){
+        if(!(root.getParent() instanceof ScrollView))return;
+        ScrollView old=(ScrollView)root.getParent();if(!(old.getParent() instanceof ViewGroup))return;
+        ViewGroup parent=(ViewGroup)old.getParent();int at=parent.indexOfChild(old);
+        ViewGroup.LayoutParams layout=old.getLayoutParams();
+        old.removeView(root);parent.removeView(old);parent.addView(root,at,layout);
     }
     private static LinearLayout find(View v){
         if(v instanceof LinearLayout&&((LinearLayout)v).getOrientation()==LinearLayout.VERTICAL)return(LinearLayout)v;
@@ -78,52 +86,125 @@ public final class HomeScreen {
         return null;
     }
     private String w(String zh,String en){return UiDesign.words(zh,en);}
+    private void configureBars(){
+        android.view.Window window=activity.getWindow();
+        window.setStatusBarColor(BG);window.setNavigationBarColor(CARD);
+        View decor=window.getDecorView();
+        int flags=decor.getSystemUiVisibility()|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        if(android.os.Build.VERSION.SDK_INT<30)flags&=~(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        decor.setSystemUiVisibility(flags);
+        if(android.os.Build.VERSION.SDK_INT>=29)decor.setForceDarkAllowed(false);
+        if(android.os.Build.VERSION.SDK_INT>=30){
+            window.setDecorFitsSystemWindows(false);
+            root.setOnApplyWindowInsetsListener((view,insets)->{
+                android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars()|android.view.WindowInsets.Type.displayCutout());
+                view.setPadding(bars.left,bars.top,bars.right,bars.bottom);
+                return insets;
+            });
+            root.requestApplyInsets();
+        }
+    }
+    private LinearLayout page(FrameLayout viewport,int index,String title){
+        ScrollView scroll=new ScrollView(activity);pages[index]=scroll;
+        scroll.setFillViewport(true);scroll.setVerticalScrollBarEnabled(false);
+        scroll.setTag(index==PERFORMANCE?"data-performance-page":"data-library-page");
+        viewport.addView(scroll,new FrameLayout.LayoutParams(-1,-1));scroll.setVisibility(View.GONE);
+        LinearLayout content=new LinearLayout(activity);content.setOrientation(LinearLayout.VERTICAL);
+        // Center a readable column on wide windows without clipping compact or split-screen layouts.
+        int width=activity.getResources().getConfiguration().screenWidthDp;
+        int side=dp(Math.max(width<360?14:20,(width-640)/2));
+        content.setPadding(side,dp(20),side,dp(24));
+        scroll.addView(content,new ScrollView.LayoutParams(-1,-2));
+        LinearLayout brand=new LinearLayout(activity);brand.setGravity(Gravity.CENTER_VERTICAL);
+        content.addView(brand,new LinearLayout.LayoutParams(-1,-2));
+        android.widget.ImageView logo=new android.widget.ImageView(activity);
+        logo.setImageResource(activity.getApplicationInfo().icon);logo.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        brand.addView(logo,new LinearLayout.LayoutParams(dp(28),dp(28)));
+        TextView name=UiDesign.text(activity,"Phigros Script",15,INK,true);
+        LinearLayout.LayoutParams flexible=new LinearLayout.LayoutParams(0,-2,1);flexible.setMarginStart(dp(8));brand.addView(name,flexible);
+        try{
+            String version=activity.getPackageManager().getPackageInfo(activity.getPackageName(),0).versionName;
+            if(!TextUtils.isEmpty(version))brand.addView(UiDesign.text(activity,version,12,MUTED,false),new LinearLayout.LayoutParams(-2,-2));
+        }catch(android.content.pm.PackageManager.NameNotFoundException ignored){}
+        TextView heading=text(content,title,32,INK,true);heading.setPadding(0,dp(20),0,dp(2));
+        if(android.os.Build.VERSION.SDK_INT>=28){heading.setAccessibilityHeading(true);scroll.setAccessibilityPaneTitle(title);}
+        return content;
+    }
+    private void navigation(){
+        View line=new View(activity);line.setBackgroundColor(UiDesign.LINE);root.addView(line,new LinearLayout.LayoutParams(-1,dp(1)));
+        LinearLayout bar=new LinearLayout(activity);bar.setGravity(Gravity.CENTER);bar.setBackgroundColor(CARD);
+        bar.setPadding(dp(12),dp(5),dp(12),dp(5));root.addView(bar,new LinearLayout.LayoutParams(-1,-2));
+        navItem(bar,PERFORMANCE,w("演奏","Play"),UiDesign.PLAY);
+        navItem(bar,LIBRARY,w("谱库","Library"),UiDesign.LIBRARY);
+    }
+    private void navItem(LinearLayout bar,int index,String label,int kind){
+        Button tab=UiDesign.button(activity,label,false,()->selectPage(index));tabs[index]=tab;
+        tab.setTextSize(13);tab.setMinWidth(0);tab.setMinimumWidth(0);
+        tab.setGravity(Gravity.CENTER);tab.setMinHeight(dp(52));tab.setPadding(dp(4),dp(4),dp(4),dp(4));
+        tab.setCompoundDrawablesWithIntrinsicBounds(null,UiDesign.mark(activity,kind),null,null);
+        tab.setCompoundDrawablePadding(dp(2));tab.setFocusable(true);tab.setTag(index==PERFORMANCE?"data-tab-performance":"data-tab-library");
+        LinearLayout.LayoutParams slot=new LinearLayout.LayoutParams(0,-2,1);slot.setMarginStart(dp(4));slot.setMarginEnd(dp(4));
+        bar.addView(tab,slot);
+    }
+    private void selectPage(int index){
+        if(index==selectedPage)return;
+        UiMotion.switchPage(selectedPage>=0?pages[selectedPage]:null,pages[index]);
+        selectedPage=index;
+        for(int i=0;i<tabs.length;i++){
+            boolean active=i==index;TextView tab=tabs[i];tab.setSelected(active);
+            tab.setTextColor(active?ACCENT:MUTED);tab.setCompoundDrawableTintList(ColorStateList.valueOf(active?ACCENT:MUTED));
+            tab.setBackground(UiDesign.ripple(activity,active?UiDesign.MINT:CARD,14));
+        }
+        activity.getPreferences(0).edit().putInt("home_page",index).apply();
+    }
     private void build(){
         TextView oldStatus=field("statusView"),oldAccess=field("accessibilityView"),oldLog=field("logView");
-        root.removeAllViews();int inset=activity.getResources().getConfiguration().screenWidthDp<360?14:20;
-        root.setPadding(dp(inset),dp(22),dp(inset),dp(28));root.setBackgroundColor(BG);
-        if(root.getParent() instanceof View)((View)root.getParent()).setBackgroundColor(BG);
-        activity.getWindow().setStatusBarColor(BG);activity.getWindow().setNavigationBarColor(BG);
-        View decor=activity.getWindow().getDecorView();decor.setSystemUiVisibility(decor.getSystemUiVisibility()&~(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR));
-        TextView brand=text(root,"PHIGROS SCRIPT",11,ACCENT,true);brand.setLetterSpacing(.18f);
-        text(root,w("演奏台","Performance"),28,INK,true).setPadding(0,dp(12),0,0);
-        LinearLayout transport=card();badge=text(transport,"",12,ACCENT,true);badge.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        mode=text(transport,"",20,INK,true);mode.setPadding(0,dp(12),dp(8),dp(10));mode.setMinHeight(dp(52));mode.setGravity(Gravity.CENTER_VERTICAL);mode.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
-        mode.setBackground(UiDesign.ripple(activity,CARD,10));mode.setFocusable(true);mode.setOnClickListener(v->PlayEntry.choose(activity));UiMotion.bindPress(mode);
+        activity.setTheme(android.R.style.Theme_Material_Light_NoActionBar);
+        root.removeAllViews();root.setPadding(0,0,0,0);root.setGravity(Gravity.TOP);
+        root.setBackgroundColor(BG);configureBars();
+        FrameLayout viewport=new FrameLayout(activity);
+        root.addView(viewport,new LinearLayout.LayoutParams(-1,0,1));
+        LinearLayout performance=page(viewport,PERFORMANCE,w("演奏台","Performance"));
+        LinearLayout library=page(viewport,LIBRARY,w("谱库","Library"));
+        LinearLayout transport=card(performance);transport.setBackground(UiDesign.shape(activity,UiDesign.MINT,20));
+        badge=text(transport,"",13,ACCENT,true);badge.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        mode=text(transport,"",22,INK,true);mode.setPadding(0,dp(12),dp(8),dp(10));mode.setMinHeight(dp(52));mode.setGravity(Gravity.CENTER_VERTICAL);mode.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+        mode.setBackground(UiDesign.ripple(activity,UiDesign.MINT,10));mode.setFocusable(true);mode.setOnClickListener(v->PlayEntry.choose(activity));UiMotion.bindPress(mode);
         summary=text(transport,"",13,MUTED,false);summary.setMinHeight(dp(42));
         primary=action(transport,w("开始打谱","Start performance"),true,()->{
             if(RootPhiraImport.isBusy()||PhiraImportControl.isBusy()){RootPhiraImport.cancel();PhiraImportControl.cancel();}
             else if(RuntimeState.INSTANCE.getRunning().get()||ManualChartControl.isOpen())AutoEntry.stop(activity);else PlayEntry.start(activity,false);update();
         });primary.setTag("data-primary-transport");
-        transport.addView(UiDesign.row(activity,UiDesign.PLAY,w("启动 Phira Pro","Open Phira Pro"),w("打开游戏并选择 Pro 模式","Launch the game and select Pro mode"),()->GameLaunch.phira(activity,true,true)),params(-1,-2,6));
-        text(transport,w("保持游戏横屏 · 音量减键可停止","Keep landscape · Volume down stops"),11,MUTED,false).setPadding(0,dp(8),0,0);
-        LinearLayout charts=card();label(charts,w("谱库","Chart library"));
-        text(charts,"Phigros",17,INK,true).setPadding(0,dp(16),0,0);
-        phigrosCount=text(charts,"",13,MUTED,false);
-        triad(charts,"Phigros",new String[]{w("下载","Get charts"),w("导入","Import"),w("删除 / 清理","Delete")},new Runnable[]{this::downloadCharts,this::importCharts,()->PhigrosLibraryManagement.open(activity)},new String[]{"data-phigros-download","data-import","data-phigros-delete"});
-        divider(charts);text(charts,"Phira / Pro",17,INK,true);
-        phiraCount=text(charts,"",13,MUTED,false);
-        triad(charts,"Phira / Pro",new String[]{w("在线谱库","Online"),w("导入","Import"),w("删除","Delete")},new Runnable[]{()->OnlinePhiraLibraryUi.open(activity),()->{if(!RootPanel.blocked(activity))invoke(activity,"choosePhira");},()->PhiraLibraryManagement.open(activity)},new String[]{"data-phira-online","data-phira-import","data-phira-delete"});
-        divider(charts);LinearLayout prepare=UiDesign.row(activity,UiDesign.SETTINGS,w("预计算触点","Prepare touch points"),w("调整设置后，重新准备已缓存谱面","Refresh prepared charts after changing settings"),()->PreparedChartsUi.open(activity));prepare.setTag("data-prepare-charts");charts.addView(prepare,new LinearLayout.LayoutParams(-1,-2));
-        LinearLayout controls=card();label(controls,w("权限与设置","Access & settings"));permission=text(controls,"",12,MUTED,false);permission.setPadding(0,dp(12),0,dp(4));
+        text(transport,w("保持游戏横屏 · 音量减键可停止","Keep landscape · Volume down stops"),12,MUTED,false).setPadding(0,dp(12),0,0);
+        LinearLayout phigros=card(library);label(phigros,"Phigros");
+        phigrosCount=text(phigros,"",13,MUTED,false);
+        triad(phigros,"Phigros",new String[]{w("下载","Get charts"),w("导入","Import"),w("删除 / 清理","Delete")},new Runnable[]{this::downloadCharts,this::importCharts,()->PhigrosLibraryManagement.open(activity)},new String[]{"data-phigros-download","data-import","data-phigros-delete"});
+        LinearLayout phira=card(library);label(phira,"Phira / Pro");
+        phiraCount=text(phira,"",13,MUTED,false);
+        triad(phira,"Phira / Pro",new String[]{w("在线谱库","Online"),w("导入","Import"),w("删除","Delete")},new Runnable[]{()->OnlinePhiraLibraryUi.open(activity),()->{if(!RootPanel.blocked(activity))invoke(activity,"choosePhira");},()->PhiraLibraryManagement.open(activity)},new String[]{"data-phira-online","data-phira-import","data-phira-delete"});
+        LinearLayout prepare=UiDesign.row(activity,UiDesign.SETTINGS,w("预计算触点","Prepare touch points"),w("调整设置后，重新准备已缓存谱面","Refresh prepared charts after changing settings"),()->PreparedChartsUi.open(activity));prepare.setTag("data-prepare-charts");library.addView(prepare,params(-1,-2,12));
+        LinearLayout controls=card(performance);label(controls,w("权限与设置","Access & settings"));permission=text(controls,"",12,MUTED,false);permission.setPadding(0,dp(8),0,dp(4));
         controls.addView(UiDesign.row(activity,UiDesign.SHIELD,w("权限与触控","Permissions & input"),w("无障碍、悬浮窗与 Root","Accessibility, overlay and Root"),this::permissions),new LinearLayout.LayoutParams(-1,-2));
         controls.addView(UiDesign.row(activity,UiDesign.SETTINGS,w("设置与工具","Settings & tools"),w("校准、识别、手势与语言","Calibration, recognition, gestures and language"),this::settings),new LinearLayout.LayoutParams(-1,-2));
-        LinearLayout video=card();label(video,w("录屏","Recording"));
+        controls.addView(UiDesign.row(activity,UiDesign.PLAY,w("启动 Phira Pro","Open Phira Pro"),null,()->GameLaunch.phira(activity,true,true)),new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout video=card(library);label(video,w("录屏","Recording"));
         recording=new Switch(activity);recording.setText(w("打谱时自动录屏","Record performances"));recording.setTextSize(15);recording.setTextColor(INK);recording.setMinHeight(dp(56));recording.setPadding(0,dp(8),0,dp(8));
         int[][] switchStates={{-android.R.attr.state_enabled},{android.R.attr.state_checked},{}};
-        recording.setThumbTintList(new ColorStateList(switchStates,new int[]{0xff737f8d,ACCENT,MUTED}));
-        recording.setTrackTintList(new ColorStateList(switchStates,new int[]{UiDesign.LINE,0xff3b675e,0xff425063}));
+        recording.setThumbTintList(new ColorStateList(switchStates,new int[]{0xff97a79e,ACCENT,MUTED}));
+        recording.setTrackTintList(new ColorStateList(switchStates,new int[]{UiDesign.LINE,0xff9ed1b9,0xffbdc9c2}));
         recording.setChecked(new AppSettings(activity).flag("recording_on_play",true));video.addView(recording,new LinearLayout.LayoutParams(-1,-2));
         recording.setOnCheckedChangeListener((v,on)->{if(!RuntimeState.INSTANCE.getRunning().get()&&!RootPanel.isBusy())new AppSettings(activity).saveFlag("recording_on_play",on);});
         text(video,w("演奏结束保存无声 MP4","Silent MP4 is saved when the performance ends"),12,MUTED,false);
         video.addView(UiDesign.row(activity,UiDesign.VIDEO,w("分辨率与帧率","Resolution & frame rate"),w("按设备选择录屏档位","Choose a profile for your device"),()->io.github.phiscript.record.RecordingSettings.show(activity)),params(-1,-2,8));
         video.addView(UiDesign.row(activity,UiDesign.HISTORY,w("最近录屏","Recent recordings"),w("查看或分享已保存的视频","View or share saved videos"),()->{try{activity.startActivity(io.github.phiscript.record.RecordingFiles.view(activity));}catch(Exception e){RootPanel.message(activity,tr("录屏位置"),tr("Android 10+：Movies/PhigrosScript；Android 8/9：应用录屏目录。\n\n")+e.getMessage());}}),new LinearLayout.LayoutParams(-1,-2));
-        LinearLayout diagnostics=card(),details=new LinearLayout(activity);details.setOrientation(1);details.setVisibility(View.GONE);
+        LinearLayout diagnostics=card(performance),details=new LinearLayout(activity);details.setOrientation(1);details.setVisibility(View.GONE);
         TextView expand=text(diagnostics,w("运行记录  ＋","Activity log  +"),14,MUTED,true);expand.setMinHeight(dp(48));expand.setGravity(Gravity.CENTER_VERTICAL);expand.setFocusable(true);expand.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
         expand.setContentDescription(w("展开运行记录","Expand activity log"));expand.setBackground(UiDesign.ripple(activity,CARD,10));
         expand.setOnClickListener(v->{boolean open=!UiMotion.expanded(details);UiMotion.toggle(details,open);expand.setText(open?w("运行记录  −","Activity log  −"):w("运行记录  ＋","Activity log  +"));expand.setContentDescription(open?w("收起运行记录","Collapse activity log"):w("展开运行记录","Expand activity log"));});UiMotion.bindPress(expand);diagnostics.addView(details,new LinearLayout.LayoutParams(-1,-2));
         for(TextView v:new TextView[]{oldStatus,oldAccess,oldLog})if(v!=null){if(v.getParent() instanceof ViewGroup)((ViewGroup)v.getParent()).removeView(v);v.setTextColor(MUTED);v.setTextSize(12);v.setPadding(0,dp(8),0,dp(8));details.addView(v,new LinearLayout.LayoutParams(-1,-2));}
-        text(root,"Phigros Script  /  data1.1.2",11,MUTED,false).setPadding(0,dp(22),0,0);update();
+        navigation();
+        selectPage(activity.getPreferences(0).getInt("home_page",PERFORMANCE)==LIBRARY?LIBRARY:PERFORMANCE);
+        update();
     }
     private void triad(LinearLayout parent,String platform,String[] labels,Runnable[] actions,String[] tags){
         ChartActions row=new ChartActions(activity);parent.addView(row,params(-1,-2,10));
@@ -160,7 +241,6 @@ public final class HomeScreen {
             super.onMeasure(widthSpec,heightSpec);
         }
     }
-    private void divider(LinearLayout box){View line=new View(activity);line.setBackgroundColor(UiDesign.LINE);box.addView(line,params(-1,dp(1),18));View gap=new View(activity);box.addView(gap,new LinearLayout.LayoutParams(1,dp(16)));}
     private void update(){
         boolean running=RuntimeState.INSTANCE.getRunning().get()||ManualChartControl.isOpen(),busy=RootPanel.isBusy();
         boolean touch=RuntimeState.INSTANCE.getActiveTouchStop().get()!=null;
@@ -188,8 +268,8 @@ public final class HomeScreen {
         int nextState=!transportEnabled?2:running?1:0;
         if(primaryState!=nextState){
             primaryState=nextState;
-            primary.setBackground(UiDesign.ripple(activity,!transportEnabled?UiDesign.RAISED:running?0xff593746:ACCENT,14));
-            primary.setTextColor(!transportEnabled?MUTED:running?INK:BG);
+            primary.setBackground(UiDesign.ripple(activity,!transportEnabled?UiDesign.RAISED:running?UiDesign.DANGER:ACCENT,14));
+            primary.setTextColor(!transportEnabled?MUTED:UiDesign.ON_ACCENT);
         }
         primary.setContentDescription(primary.getText());
         ChartLibrary phi=RuntimeState.INSTANCE.getLibrary();PhiraLibrary phira=RuntimeState.INSTANCE.getPhiraLibrary();
@@ -264,7 +344,7 @@ public final class HomeScreen {
         catch(Exception e){Throwable t=e instanceof InvocationTargetException?((InvocationTargetException)e).getTargetException():e;RootPanel.message(a,tr("操作未完成"),String.valueOf(t.getMessage()));}
     }
     private TextView field(String name){try{Field f=activity.getClass().getDeclaredField(name);f.setAccessible(true);return(TextView)f.get(activity);}catch(Exception e){RuntimeState.INSTANCE.log(tr("界面状态字段未读取：")+name);return null;}}
-    private LinearLayout card(){LinearLayout box=UiDesign.card(activity);root.addView(box,params(-1,-2,14));UiMotion.enter(box,cardIndex++);return box;}
+    private LinearLayout card(LinearLayout page){LinearLayout box=UiDesign.card(activity);page.addView(box,params(-1,-2,12));return box;}
     private void label(LinearLayout box,String title){TextView name=text(box,title,17,INK,true);if(android.os.Build.VERSION.SDK_INT>=28)name.setAccessibilityHeading(true);}
     private TextView text(LinearLayout parent,String value,int size,int color,boolean bold){TextView v=UiDesign.text(activity,value,size,color,bold);parent.addView(v,new LinearLayout.LayoutParams(-1,-2));return v;}
     private Button action(LinearLayout parent,String value,boolean main,Runnable click){Button b=UiDesign.button(activity,value,main,click);parent.addView(b,params(-1,-2,12));return b;}

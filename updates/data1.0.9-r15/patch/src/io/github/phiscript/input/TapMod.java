@@ -40,6 +40,7 @@ public final class TapMod {
     private static Context app;
     private static volatile boolean enabled=true,noiseAvoid=true;
     private static volatile float vertical=35,jitter=6,escape=2000;
+    private static volatile ContactVariation variation=new ContactVariation(6,3f);
     private static final Map<Chart,Long> salts=Collections.synchronizedMap(new WeakHashMap<Chart,Long>());
     private static final SecureRandom random=new SecureRandom();
     public static void init(Context c){if(c!=null)app=c.getApplicationContext();reload();}
@@ -48,6 +49,9 @@ public final class TapMod {
         enabled=bool(raw(f,"tapmod_enabled","true"));noiseAvoid=bool(raw(f,"tap_noise_avoid","true"));
         vertical=value(raw(f,"tap_vertical_permille","35"),35,0,200);
         jitter=value(raw(f,"tap_jitter_permille","6"),6,0,20);
+        int delay=Math.round(value(raw(f,"tap_random_delay_ms","6"),6,0,20));
+        float drift=value(raw(f,"tap_screen_drift_permille","3"),3,0,12);
+        variation=enabled?new ContactVariation(delay,drift):ContactVariation.OFF;
         escape=value(raw(f,"tap_noise_escape_permille","2000"),2000,0,2000);
         String clock=raw(f,"tap_noise_clock_guard_ms","0");guard=new Guard("16".equals(clock)?16:"24".equals(clock)?24:0);
     }
@@ -56,7 +60,9 @@ public final class TapMod {
     private static float value(String s,float d,float lo,float hi){try{float v=Float.parseFloat(s);return Float.isFinite(v)?Math.max(lo,Math.min(hi,v)):d;}catch(Exception e){return d;}}
     public static void begin(Chart c){reload();salts.put(c,random.nextLong());searchTimeouts.set(0);}
     /** Exact preparation inputs; changing the safe-gap algorithm invalidates old paths. */
-    public static String preparationSignature(){return "gesture-noise-v2|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(vertical)+"|"+Float.toHexString(jitter)+"|"+Float.toHexString(escape)+"|"+guard.backMs+"|"+guard.aheadMs+"|"+preparationEdgeGuard()+"|"+preparationInwardFlick();}
+    static ContactVariation contactVariation(){return variation;}
+    static String baseSignature(){return "gesture-variation-v4|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(vertical)+"|"+Float.toHexString(jitter)+"|"+Float.toHexString(escape)+"|"+guard.backMs+"|"+guard.aheadMs+"|"+preparationEdgeGuard()+"|"+preparationInwardFlick();}
+    public static String preparationSignature(){return baseSignature()+"|"+variation.maxDelay+"|"+Float.toHexString(variation.maxDrift);}
     public static boolean preparationEdgeGuard(){return app==null||new AppSettings(app).flag("gesture_edge_guard",true);}
     public static boolean preparationInwardFlick(){return app==null||new AppSettings(app).flag("gesture_flick_inward",true);}
     public static long preparationSalt(Chart c){synchronized(salts){Long salt=salts.get(c);if(salt==null){salt=random.nextLong();salts.put(c,salt);}return salt;}}
@@ -66,7 +72,7 @@ public final class TapMod {
     private static long seed(Chart c,Note n){synchronized(salts){Long s=salts.get(c);if(s==null){s=random.nextLong();salts.put(c,s);}return s^Double.doubleToLongBits(n.getTimeSeconds())^mix(Double.doubleToLongBits(n.getPositionX()))^((long)n.getLineIndex()<<17)^(n.getAbove()?31:63);}}
     private static Point normal(Chart c,Note n,double t,Viewport v){Point p=c.judgeNormal(n,t,v);double m=Math.hypot(p.getX(),p.getY());if(!Double.isFinite(m)||m<1e-9)throw new IllegalStateException(tr("判定线方向无效"));return new Point((float)(p.getX()/m),(float)(p.getY()/m));}
     public static boolean avoids(Chart c){return noiseAvoid&&BlockAreaSet.count(c)>0;}
-    private static boolean blocked(Chart c,Viewport v,Point p,double t){return BlockAreaSet.covers(c,p.getX(),p.getY(),v.getLeft(),v.getTop(),v.getWidth(),v.getHeight(),t);}
+    private static boolean blocked(Chart c,Viewport v,Point p,double t){return BlockAreaSet.touchesNoise(c,v,p,t);}
     public static Point adjustNote(Chart c,Note n,double t,Viewport v,boolean visual,Point p){
         if(visual||p==null)return p;
         if(!enabled)return avoid(c,n,t,v,p);

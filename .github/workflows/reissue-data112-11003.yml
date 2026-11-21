@@ -1,0 +1,33 @@
+name: Reissue data1.1.2 build 11003
+on:
+  push:
+    branches: [release/data112-rebuild-11003]
+    paths:
+      - updates/data1.1.2/rebuild-11003/**
+      - .github/workflows/reissue-data112-11003.yml
+      - .github/scripts/reissue_data112.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-data1-1-2
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/release/data112-rebuild-11003'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Restore verified signed APK and source
+        run: |
+          gh release download data1.0.9-r15 --repo "$GITHUB_REPOSITORY" --pattern PhigrosScript_data1.0.9-r15.apk --dir "$RUNNER_TEMP/base"
+          python3 .github/scripts/reissue_data112.py restore "$RUNNER_TEMP/dist" "$RUNNER_TEMP/base/PhigrosScript_data1.0.9-r15.apk"
+      - name: Replace the APK, source archive and checksums
+        run: python3 .github/scripts/reissue_data112.py publish "$RUNNER_TEMP/dist"

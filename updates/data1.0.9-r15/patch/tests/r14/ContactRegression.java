@@ -112,9 +112,9 @@ public final class ContactRegression {
             geometry(root);
         }
         shortHandoff();movingEdge();
-        Chart hole=chart(new JSONArray().put(rect(0,0,1,1,0,2)).put(rect(.488,.103,.512,.111,0,2).put("isSubtract",true)),bank(1,1,0));
+        Chart hole=chart(new JSONArray().put(rect(0,0,1,1,0,2)).put(rect(.482,.092,.518,.130,0,2).put("isSubtract",true)),bank(1,1,0));
         Point q=TapMod.withinBounds(hole,hole.getNotes().get(0),.5,V,new Point(500,150),new TouchBounds(30,30,970,570));
-        ok(q.getY()>532&&q.getY()<539&&!BlockAreaSet.covers(hole,q.getX(),q.getY(),0,0,1000,600,.5),"narrow subtractive window beyond old escape radius");
+        ok(q.getY()>522+600./108&&q.getY()<544.8-600./108&&!BlockAreaSet.covers(hole,q.getX(),q.getY(),0,0,1000,600,.5),"narrow subtractive window beyond old escape radius");
         System.out.println("PASS "+checks+" checks. Both input backends: one/two/six physical fingers; cross-line hold/drag/flick reuse, actual swipe displacement, safe DOWN and MOVE, narrow subtractive window.");
     }
 }

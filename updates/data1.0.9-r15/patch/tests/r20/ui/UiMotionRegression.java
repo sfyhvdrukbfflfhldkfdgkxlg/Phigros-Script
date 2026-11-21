@@ -35,6 +35,12 @@ public final class UiMotionRegression {
         press.motion.setInterpolator(new DecelerateInterpolator());press.touch.onTouch(press,new MotionEvent(MotionEvent.ACTION_CANCEL));linear(press,"press cancel");ok(press.motion.targetX==1&&press.motion.targetY==1,"cancelled press remained scaled");
         ViewGroup tree=new ViewGroup(c);View child=new View(c);tree.addView(child);child.setAlpha(.1f);UiMotion.cancelTree(tree);ok(child.getAlpha()==1,"subtree animation not reset");
         android.app.AlertDialog dialog=new android.app.AlertDialog();UiMotion.show(dialog);ok(dialog.shown&&dialog.getWindow().getDecorView().motion.starts==1&&dialog.getWindow().animations==0,"dialog entry not attached to actual shown dialog or duplicate window animation enabled");linear(dialog.getWindow().getDecorView(),"dialog entry");
-        System.out.println("PASS "+checks+" native UI motion lifecycle model checks: explicit linear interpolation for entry/press/state/expansion/dialog, system motion policy, playback exclusion, coalesced state, press cancel, rapid expansion and detach; no renderer claim.");
+        View play=new View(c),library=new View(c);library.setVisibility(View.GONE);
+        UiMotion.switchPage(null,play);ok(play.getVisibility()==View.VISIBLE,"initial page hidden");
+        UiMotion.switchPage(play,library);ok(play.getVisibility()==View.GONE&&library.getVisibility()==View.VISIBLE,"two visible or zero visible pages");linear(library,"library tab");
+        UiMotion.switchPage(library,play);ok(library.getVisibility()==View.GONE&&play.getVisibility()==View.VISIBLE,"quick tab return restored wrong page");
+        ValueAnimator.enabled=false;int starts=library.motion.starts;UiMotion.switchPage(play,library);
+        ok(play.getVisibility()==View.GONE&&library.getAlpha()==1&&library.motion.starts==starts,"reduced-motion page switch animated");
+        System.out.println("PASS "+checks+" native UI lifecycle checks: linear animation, two-page visibility, reduced motion, playback exclusion, state coalescing and detach.");
     }
 }

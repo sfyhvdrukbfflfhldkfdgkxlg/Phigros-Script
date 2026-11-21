@@ -24,6 +24,8 @@ public final class BlockAreaSet {
     private final ActiveIndex normalIndex,subtractIndex;
     private final double[] changeTimes;
     private boolean singleInvert;
+    // Radius in units of viewport height: 10 physical pixels at 1080p.
+    private static final double TOUCH_RADIUS = 1.0 / 108.0;
     private static final Map<Object, BlockAreaSet> MAP = Collections.synchronizedMap(new WeakHashMap());
     private static final BlockAreaSet EMPTY = new BlockAreaSet(new BlockArea[0], new BlockArea[0]);
     private static final int AREA_HEADER_BYTES = 6 * Double.BYTES + 3 * Integer.BYTES;
@@ -67,7 +69,7 @@ public final class BlockAreaSet {
         double offset=chart.getOffsetSeconds(),aspect=(double)view.getWidth()/view.getHeight();
         double x=(p.getX()-view.getLeft())/view.getWidth(),y=1.0-(p.getY()-view.getTop())/view.getHeight();
         double rx=(rounded.getX()-view.getLeft())/view.getWidth(),ry=1.0-(rounded.getY()-view.getTop())/view.getHeight();
-        return set.atChanges(from+offset,to+offset,t->set.covered(x,y,t,aspect) || set.covered(rx,ry,t,aspect));
+        return set.atChanges(from+offset,to+offset,t->set.touchCovered(x,y,t,aspect) || set.touchCovered(rx,ry,t,aspect));
     }
 
     /** Detect a moving touch crossing a static or translating rectangle between samples.
@@ -81,7 +83,7 @@ public final class BlockAreaSet {
         double offset=chart.getOffsetSeconds(),a=from+offset,b=to+offset,aspect=(double)view.getWidth()/view.getHeight();
         double x0=(first.getX()-view.getLeft())/view.getWidth(),y0=1-(first.getY()-view.getTop())/view.getHeight();
         double x1=(last.getX()-view.getLeft())/view.getWidth(),y1=1-(last.getY()-view.getTop())/view.getHeight();
-        if(set.covered(x0,y0,a,aspect)||set.covered(x1,y1,b,aspect))return true;
+        if(set.touchCovered(x0,y0,a,aspect)||set.touchCovered(x1,y1,b,aspect))return true;
         if(a==b)return false;
         ArrayList<BlockArea> active=new ArrayList<>();
         if(set.normal.length!=0)set.normalIndex.collectWindow(1,0,set.normal.length,a,b,active);
@@ -116,22 +118,29 @@ public final class BlockAreaSet {
                 double[] p=area.local(lerp(x0,x1,(l-a)/(b-a)),lerp(y0,y1,(l-a)/(b-a)),l,aspect);
                 double[] q=area.local(lerp(x0,x1,(r-a)/(b-a)),lerp(y0,y1,(r-a)/(b-a)),r,aspect);
                 if(p==null||q==null)continue;exact=true;
-                crossing(crossings,p[0],q[0],area.minX-1e-8);crossing(crossings,p[0],q[0],area.maxX+1e-8);
-                crossing(crossings,p[1],q[1],area.minY-1e-8);crossing(crossings,p[1],q[1],area.maxY+1e-8);
+                cutCrossings(crossings,area,p,q,l,aspect,TOUCH_RADIUS);
+                if(set.subtract.length!=0)cutCrossings(crossings,area,p,q,l,aspect,-TOUCH_RADIUS);
             }
             if(!exact)continue;
             double previous=0;
             for(double f:crossings){
                 double t=lerp(l,r,(previous+f)*.5),u=(t-a)/(b-a);
-                if(set.covered(lerp(x0,x1,u),lerp(y0,y1,u),t,aspect))return true;
+                if(set.touchCovered(lerp(x0,x1,u),lerp(y0,y1,u),t,aspect))return true;
                 t=lerp(l,r,f);u=(t-a)/(b-a);
-                if(set.covered(lerp(x0,x1,u),lerp(y0,y1,u),t,aspect))return true;
+                if(set.touchCovered(lerp(x0,x1,u),lerp(y0,y1,u),t,aspect))return true;
                 previous=f;
             }
         }
         // A step may be active only at the exact keyframe, outside either limit.
-        for(double t:cuts){double u=(t-a)/(b-a);if(set.covered(lerp(x0,x1,u),lerp(y0,y1,u),t,aspect))return true;}
+        for(double t:cuts){double u=(t-a)/(b-a);if(set.touchCovered(lerp(x0,x1,u),lerp(y0,y1,u),t,aspect))return true;}
         return false;
+    }
+    private static void cutCrossings(java.util.Set<Double> crossings,BlockArea area,double[] p,double[] q,
+                                     double time,double aspect,double radius){
+        BlockArea.Geometry g=area.geometry(time,aspect);
+        double x=radius/(aspect*g.sx)+1e-8,y=radius/g.sy+1e-8;
+        crossing(crossings,p[0],q[0],area.minX-x);crossing(crossings,p[0],q[0],area.maxX+x);
+        crossing(crossings,p[1],q[1],area.minY-y);crossing(crossings,p[1],q[1],area.maxY+y);
     }
     private static double lerp(double a,double b,double f){return a+(b-a)*f;}
     private static void timeCut(java.util.Set<Double> out,double time,double from,double to){if(time>from&&time<to)out.add(time);}
@@ -324,8 +333,74 @@ public final class BlockAreaSet {
     }
 
     private boolean covered(double x,double y,double t,double aspect){
-        int inverted=subtractIndex.count(x,y,t,aspect);
-        return normalIndex.covers(x,y,t,aspect) ^ (singleInvert?inverted==1:(inverted&1)!=0);
+        int inverted=subtractIndex.count(x,y,t,aspect,0);
+        return normalIndex.covers(x,y,t,aspect,0) ^ (singleInvert?inverted==1:(inverted&1)!=0);
+    }
+
+    public static boolean touchesNoise(Chart chart,Viewport view,Point point,double seconds){
+        BlockAreaSet set=MAP.get(chart);
+        if(set==null||set==EMPTY)return false;
+        double x=(point.getX()-view.getLeft())/view.getWidth();
+        double y=1.0-(point.getY()-view.getTop())/view.getHeight();
+        return set.touchCovered(x,y,seconds+chart.getOffsetSeconds(),(double)view.getWidth()/view.getHeight());
+    }
+
+    /** Bound all inside/outside states of the touch footprint before composing the XOR mask.
+     * Expanding a subtractive rectangle unconditionally would enlarge safe holes. */
+    private boolean touchCovered(double x,double y,double t,double aspect){
+        int possible=subtractIndex.count(x,y,t,aspect,TOUCH_RADIUS);
+        if(possible==0)return normalIndex.covers(x,y,t,aspect,TOUCH_RADIUS);
+        int certain=subtractIndex.count(x,y,t,aspect,-TOUCH_RADIUS);
+        boolean mayInvert=singleInvert ? certain<=1 && possible>=1 : possible!=certain || (certain&1)!=0;
+        boolean mayKeep=singleInvert ? certain!=1 || possible!=1 : possible!=certain || (certain&1)==0;
+        boolean unsafe=(mayKeep && normalIndex.covers(x,y,t,aspect,TOUCH_RADIUS))
+            || (mayInvert && !normalIndex.covers(x,y,t,aspect,-TOUCH_RADIUS));
+        if(!unsafe || possible==certain || (possible==1 && normal.length==0) || covered(x,y,t,aspect))return unsafe;
+        // A coincident positive and subtractive edge cannot change membership
+        // independently. Preserve cancellation through the whole footprint,
+        // including where translating or rotating edges exactly coincide.
+        return uncertainMaskCanBlock(x,y,t,aspect);
+    }
+
+    private static final class Footprint {
+        final BlockArea.Geometry g;
+        final double width,height;
+        int inversions;
+        boolean positive,definite;
+        Footprint(BlockArea.Geometry g,double width,double height){this.g=g;this.width=width;this.height=height;}
+        boolean same(BlockArea.Geometry other,double w,double h){
+            return g.x==other.x && g.y==other.y && g.c==other.c && g.s==other.s && width==w && height==h;
+        }
+    }
+
+    private boolean uncertainMaskCanBlock(double x,double y,double time,double aspect){
+        ArrayList<BlockArea> active=new ArrayList<>();
+        if(normal.length>0)normalIndex.collectWindow(1,0,normal.length,time,time,active);
+        if(subtract.length>0)subtractIndex.collectWindow(1,0,subtract.length,time,time,active);
+        ArrayList<Footprint> shapes=new ArrayList<>();
+        for(BlockArea area:active){
+            if(!area.covers(x,y,time,aspect,TOUCH_RADIUS))continue;
+            BlockArea.Geometry geometry=area.geometry(time,aspect);
+            double w=(area.maxX-area.minX)*geometry.sx,h=(area.maxY-area.minY)*geometry.sy;
+            Footprint match=null;
+            for(Footprint existing:shapes)if(existing.same(geometry,w,h)){match=existing;break;}
+            if(match==null){match=new Footprint(geometry,w,h);shapes.add(match);}
+            if(area.isSubtract)match.inversions++;else match.positive=true;
+            match.definite|=area.covers(x,y,time,aspect,-TOUCH_RADIUS);
+        }
+        // Six states: positive union on/off, and zero, one or multiple
+        // inversions (parity instead when the chart uses parity inversion).
+        int states=1;
+        for(Footprint shape:shapes){
+            int next=shape.definite?0:states;
+            for(int state=0;state<6;state++)if((states&(1<<state))!=0){
+                int count=state%3+shape.inversions;
+                int result=(state>=3||shape.positive?3:0)+(singleInvert?Math.min(2,count):count&1);
+                next|=1<<result;
+            }
+            states=next;
+        }
+        return (states&((1<<1)|(1<<3)|(1<<5)))!=0;
     }
 
     public static boolean overlaps(Chart chart,long fromMs,long toMs) {
@@ -355,7 +430,7 @@ public final class BlockAreaSet {
         double x=(p.getX()-v.getLeft())/v.getWidth(),y=1.0-(p.getY()-v.getTop())/v.getHeight();
         double aspect=(double)v.getWidth()/v.getHeight();
         for(ActiveIndex index:new ActiveIndex[]{normalIndex,subtractIndex})
-            if(index.areas.length!=0)index.edges(1,0,index.areas.length,x,y,dx/v.getWidth(),-dy/v.getHeight(),stamp,aspect,low,high,edges);
+            if(index.areas.length!=0)index.edges(1,0,index.areas.length,x,y,dx/v.getWidth(),-dy/v.getHeight(),stamp,aspect,low,high,edges,subtract.length!=0);
     }
     public static boolean clip(double p,double step,double low,double high,double[] limits) {
         if(Math.abs(step)<1e-13)return p>=low && p<=high;
@@ -381,27 +456,30 @@ public final class BlockAreaSet {
             int mid=(lo+hi)>>>1;collectWindow(node*2,lo,mid,left,right,out);collectWindow(node*2+1,mid,hi,left,right,out);
         }
         void edges(int node,int lo,int hi,double x,double y,double dx,double dy,double t,double aspect,
-                   double low,double high,java.util.List<Double> out) {
+                   double low,double high,java.util.List<Double> out,boolean both) {
             if(maxEnd[node]<=t || areas[lo].appear>t)return;
             if(hi-lo==1) {
-                if(t<areas[lo].disappear)areas[lo].edges(x,y,dx,dy,t,aspect,low,high,out);
+                if(t<areas[lo].disappear){
+                    areas[lo].edges(x,y,dx,dy,t,aspect,low,high,out,TOUCH_RADIUS);
+                    if(both)areas[lo].edges(x,y,dx,dy,t,aspect,low,high,out,-TOUCH_RADIUS);
+                }
                 return;
             }
             int mid=(lo+hi)>>>1;
-            edges(node*2,lo,mid,x,y,dx,dy,t,aspect,low,high,out);
-            edges(node*2+1,mid,hi,x,y,dx,dy,t,aspect,low,high,out);
+            edges(node*2,lo,mid,x,y,dx,dy,t,aspect,low,high,out,both);
+            edges(node*2+1,mid,hi,x,y,dx,dy,t,aspect,low,high,out,both);
         }
-        boolean covers(double x,double y,double time,double aspect){return areas.length>0&&find(1,0,areas.length,x,y,time,aspect);}
-        int count(double x,double y,double time,double aspect){return areas.length==0?0:count(1,0,areas.length,x,y,time,aspect);}
-        int count(int node,int lo,int hi,double x,double y,double time,double aspect){
+        boolean covers(double x,double y,double time,double aspect,double radius){return areas.length>0&&find(1,0,areas.length,x,y,time,aspect,radius);}
+        int count(double x,double y,double time,double aspect,double radius){return areas.length==0?0:count(1,0,areas.length,x,y,time,aspect,radius);}
+        int count(int node,int lo,int hi,double x,double y,double time,double aspect,double radius){
             if(maxEnd[node]<=time||areas[lo].appear>time)return 0;
-            if(hi-lo==1)return areas[lo].covers(x,y,time,aspect)?1:0;
-            int mid=(lo+hi)>>>1;return count(node*2,lo,mid,x,y,time,aspect)+count(node*2+1,mid,hi,x,y,time,aspect);
+            if(hi-lo==1)return areas[lo].covers(x,y,time,aspect,radius)?1:0;
+            int mid=(lo+hi)>>>1;return count(node*2,lo,mid,x,y,time,aspect,radius)+count(node*2+1,mid,hi,x,y,time,aspect,radius);
         }
-        boolean find(int node,int lo,int hi,double x,double y,double time,double aspect){
+        boolean find(int node,int lo,int hi,double x,double y,double time,double aspect,double radius){
             if(maxEnd[node]<=time||areas[lo].appear>time)return false;
-            if(hi-lo==1)return areas[lo].covers(x,y,time,aspect);
-            int mid=(lo+hi)>>>1;return find(node*2,lo,mid,x,y,time,aspect)||find(node*2+1,mid,hi,x,y,time,aspect);
+            if(hi-lo==1)return areas[lo].covers(x,y,time,aspect,radius);
+            int mid=(lo+hi)>>>1;return find(node*2,lo,mid,x,y,time,aspect,radius)||find(node*2+1,mid,hi,x,y,time,aspect,radius);
         }
     }
 
@@ -724,18 +802,22 @@ public final class BlockAreaSet {
         }
         static int last(double[] times,double t){int lo=0,hi=times.length;while(lo<hi){int mid=(lo+hi)>>>1;if(times[mid]<=t)lo=mid+1;else hi=mid;}return lo-1;}
         static double ratio(double value,double previous){return Math.abs(previous)<1e-38?1:value/previous;}
-        void edges(double x,double y,double dx,double dy,double t,double aspect,double low,double high,java.util.List<Double> out) {
+        void edges(double x,double y,double dx,double dy,double t,double aspect,double low,double high,java.util.List<Double> out,double radius) {
             double[] p=local(x,y,t,aspect),q=local(x+dx,y+dy,t,aspect);if(p==null||q==null)return;
             double[] span={low,high};
-            if(clip(p[0],q[0]-p[0],minX,maxX,span)&&clip(p[1],q[1]-p[1],minY,maxY,span)){out.add(span[0]);out.add(span[1]);}
+            Geometry g=geometry(t,aspect);
+            double px=radius/(aspect*g.sx)+1e-8,py=radius/g.sy+1e-8;
+            if(minX-px>maxX+px||minY-py>maxY+py)return;
+            if(clip(p[0],q[0]-p[0],minX-px,maxX+px,span)&&clip(p[1],q[1]-p[1],minY-py,maxY+py,span)){out.add(span[0]);out.add(span[1]);}
         }
-        boolean covers(double x,double y,double time,double aspect) {
+        boolean covers(double x,double y,double time,double aspect,double radius) {
             if(time<appear||time>=disappear)return false;
             Geometry g=geometry(time,aspect);if(g.sx<1e-6||g.sy<1e-6)return false;
             double dx=(x-g.x)*aspect,dy=y-g.y;
             double localX=centerX+(dx*g.c+dy*g.s)/aspect/g.sx;
             double localY=centerY+(-dx*g.s+dy*g.c)/g.sy;
-            return localX>=minX-1e-8&&localX<=maxX+1e-8&&localY>=minY-1e-8&&localY<=maxY+1e-8;
+            double px=radius/(aspect*g.sx)+1e-8,py=radius/g.sy+1e-8;
+            return localX>=minX-px && localX<=maxX+px && localY>=minY-py && localY<=maxY+py;
         }
         boolean translationOnly(double a,double b){
             return scale.value(a,true)==scale.value(b,true)&&scale.value(a,false)==scale.value(b,false)&&rotate.value(a,true)==rotate.value(b,true);

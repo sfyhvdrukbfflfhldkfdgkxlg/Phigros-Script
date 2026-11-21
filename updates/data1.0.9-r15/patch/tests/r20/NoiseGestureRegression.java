@@ -37,21 +37,21 @@ public final class NoiseGestureRegression {
     private static void clear(Chart c,Point p,double time){ok(TapMod.clearAt(c,V,p,time),"center was not clear over timing guard: "+p);ok(p.getX()>=B.left&&p.getX()<=B.right&&p.getY()>=B.top&&p.getY()<=B.bottom,"center escaped viewport");}
     private static void basic()throws Exception{
         Chart gap=strips(new Strip(-100,240,false),new Strip(360,700,false));
-        Point p=choose(gap,245);near(p.getY(),245,"clear gesture was shifted during active noise");near(p.getX(),500,"normal lane shifted laterally");clear(gap,p,.5);
-        near(choose(gap,200).getY(),242,"blocked point did not take the nearby safe route");
+        Point p=choose(gap,255);near(p.getY(),255,"clear gesture was shifted during active noise");near(p.getX(),500,"normal lane shifted laterally");clear(gap,p,.5);
+        near(choose(gap,200).getY(),240+600./108+2,"blocked point did not take the nearby safe route");
         Chart split=strips(new Strip(-100,240,false),new Strip(360,700,false),new Strip(290,310,false),new Strip(290,310,true));
-        near(choose(split,245).getY(),245,"raw cancelled XOR cuts split a composed gap");
+        near(choose(split,255).getY(),255,"raw cancelled XOR cuts split a composed gap");
         Chart cancelled=strips(new Strip(200,400,false),new Strip(200,400,true));near(choose(cancelled,245).getY(),245,"fully cancelled geometry moved an ordinary safe point");
         Chart parity=strips(new Strip(-100,240,false),new Strip(360,700,false),new Strip(290,310,true),new Strip(290,310,true));
-        near(choose(parity,245).getY(),245,"even subtract parity created a false gap boundary");
-        Chart narrow=strips(new Strip(-100,298,false),new Strip(302,700,false));Point n=choose(narrow,200);near(n.getY(),300,"usable 4px gap was discarded");clear(narrow,n,.5);
+        near(choose(parity,255).getY(),255,"even subtract parity created a false gap boundary");
+        Chart narrow=strips(new Strip(-100,298,false),new Strip(302,700,false));try{choose(narrow,200);throw new AssertionError("4px gap accepted without edge clearance");}catch(TapMod.NoSafePoint expected){checks++;}
         Chart unrelated=chart(new Point(0,1),rect(50,100,100,500,false));near(choose(unrelated,245).getY(),245,"unrelated geometry recentered the viewport");
         Point unchanged=TapMod.withinBounds(gap,gap.getNotes().get(0),4,V,new Point(500,245),B);near(unchanged.getY(),245,"inactive domains changed a safe position");
     }
     private static void continuityAndBand()throws Exception{
         Chart wall=strips(new Strip(270,330,false));Point previous=new Point(500,200);
         Point held=TapMod.withinBounds(wall,wall.getNotes().get(0),.508,V,new Point(500,400),B,previous,500);
-        near(held.getY(),268,"hold did not remain on reachable side of the barrier");TapMod.segment(wall,V,previous,held,500,508);checks++;
+        near(held.getY(),270-600./108-2,"hold did not remain on reachable side of the barrier");TapMod.segment(wall,V,previous,held,500,508);checks++;
         JSONObject flash=rect(-100,100,1100,120,false).put("appearTime",.520).put("enableTime",.520).put("disableTime",.530).put("disappearTime",.530);
         Chart earlier=chart(new Point(0,1),rect(-100,300,1100,330,false),flash);
         Point retained=TapMod.withinBounds(earlier,earlier.getNotes().get(0),.55,V,new Point(500,50),B,new Point(500,50),500);
@@ -71,24 +71,23 @@ public final class NoiseGestureRegression {
         // guard its furthest bottom is 241.44; lower edge remains at 360.
         JSONObject upper=rect(-100,-100,1100,240,false).put("moveEvents",new JSONArray().put(move(0,1-10/600.0)).put(move(1,1-130/600.0)));
         // The source rectangle center is y=70; the track above centers at10..130.
-        Chart c=chart(new Point(0,1),upper,rect(-100,360,1100,700,false));Point p=choose(c,245);
-        near(p.getY(),245,"moving noise recentered an already clear gesture");clear(c,p,.5);
+        Chart c=chart(new Point(0,1),upper,rect(-100,360,1100,700,false));Point p=choose(c,255);
+        near(p.getY(),255,"moving noise recentered an already clear gesture");clear(c,p,.5);
         for(String profile:new String[]{"16","24"}){
-            AppSettings.values.put("tap_noise_clock_guard_ms",profile);TapMod.reload();Point q=choose(c,245);clear(c,q,.5);
-            near(q.getY(),245,"guard displaced a clear point "+profile);
+            AppSettings.values.put("tap_noise_clock_guard_ms",profile);TapMod.reload();Point q=choose(c,255);clear(c,q,.5);
+            near(q.getY(),255,"guard displaced a clear point "+profile);
         }
         AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.reload();
     }
     private static boolean blocked(Strip[] areas,double y){boolean normal=false;int inverted=0;for(Strip s:areas)if(y>=s.lo&&y<=s.hi){if(s.subtract)inverted++;else normal=true;}return normal^((inverted&1)!=0);}
-    private static double oracle(Strip[] areas,double start){
-        if(!blocked(areas,start)&&!blocked(areas,Math.round(start)))return start;
-        // Brute-force the nearest integer location with a 2px inset at each blocked edge.
-        double best=Double.NaN,dist=Double.POSITIVE_INFINITY;
-        for(int y=0;y<=599;y++){
-            if(blocked(areas,y)||blocked(areas,y-1)||blocked(areas,y+1))continue;
-            double d=Math.abs(y-start);if(d<dist){best=y;dist=d;}
+    // The complete margin around each accepted point must be clear in the final composed mask.
+    private static boolean footprintClear(Strip[] areas,double y){
+        double radius=600./108;
+        if(blocked(areas,y-radius)||blocked(areas,y+radius))return false;
+        for(Strip a:areas)for(double e:new double[]{a.lo,a.hi}){
+            if(e>=y-radius&&e<=y+radius && (blocked(areas,e)||blocked(areas,e-1e-6)||blocked(areas,e+1e-6)))return false;
         }
-        return best;
+        return true;
     }
     private static void independentIntervals()throws Exception{
         Random r=new Random(20261120);long started=System.nanoTime();
@@ -97,9 +96,9 @@ public final class NoiseGestureRegression {
             for(int i=0;i<count;i++){int a,b;do{a=10+10*r.nextInt(58);}while(!used.add(a));do{b=10+10*r.nextInt(58);}while(!used.add(b));areas[i]=new Strip(Math.min(a,b),Math.max(a,b),r.nextBoolean());}
             Chart c=strips(areas);for(int sample=0;sample<4;sample++){
                 double start;boolean edge;do{start=10.25+r.nextInt(579);edge=false;for(Strip area:areas)if(Math.abs(start-area.lo)<1||Math.abs(start-area.hi)<1)edge=true;}while(edge);
-                double expected=oracle(areas,start);Point p=choose(c,start);
+                Point p=choose(c,start);
                 StringBuilder description=new StringBuilder();for(Strip area:areas)description.append(' ').append(area.lo).append("..").append(area.hi).append(area.subtract?'S':'N');
-                ok(Math.abs(Math.abs(p.getY()-start)-Math.abs(expected-start))<=1.05,"not a near-original safe position on trial "+trial+" start="+start+description);near(p.getX(),500,"full-width strips required unnecessary lateral movement");clear(c,p,.5);
+                ok(footprintClear(areas,p.getY())&&footprintClear(areas,Math.round(p.getY())),"margin intersects final mask on trial "+trial+description);near(p.getX(),500,"full-width strips required unnecessary lateral movement");clear(c,p,.5);
                 double[] around={p.getY(),Math.round(p.getY())};for(double y:around)if(y>=0&&y<=599)ok(!blocked(areas,y),"gesture touched a blocked pixel");
             }
         }

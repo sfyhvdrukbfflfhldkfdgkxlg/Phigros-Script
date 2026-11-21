@@ -3,7 +3,6 @@ package io.github.phiscript.root;
 import static io.github.phiscript.i18n.AdditionalEnglish.tr;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.net.Uri;
 import io.github.phiscript.AppSettings;
@@ -18,9 +17,9 @@ public final class PlayEntry {
     private PlayEntry(){}
     public static void choose(Activity a){
         if(RootPanel.blocked(a))return;
-        new AlertDialog.Builder(a).setTitle(io.github.phiscript.i18n.UiText.text("演奏模式")).setItems(io.github.phiscript.i18n.UiText.text(new String[]{
+        UiDesign.show(UiDesign.dialog(a,tr("演奏模式")).setItems(io.github.phiscript.i18n.UiText.text(new String[]{
             tr("Phigros · 自动读谱"),tr("Phira · 谱面演奏"),tr("Phigros · 纯视觉"),tr("Phigros · 手选谱面"),tr("Phira Pro · 谱面演奏"),tr("Phigros · 课题连续校准（三首）")
-        }),(dialog,index)->select(a,index)).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).show();
+        }),(dialog,index)->select(a,index)).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).create());
     }
     public static void select(Activity a,int index){
         if(index==1||index==4){GameLaunch.phira(a,index==4,false);return;}

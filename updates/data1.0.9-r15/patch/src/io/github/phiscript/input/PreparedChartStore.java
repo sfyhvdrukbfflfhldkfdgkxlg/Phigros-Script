@@ -31,7 +31,8 @@ public final class PreparedChartStore {
     private static final Object diskLock=new Object();
     private static final Viewport CLOUD_VIEW=new Viewport(0,0,1920,1080);
     private static final TouchBounds CLOUD_BOUNDS=new TouchBounds(0,0,1919,1079);
-    private static final String CLOUD_SETTINGS="gesture-noise-v2|true|true|0x1.18p5|0x1.8p2|0x1.f4p10|4|12|true|true";
+    static final String LEGACY_CLOUD_SETTINGS="gesture-noise-v2|true|true|0x1.18p5|0x1.8p2|0x1.f4p10|4|12|true|true";
+    private static final String CLOUD_SETTINGS="gesture-variation-v4|true|true|0x1.18p5|0x1.8p2|0x1.f4p10|4|12|true|true";
     private static final ThreadLocal<ImportGeometry> importBatch=new ThreadLocal<>();
     private static final class Geometry {
         final Viewport viewport;final TouchBounds bounds;
@@ -128,7 +129,7 @@ public final class PreparedChartStore {
         return new ImportGeometry(service!=null&&service.getGameForeground()?service:context);
     }
     static void checkCloudGeometry(GestureProfile profile,Viewport view,String signature)throws IOException{
-        if(!GestureProfile.read(null).equals(profile)||!CLOUD_SETTINGS.equals(signature)){
+        if(!GestureProfile.read(null).equals(profile)||!CLOUD_SETTINGS.equals(TapMod.baseSignature())||!TapMod.preparationSignature().equals(signature)){
             throw new IOException(io.github.phiscript.root.UiDesign.words(
                     "云端轨迹使用默认手势和噪域设置。请在 Swordalt 谱库按当前设置准备这张谱面。",
                     "Cloud tracks use the default gesture and noise settings. Prepare this chart in the Swordalt library to use your settings."));
@@ -158,7 +159,7 @@ public final class PreparedChartStore {
         GesturePlan plan=PreparedTrajectory.readCloud(chart,window.profile,CLOUD_VIEW,CLOUD_BOUNDS,in,archive.trackLength,fingerprint,geometry.viewport,geometry.bounds,cancel);
         check(cancel);
         byte[] tracks=plan.encodePrepared(fingerprint);
-        if(tracks.length!=archive.trackLength)throw new IOException(tr("预计算文件大小无效"));
+        archive=archive.withTrackLength(tracks.length);
         File target=file(context,fingerprint+"."+key(window.profile,geometry.viewport,geometry.bounds)+".ptg");
         write(context,target,archive,fingerprint,tracks,cancel);
         GesturePlan.cache(chart,window.profile,geometry.viewport,geometry.bounds,plan,true);

@@ -51,6 +51,11 @@ final class PlaybackArchive {
         return (long)HEADER_SIZE + timeline.length + trackLength;
     }
 
+    PlaybackArchive withTrackLength(int length) throws IOException {
+        validateLengths(timeline.length, length);
+        return new PlaybackArchive(timeline, length);
+    }
+
     void write(OutputStream target, String fingerprint, byte[] tracks) throws IOException {
         DataOutputStream out = new DataOutputStream(target);
         out.writeInt(MAGIC);

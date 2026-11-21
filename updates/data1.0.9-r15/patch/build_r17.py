@@ -20,7 +20,7 @@ APK_NAME="PhigrosScript_data1.0.9-r17.apk"
 
 def build(base,key,cert,output,release="data1.0.9-r17",code=41):
     assert hashlib.sha256(base.read_bytes()).hexdigest()==previous.BASE_SHA256,"Expected exact official R15 APK"
-    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001),("data1.1.2",11002))
+    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001),("data1.1.2",11002),("data1.1.2",11003))
     sdk=ROOT/"tools/platform/android-35/android.jar"
     bt=ROOT/"tools/build-tools/android-15"
     ecj=ROOT/"tools/ecj.jar"

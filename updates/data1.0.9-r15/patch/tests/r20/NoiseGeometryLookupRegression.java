@@ -27,7 +27,7 @@ public final class NoiseGeometryLookupRegression {
         dx=(x-centerX)*aspect;dy=y-centerY;return new double[]{centerX,centerY,.5+(dx*cos+dy*sin)/aspect/sx,.5+(-dx*sin+dy*cos)/sy};
     }
     public static void main(String[] args)throws Exception{
-        Object area=area();Class<?> type=area.getClass();Method hash=method(type,"geometryHash",long.class,long.class),center=method(type,"center",double.class,double.class),local=method(type,"local",double.class,double.class,double.class,double.class),covers=method(type,"covers",double.class,double.class,double.class,double.class),geometry=method(type,"geometry",double.class,double.class);
+        Object area=area();Class<?> type=area.getClass();Method hash=method(type,"geometryHash",long.class,long.class),center=method(type,"center",double.class,double.class),local=method(type,"local",double.class,double.class,double.class,double.class),covers=method(type,"covers",double.class,double.class,double.class,double.class,double.class),geometry=method(type,"geometry",double.class,double.class);
         Random random=new Random(382516);List<double[]> collision=new ArrayList<>();double[] aspects={.25,.75,1,16.0/9,4};
         while(collision.size()<192){double t=.001+random.nextDouble()*9.998,aspect=aspects[random.nextInt(aspects.length)];if((Integer)hash.invoke(null,Double.doubleToLongBits(t),Double.doubleToLongBits(aspect))==250)collision.add(new double[]{t,aspect});}
         for(int round=0;round<12;round++){
@@ -37,7 +37,7 @@ public final class NoiseGeometryLookupRegression {
                 near(actual[0],expected[0],"collision center X");near(actual[1],expected[1],"collision center Y");actual=(double[])local.invoke(area,x,y,t,aspect);
                 near(actual[0],expected[2],"collision local X");near(actual[1],expected[3],"collision local Y");
                 boolean blocked=expected[2]>=.2-1e-8&&expected[2]<=.8+1e-8&&expected[3]>=.3-1e-8&&expected[3]<=.7+1e-8;
-                ok((Boolean)covers.invoke(area,x,y,t,aspect)==blocked,"fused covers changed local-space coverage");
+                ok((Boolean)covers.invoke(area,x,y,t,aspect,0.)==blocked,"fused covers changed local-space coverage");
                 Object exact=geometry.invoke(area,t,aspect),adjacent=geometry.invoke(area,Math.nextUp(t),Math.nextUp(aspect));
                 ok(field(exact.getClass(),"time").getLong(exact)==Double.doubleToLongBits(t),"exact timestamp was aliased");
                 ok(field(adjacent.getClass(),"time").getLong(adjacent)==Double.doubleToLongBits(Math.nextUp(t)),"adjacent timestamp was rounded");
@@ -53,7 +53,7 @@ public final class NoiseGeometryLookupRegression {
             for(double lx:new double[]{.2-2e-8,.2-1e-8,.2,.5,.8,.8+1e-8,.8+2e-8})for(double ly:new double[]{.3-2e-8,.3-1e-8,.3,.5,.7,.7+1e-8,.7+2e-8}){
                 double dx=(lx-.5)*aspect*sx,dy=(ly-.5)*sy,x=centerAt[0]+(dx*cos-dy*sin)/aspect,y=centerAt[1]+dx*sin+dy*cos;
                 double[] before=(double[])local.invoke(area,x,y,t,aspect);boolean legacy=before[0]>=.2-1e-8&&before[0]<=.8+1e-8&&before[1]>=.3-1e-8&&before[1]<=.7+1e-8;
-                ok((Boolean)covers.invoke(area,x,y,t,aspect)==legacy,"fused cover differed at transformed epsilon boundary");
+                ok((Boolean)covers.invoke(area,x,y,t,aspect,0.)==legacy,"fused cover differed at transformed epsilon boundary");
             }
         }
         System.out.println("PASS "+checks+" exact geometry lookup checks: wrapping hash collisions, repeated 96-entry eviction, five aspects, adjacent-double keys, independent transform/local coverage and fixed memory bounds.");

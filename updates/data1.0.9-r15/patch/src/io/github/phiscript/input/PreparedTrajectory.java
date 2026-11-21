@@ -205,7 +205,79 @@ public final class PreparedTrajectory {
         }
         cancelled(cancel);return out;
     }
-    private static void cancelled(AtomicBoolean cancel){if(Thread.currentThread().isInterrupted()||cancel!=null&&cancel.get())throw new IllegalStateException(tr("谱面轨迹预计算已取消"));}
+    static void cancelled(AtomicBoolean cancel){if(Thread.currentThread().isInterrupted()||cancel!=null&&cancel.get())throw new IllegalStateException(tr("谱面轨迹预计算已取消"));}
+
+    /** Commit device-specific timing, vertical translation, and hold anchoring only once. */
+    GesturePlan finishDevice(Chart chart,List<TouchEvent> input,int[] metrics,AtomicBoolean cancel,GesturePlan raw){
+        ContactVariation variation=TapMod.contactVariation();
+        long seed=ContactVariation.chartSeed(chart);
+        NavigableSet<Long> starts=new TreeSet<>();
+        for(TouchEvent event:input)starts.add(event.getStartMs());
+        List<TouchEvent> output=new ArrayList<>(input.size());
+        for(int i=0;i<input.size();){
+            cancelled(cancel);
+            int end=i+1;
+            while(end<input.size()&&input.get(end).getStartMs()==input.get(i).getStartMs())end++;
+            List<TouchEvent> group=input.subList(i,end);
+            int delay=variation.delay(seed,group,starts);
+            float[] offsets=new float[group.size()];
+            // If one chord member cannot move safely in time, preserve the whole chord's onset.
+            if(!planVariation(chart,variation,seed,group,delay,offsets,cancel)){
+                delay=0;
+                planVariation(chart,variation,seed,group,0,offsets,cancel);
+            }
+            for(int j=0;j<group.size();j++){
+                TouchEvent before=group.get(j);
+                Track track=tracks.remove(before);
+                TouchEvent event=delay==0?before:new TouchEvent(before.getNote(),before.getStartMs()+delay,before.getEndMs()+delay);
+                tracks.put(event,track);
+                track.start+=delay;
+                for(int k=0;k<track.critical.length;k++)track.critical[k]+=delay;
+                float dy=offsets[j];
+                if(dy!=0)for(int k=0;k<track.y.length;k++)track.y[k]=bounds.y(track.y[k]+dy);
+                ContactPlanner.Route route=raw==null?null:raw.routes.get(before);
+                boolean anchored=(route==null||route.uses==1)&&HoldOscillation.stabilize(chart,view,event,
+                        track.flick,track.x,track.y,track.connected,track.start,cancel,raw!=null);
+                if(dy!=0||anchored){
+                    for(int k=0;k<track.y.length;k++){
+                        if(!Float.isFinite(track.x[k]))track.aospX[k]=track.aospY[k]=0;
+                        track.prepareAccessibility(k,horizontal,vertical);
+                    }
+                }
+                if(anchored){
+                    BitSet boundaries=new BitSet(track.y.length);
+                    for(int time:track.critical)boundaries.set(time-track.start);
+                    for(int k=1;k<track.y.length;k++){
+                        if(track.connected[k]==0&&(Float.isFinite(track.x[k-1])||Float.isFinite(track.x[k]))){
+                            boundaries.set(k-1);boundaries.set(k);
+                        }
+                    }
+                    track.critical=new int[boundaries.cardinality()];
+                    int cursor=0;
+                    for(int k=boundaries.nextSetBit(0);k>=0;k=boundaries.nextSetBit(k+1))track.critical[cursor++]=track.start+k;
+                    track.index();
+                }
+                output.add(event);
+            }
+            i=end;
+        }
+        return GesturePlan.fromPrepared(output,metrics,this);
+    }
+
+    private boolean planVariation(Chart chart,ContactVariation variation,long seed,List<TouchEvent> group,
+                                  int delay,float[] offsets,AtomicBoolean cancel){
+        for(int i=0;i<group.size();i++){
+            TouchEvent event=group.get(i);
+            Track track=tracks.get(event);
+            float dy=variation.drift(seed,event,track.y,view,bounds);
+            if(!ContactVariation.safe(chart,view,track.start,track.x,track.y,track.connected,delay,dy,cancel)){
+                if(dy==0||!ContactVariation.safe(chart,view,track.start,track.x,track.y,track.connected,delay,0,cancel))return false;
+                dy=0;
+            }
+            offsets[i]=dy;
+        }
+        return true;
+    }
 
     private static final int SAMPLE_BYTES=15;
     private static final int SAMPLES_PER_BLOCK=1024;
@@ -327,7 +399,9 @@ public final class PreparedTrajectory {
         if(in.readInt()!=MAGIC||in.readInt()!=VERSION||!in.readUTF().equals(fingerprint))throw new IOException(tr("谱面预计算版本或指纹不匹配"));
         String settings=in.readUTF();
         long salt=in.readLong();
-        if(!settings.equals(TapMod.preparationSignature()))throw new IOException(tr("触控设置已改变，需要重新预计算"));
+        String deviceSettings=TapMod.preparationSignature();
+        boolean legacyCloud=destination!=null && PreparedChartStore.LEGACY_CLOUD_SETTINGS.equals(settings);
+        if(!settings.equals(deviceSettings)&&!legacyCloud)throw new IOException(tr("触控设置已改变，需要重新预计算"));
         ByteArrayOutputStream geometry=new ByteArrayOutputStream();
         writeGeometry(new DataOutputStream(geometry),profile,view,bounds);
         byte[] actual=new byte[geometry.size()];
@@ -345,7 +419,7 @@ public final class PreparedTrajectory {
             if(notes.put(note.getId(),note)!=null)throw new IOException(tr("谱面音符编号不唯一"));
         }
         PreparedTrajectory prepared=new PreparedTrajectory(profile,destination==null?view:destination,
-                destination==null?bounds:destinationBounds,settings,salt);
+                destination==null?bounds:destinationBounds,deviceSettings,salt);
         PixelAxis inputX=new PixelAxis(bounds.left,bounds.right),inputY=new PixelAxis(bounds.top,bounds.bottom);
         List<TouchEvent> events=new ArrayList<>();
         ByteBuffer block=ByteBuffer.allocate(SAMPLES_PER_BLOCK*SAMPLE_BYTES);
@@ -379,7 +453,7 @@ public final class PreparedTrajectory {
             }
             readSamples(in,samples,track,inputX,inputY,block);
             readBoundaries(in,samples,track);
-            if(destination!=null&&!prepared.mapCloudTrack(track,chart,view,cancel))emptyTracks++;
+            if(destination!=null&&!prepared.mapCloudTrack(track,chart,view,legacyCloud,cancel))emptyTracks++;
             if(track!=null)track.index();
         }
         if(body.remaining!=0)throw new IOException(tr("预计算文件含多余数据"));
@@ -391,9 +465,10 @@ public final class PreparedTrajectory {
                 "本机触控边界内没有可用的云端手势，请在 Swordalt 谱库按本机设置准备这张谱面。",
                 "No cloud gesture fits your touch bounds. Prepare this chart locally in the Swordalt library."));
         TapMod.preparationSalt(chart,salt);
+        if(legacyCloud)return prepared.finishDevice(chart,events,metrics,cancel,null);
         return GesturePlan.fromPrepared(events,metrics,prepared);
     }
-    private boolean mapCloudTrack(Track track,Chart chart,Viewport source,AtomicBoolean cancel)throws IOException{
+    private boolean mapCloudTrack(Track track,Chart chart,Viewport source,boolean legacyCloud,AtomicBoolean cancel)throws IOException{
         float scaleX=view.getWidth()/source.getWidth(),scaleY=view.getHeight()/source.getHeight();
         boolean hasNoise=TapMod.avoids(chart),previousClipped=false;
         boolean playable=false;
@@ -410,8 +485,11 @@ public final class PreparedTrajectory {
                 long time=(long)track.start+i;
                 // Clipping at a system inset changes the certified segment. Do not publish a
                 // modified contact across a noise region, even if both endpoints remain clear.
-                if((clipped||previousClipped)&&BlockAreaSet.overlaps(chart,time-1-TapMod.noiseLookBackMs(),time+TapMod.noiseLookAheadMs())){
+                if((legacyCloud||clipped||previousClipped)&&BlockAreaSet.overlaps(chart,time-1-TapMod.noiseLookBackMs(),time+TapMod.noiseLookAheadMs())){
                     if(!TapMod.clearAt(chart,view,current,time/1000.0)){
+                        current=legacyCloud?nearbyCloudPoint(chart,current,time):null;
+                    }
+                    if(current==null){
                         track.x[i]=track.y[i]=Float.NaN;
                         track.aospX[i]=track.aospY[i]=0;
                         track.aospAlternate[i]=NO_ALTERNATE;
@@ -419,6 +497,8 @@ public final class PreparedTrajectory {
                         previous=null;previousClipped=false;
                         continue;
                     }
+                    track.x[i]=current.getX();
+                    track.y[i]=current.getY();
                     if(track.connected[i]!=0&&previous!=null){
                         try{TapMod.segment(chart,view,previous,current,time-1,time);}
                         catch(TapMod.NoSafePoint blocked){track.connected[i]=0;}
@@ -431,6 +511,21 @@ public final class PreparedTrajectory {
             playable=true;
         }
         return playable;
+    }
+
+    // Legacy cloud archives contain routed contacts but no moving judge-line normals.
+    // Keep repairs local to the authored contact and certify continuity separately.
+    private Point nearbyCloudPoint(Chart chart,Point origin,long time){
+        float step=Math.max(1f,view.getHeight()/216f);
+        for(int ring=1;ring<=3;ring++){
+            for(int direction=0;direction<8;direction++){
+                double angle=direction*Math.PI/4;
+                Point trial=new Point(bounds.x(origin.getX()+(float)Math.cos(angle)*step*ring),
+                        bounds.y(origin.getY()+(float)Math.sin(angle)*step*ring));
+                if(TapMod.clearAt(chart,view,trial,time/1000.0))return trial;
+            }
+        }
+        return null;
     }
     static byte[] encode(GesturePlan plan,PreparedTrajectory p,String fingerprint)throws IOException{
         if(fingerprint==null||fingerprint.isEmpty()||fingerprint.length()>512)throw new IOException(tr("谱面指纹无效"));

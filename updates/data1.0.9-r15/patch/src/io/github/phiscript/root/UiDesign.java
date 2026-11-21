@@ -26,22 +26,23 @@ import io.github.phiscript.i18n.UiText;
 /** Native design primitives shared by home, libraries and settings dialogs. */
 public final class UiDesign {
     private static final int STYLED_TEXT=0x7f0f7b04;
-    public static final int BG=0xff0b111b,SURFACE=0xff151f2d,RAISED=0xff202d3e,
-        INK=0xfff0f5fc,MUTED=0xffaab9cc,ACCENT=0xff83e4ca,DANGER=0xffffb5b7,LINE=0xff2b3b4e;
+    public static final int BG=0xfff5f7f4,SURFACE=0xffffffff,RAISED=0xffedf1ed,
+        INK=0xff172d25,MUTED=0xff4c6258,ACCENT=0xff1d6450,DANGER=0xff9b3340,LINE=0xffd5dfd8,
+        MINT=0xffdfefe5,ON_ACCENT=0xffffffff;
     public static final int PLAY=0,LIBRARY=1,DOWNLOAD=2,IMPORT=3,TRASH=4,SETTINGS=5,SHIELD=6,VIDEO=7,HISTORY=8;
     private UiDesign(){}
     public static int dp(Context c,float n){return Math.round(n*c.getResources().getDisplayMetrics().density);}
     public static String words(String chinese,String english){return UiText.english()?english:UiText.text(chinese);}
     public static GradientDrawable shape(Context c,int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(c,radius));return d;}
-    public static RippleDrawable ripple(Context c,int color,int radius){return new RippleDrawable(ColorStateList.valueOf(0x3383e4ca),shape(c,color,radius),shape(c,0xffffffff,radius));}
+    public static RippleDrawable ripple(Context c,int color,int radius){return new RippleDrawable(ColorStateList.valueOf(color==ACCENT||color==DANGER?0x33ffffff:0x24216950),shape(c,color,radius),shape(c,0xffffffff,radius));}
     public static LinearLayout.LayoutParams space(Context c,int width,int height,int top){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(width,height);p.topMargin=dp(c,top);return p;}
     public static TextView text(Context c,String value,int size,int color,boolean bold){
         TextView v=new TextView(c);v.setText(UiText.text(value));v.setTextSize(size);v.setTextColor(color);v.setLineSpacing(dp(c,3),1);v.setIncludeFontPadding(false);v.setTag(STYLED_TEXT,true);
         if(bold)v.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return v;
     }
-    public static LinearLayout card(Context c){LinearLayout box=new LinearLayout(c);box.setOrientation(1);box.setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));box.setBackground(shape(c,SURFACE,22));return box;}
+    public static LinearLayout card(Context c){LinearLayout box=new LinearLayout(c);box.setOrientation(1);box.setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));GradientDrawable panel=shape(c,SURFACE,18);panel.setStroke(dp(c,1),LINE);box.setBackground(panel);return box;}
     public static Button button(Context c,String title,boolean primary,Runnable click){
-        Button b=new Button(c);b.setText(UiText.text(title));b.setAllCaps(false);b.setTextSize(primary?17:14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setTextColor(primary?BG:INK);
+        Button b=new Button(c);b.setText(UiText.text(title));b.setAllCaps(false);b.setTextSize(primary?17:14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setTextColor(primary?ON_ACCENT:INK);b.setStateListAnimator(null);
         b.setMinHeight(dp(c,primary?56:48));b.setMinimumHeight(dp(c,primary?56:48));b.setPadding(dp(c,12),dp(c,12),dp(c,12),dp(c,12));b.setBackground(ripple(c,primary?ACCENT:RAISED,14));
         b.setContentDescription(UiText.text(title));b.setOnClickListener(v->click.run());UiMotion.bindPress(b);return b;
     }
@@ -56,10 +57,10 @@ public final class UiDesign {
         copy.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         row.setOnClickListener(v->click.run());UiMotion.bindPress(row);return row;
     }
-    public static AlertDialog.Builder dialog(Activity a,String title){return new AlertDialog.Builder(a,android.R.style.Theme_Material_Dialog_Alert).setTitle(UiText.text(title));}
+    public static AlertDialog.Builder dialog(Activity a,String title){return new AlertDialog.Builder(a,android.R.style.Theme_Material_Light_Dialog_Alert).setTitle(UiText.text(title));}
     public static AlertDialog show(AlertDialog dialog){
         UiMotion.show(dialog);
-        if(dialog.getWindow()!=null){dialog.getWindow().setBackgroundDrawable(shape(dialog.getContext(),SURFACE,24));dialog.getWindow().setDimAmount(.60f);}
+        if(dialog.getWindow()!=null){dialog.getWindow().setBackgroundDrawable(shape(dialog.getContext(),SURFACE,22));dialog.getWindow().setDimAmount(.34f);if(android.os.Build.VERSION.SDK_INT>=29)dialog.getWindow().getDecorView().setForceDarkAllowed(false);}
         tint(dialog.getWindow()==null?null:dialog.getWindow().getDecorView());
         for(int id:new int[]{AlertDialog.BUTTON_POSITIVE,AlertDialog.BUTTON_NEGATIVE,AlertDialog.BUTTON_NEUTRAL}){
             Button b=dialog.getButton(id);if(b!=null){b.setTextColor(ACCENT);b.setAllCaps(false);b.setMinHeight(dp(b.getContext(),48));UiMotion.bindPress(b);}
@@ -77,6 +78,7 @@ public final class UiDesign {
         if(description!=null&&!description.isEmpty())box.addView(text(a,description,13,MUTED,false),space(a,-1,-2,0));
         field.setTextColor(INK);field.setHintTextColor(MUTED);field.setMinHeight(dp(a,52));field.setBackgroundTintList(ColorStateList.valueOf(ACCENT));box.addView(field,space(a,-1,-2,12));return box;
     }
+    static Drawable mark(Context c,int kind){return new Mark(c,kind);}
     private static final class Mark extends Drawable {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);final int size,kind;
         Mark(Context c,int kind){size=dp(c,22);this.kind=kind;p.setColor(ACCENT);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1.7f);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);setBounds(0,0,size,size);}
@@ -91,6 +93,6 @@ public final class UiDesign {
             else if(kind==HISTORY){canvas.drawCircle(12,12,9,p);canvas.drawLine(12,6,12,12,p);canvas.drawLine(12,12,16,14,p);}
             else{canvas.drawRoundRect(4,5,20,20,3,3,p);canvas.drawLine(8,3,8,17,p);canvas.drawLine(8,10,16,10,p);canvas.drawLine(12,14,16,14,p);}canvas.restore();
         }
-        public void setAlpha(int alpha){p.setAlpha(alpha);}public void setColorFilter(ColorFilter f){p.setColorFilter(f);}public int getOpacity(){return PixelFormat.TRANSLUCENT;}
+        public void setAlpha(int alpha){p.setAlpha(alpha);invalidateSelf();}public void setColorFilter(ColorFilter f){p.setColorFilter(f);invalidateSelf();}public int getOpacity(){return PixelFormat.TRANSLUCENT;}
     }
 }
