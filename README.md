@@ -2,6 +2,10 @@
 
 <img src="updates/data1.0.9-r15/patch/icon/icon.svg" width="112" alt="Phigros Script 图标">
 
+[中文](#中文) · [English](#english)
+
+## 中文
+
 本分支版本为 **data1.1.2**，versionCode 为 **11002**。确认歌曲后从导入缓存读取时间轴和逐毫秒触点，支持在原谱 JSON 离线后演奏。Phira 默认重试延迟为 715 毫秒，默认不叠加谱面自带偏移。Phigros 默认为 1700 毫秒。[升级与使用说明](updates/data1.1.2/README.md)
 
 [GitHub 发行版](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases) · [data1.1.0 使用与构建](updates/data1.1.0/README.md) · [data1.1.0 验证记录](updates/data1.1.0/TESTING.md)
@@ -13,6 +17,16 @@ Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导
 支持 Root 与无障碍输入。验证覆盖最终签名 APK 的实际代码、原谱及 Android 主机模型；Android 真机界面、判定与录屏性能仍需实测，不保证任意谱面全连或满分。
 
 data1.1.2 的补丁源码和构建入口位于 [updates/data1.0.9-r15/patch/build_112.py](updates/data1.0.9-r15/patch/build_112.py)。根目录保留旧版 Alpha Gradle 工程。
+
+## English
+
+Phigros Script is an Android chart player for Phigros, Phira and Phira Pro. It recognizes the song and difficulty, then plays the chart using Android accessibility gestures or root touch input. [Download the latest APK](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/latest)
+
+- **Phigros.** Confirm the song and difficulty to download its timeline, touch coordinates and noise areas. Once cached, the chart can be played offline. In Challenge Mode, the app recalibrates at the start of each of the three songs.
+- **Phira and Phira Pro.** Import a local chart, or find one in the online library by song recognition or chart ID. The app prepares its touch coordinates during import.
+- **Timing and recording.** The default retry delay is 1,700 ms for Phigros and 715 ms for Phira. Phira's chart offset is excluded by default. Recording supports 720p or 1080p at 30 or 60 fps.
+
+For **data1.1.2** (Android version code 11002), the APK patch and its build script are under `updates/data1.0.9-r15/patch`. [Build script](updates/data1.0.9-r15/patch/build_112.py) · [Upgrade and build instructions in Chinese](updates/data1.1.2/README.md)
 
 <details>
 <summary>原 Alpha 版本说明</summary>
