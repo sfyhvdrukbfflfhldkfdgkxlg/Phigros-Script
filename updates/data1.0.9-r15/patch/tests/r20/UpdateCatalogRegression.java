@@ -33,9 +33,12 @@ public final class UpdateCatalogRegression {
     public static void main(String[] args) throws Exception {
         if(args.length>0 && "--revisions".equals(args[0])){
             JSONObject r2=release("data1.1.3-r2",false,false);
+            JSONObject r3=release("data1.1.3-r3",false,false);
             JSONObject r10=release("data1.1.3-r10",false,false);
             expect("data1.1.3","data1.1.3-r2",r2);
             expect("data1.1.3-r2",null,r2,release("data1.1.3",false,false));
+            expect("data1.1.3-r2","data1.1.3-r3",r2,r3);
+            expect("data1.1.3-r3",null,r3,r2);
             expect("data1.1.3-r2","data1.1.3-r10",r10,r2,release("data1.1.3-r20",false,true));
             expect("data1.1.3-r10",null,r2);
             expect("data1.1.3-r10","data1.1.4",r2,release("data1.1.4",false,false));

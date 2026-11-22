@@ -31,6 +31,14 @@ def main(version, code):
     check(base, apk, version, code)
     run("python", "patch/tests/icon_resource_check.py", base, apk)
     def checks(work, api, host, models, tests):
+        with ZipFile(work/"final.jar") as classes:
+            has_game_audio = "io/github/phiscript/record/GameAudioMuxer.class" in classes.namelist()
+        if has_game_audio:
+            audio_dir = work/"audio-models"
+            audio_cp = cp(audio_dir, models, api)
+            compile_to(audio_dir, audio_cp, *sorted((ROOT/"patch/tests/audio").rglob("*.java")))
+            for check_name in ("GameAudioMuxerRegression", "GameAudioInputRegression"):
+                run("java", "-cp", audio_cp, "io.github.phiscript.record."+check_name)
         if code >= 11002:
             check_download_menu(work/"final.jar")
             if args.cloud_smoke:

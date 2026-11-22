@@ -24,6 +24,7 @@ import android.util.DisplayMetrics;
 import android.view.WindowManager;
 import io.github.phiscript.RuntimeState;
 import io.github.phiscript.root.ManualChartControl;
+import static io.github.phiscript.root.UiDesign.words;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,6 +43,7 @@ public final class ManualRecordingService extends Service {
     private MediaProjection projection;
     private VirtualDisplay display;
     private RecordingFiles output;
+    private GameRecordingAudio audio;
     private volatile boolean armed,recording;
     private long began;
     private RecordingPolicy.Profile profile=RecordingPolicy.DEFAULT;
@@ -59,7 +61,7 @@ public final class ManualRecordingService extends Service {
         current=this;
         try{
             profile=RecordingPreferences.load(this);
-            notification(tr("录屏授权已开启，等待游戏内点击“开始”；无声视频"));
+            notification(words("录屏已就绪，等待游戏内点击「开始」","Recording is ready. Tap Start in the game."));
             int result=intent.getIntExtra("result",0);Intent data=intent.getParcelableExtra("data");
             if(result!=Activity.RESULT_OK||data==null)throw new IllegalArgumentException(tr("缺少本次录屏授权"));
             // Android 14+: service must already be foreground before consuming the token.
@@ -108,7 +110,8 @@ public final class ManualRecordingService extends Service {
                 c.prepareVideo();
                 if(c.stopping.get())throw new IllegalStateException(tr("录屏已取消"));
                 c.recorder.start();c.began=android.os.SystemClock.uptimeMillis();c.recording=true;
-                c.main.post(()->{if(!c.stopping.get())c.notification(tr("正在录制游戏画面（无声）；停止打谱将自动保存"));});
+                c.audio=GameRecordingAudio.start(c,c.projection,System.nanoTime());
+                c.main.post(()->{if(!c.stopping.get())c.notification(words("正在录制游戏，停止演奏后自动保存","Recording the game. The video is saved when playback stops."));});
             }catch(Exception e){failure.set(e);c.fail(e.getMessage());}
             catch(OutOfMemoryError e){failure.set(new IllegalStateException(tr("录屏内存不足"),e));c.fail(tr("录屏内存不足"));}
             finally{latch.countDown();}
@@ -122,17 +125,23 @@ public final class ManualRecordingService extends Service {
         if(!stopping.compareAndSet(false,true))return;armed=false;
         Runnable cleanup=()->{
             boolean valid=false;
+            if(audio!=null)audio.stopCapture();
             if(recorder!=null){
                 try{if(recording){recorder.stop();valid=android.os.SystemClock.uptimeMillis()-began>=300;}}catch(Exception e){RuntimeState.INSTANCE.log(tr("录屏过短或编码未完成，未保存损坏视频"));}
                 try{recorder.release();}catch(Exception ignored){}recorder=null;
             }
             recording=false;
-            if(display!=null){display.release();display=null;}
-            if(output!=null){output.finish(valid);output=null;}
+            if(display!=null){try{display.release();}catch(RuntimeException ignored){}display=null;}
             MediaProjection p=projection;projection=null;
             if(p!=null){try{p.unregisterCallback(callback);p.stop();}catch(Exception ignored){}}
-            main.post(()->{if(current==this)current=null;stopForeground(true);stopSelf();});
-            if(thread!=null)thread.quitSafely();
+            try{
+                if(audio!=null)audio.finish(output,valid);
+                else if(output!=null)output.finish(valid);
+            }finally{
+                audio=null;output=null;
+                main.post(()->{if(current==this)current=null;stopForeground(true);stopSelf();});
+                if(thread!=null)thread.quitSafely();
+            }
         };
         if(media!=null)media.post(cleanup);else cleanup.run();
     }

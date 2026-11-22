@@ -32,7 +32,8 @@ public final class HomeScreen {
     private static final int INK=UiDesign.INK,MUTED=UiDesign.MUTED,ACCENT=UiDesign.ACCENT;
     private final Activity activity;
     private final LinearLayout root;
-    private TextView badge,summary,phigrosCount,phiraCount,permission,mode;
+    private TextView badge,summary,phigrosCount,phiraCount,permission,mode,recordingProfile;
+    private LinearLayout recordingSettings;
     private Button primary;
     private Switch recording;
     private static final int PERFORMANCE=0,LIBRARY=1;
@@ -92,38 +93,50 @@ public final class HomeScreen {
         scroll.setClipToPadding(false);
         scroll.setTag(index==PERFORMANCE?"data-performance-page":"data-library-page");
         viewport.addView(scroll,new FrameLayout.LayoutParams(-1,-1));scroll.setVisibility(View.GONE);
-        LinearLayout content=new LinearLayout(activity);content.setOrientation(LinearLayout.VERTICAL);
-        // Center a readable column on wide windows without clipping compact or split-screen layouts.
-        int width=activity.getResources().getConfiguration().screenWidthDp;
-        int side=dp(Math.max(width<360?14:20,(width-640)/2));
-        content.setPadding(side,dp(20),side,dp(24));
+        LinearLayout content=new LinearLayout(activity){
+            @Override protected void onMeasure(int widthSpec,int heightSpec){
+                int width=MeasureSpec.getSize(widthSpec);
+                int side=Math.max(dp(width<dp(360)?14:20),(width-dp(960))/2);
+                if(getPaddingLeft()!=side)setPadding(side,dp(14),side,dp(20));
+                super.onMeasure(widthSpec,heightSpec);
+            }
+        };content.setOrientation(LinearLayout.VERTICAL);
         scroll.addView(content,new ScrollView.LayoutParams(-1,-2));
         LinearLayout brand=new LinearLayout(activity);brand.setGravity(Gravity.CENTER_VERTICAL);
         content.addView(brand,new LinearLayout.LayoutParams(-1,-2));
         android.widget.ImageView logo=new android.widget.ImageView(activity);
         logo.setImageResource(activity.getApplicationInfo().icon);logo.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         brand.addView(logo,new LinearLayout.LayoutParams(dp(28),dp(28)));
-        TextView name=UiDesign.text(activity,"Phigros Script",15,INK,true);
-        LinearLayout.LayoutParams flexible=new LinearLayout.LayoutParams(0,-2,1);flexible.setMarginStart(dp(8));brand.addView(name,flexible);
+        TextView heading=UiDesign.text(activity,title,27,INK,true);
+        LinearLayout.LayoutParams flexible=new LinearLayout.LayoutParams(0,-2,1);
+        flexible.setMarginStart(dp(10));flexible.setMarginEnd(dp(6));brand.addView(heading,flexible);
         try{
             String version=activity.getPackageManager().getPackageInfo(activity.getPackageName(),0).versionName;
             if(!TextUtils.isEmpty(version))brand.addView(UiDesign.text(activity,version,12,MUTED,false),new LinearLayout.LayoutParams(-2,-2));
         }catch(android.content.pm.PackageManager.NameNotFoundException ignored){}
-        TextView heading=text(content,title,32,INK,true);heading.setPadding(0,dp(20),0,dp(2));
         if(android.os.Build.VERSION.SDK_INT>=28){heading.setAccessibilityHeading(true);scroll.setAccessibilityPaneTitle(title);}
         return content;
     }
     private void navigation(GlassStage stage){
-        FrameLayout controls=new FrameLayout(activity);
+        FrameLayout controls=new FrameLayout(activity){
+            @Override protected void onMeasure(int widthSpec,int heightSpec){
+                if(getChildCount()>0){
+                    int available=MeasureSpec.getSize(widthSpec)-getPaddingLeft()-getPaddingRight();
+                    LayoutParams slot=(LayoutParams)getChildAt(0).getLayoutParams();
+                    int margin=Math.max(dp(12),(available-dp(440))/2);
+                    slot.leftMargin=margin;
+                    slot.rightMargin=margin;
+                }
+                super.onMeasure(widthSpec,heightSpec);
+            }
+        };
         stage.addView(controls,new FrameLayout.LayoutParams(-1,-1));
         LinearLayout bar=new LinearLayout(activity);bar.setGravity(Gravity.CENTER);
         bar.setBackground(GlassSurface.dock(activity));bar.setElevation(dp(3));
         bar.setPadding(dp(6),dp(4),dp(6),dp(4));
         // Keep the two tabs within thumb reach in a broad landscape or tablet window.
-        int width=activity.getResources().getConfiguration().screenWidthDp;
-        int margin=dp(Math.max(12,(width-440)/2));
         FrameLayout.LayoutParams dock=new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM);
-        dock.setMargins(margin,dp(4),margin,dp(6));controls.addView(bar,dock);
+        dock.setMargins(dp(12),dp(4),dp(12),dp(6));controls.addView(bar,dock);
         navItem(bar,PERFORMANCE,w("演奏","Play"),UiDesign.PLAY);
         navItem(bar,LIBRARY,w("谱库","Library"),UiDesign.LIBRARY);
         stage.setDock(bar);
@@ -168,7 +181,8 @@ public final class HomeScreen {
         GlassWindows.home(activity.getWindow(),viewport);
         LinearLayout performance=page(viewport,PERFORMANCE,w("演奏台","Performance"));
         LinearLayout library=page(viewport,LIBRARY,w("谱库","Library"));
-        LinearLayout transport=card(performance);transport.setBackground(new GlassSurface(activity,20,true));
+        LinearLayout playTools=panels(performance);
+        LinearLayout transport=card(playTools);transport.setBackground(new GlassSurface(activity,20,true));
         badge=text(transport,"",13,ACCENT,true);badge.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         mode=text(transport,"",22,INK,true);mode.setPadding(0,dp(12),dp(8),dp(10));mode.setMinHeight(dp(52));mode.setGravity(Gravity.CENTER_VERTICAL);mode.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
         mode.setBackground(UiDesign.ripple(activity,android.graphics.Color.TRANSPARENT,10));mode.setFocusable(true);mode.setOnClickListener(v->PlayEntry.choose(activity));UiMotion.bindPress(mode);
@@ -178,28 +192,31 @@ public final class HomeScreen {
             else if(RuntimeState.INSTANCE.getRunning().get()||ManualChartControl.isOpen())AutoEntry.stop(activity);else PlayEntry.start(activity,false);update();
         });primary.setTag("data-primary-transport");
         text(transport,w("保持游戏横屏 · 音量减键可停止","Keep landscape · Volume down stops"),12,MUTED,false).setPadding(0,dp(12),0,0);
-        LinearLayout phigros=card(library);label(phigros,"Phigros");
+        LinearLayout libraries=panels(library);
+        LinearLayout phigros=card(libraries);label(phigros,"Phigros");
         phigrosCount=text(phigros,"",13,MUTED,false);
         triad(phigros,"Phigros",new String[]{w("下载","Get charts"),w("导入","Import"),w("删除 / 清理","Delete")},new Runnable[]{this::downloadCharts,this::importCharts,()->PhigrosLibraryManagement.open(activity)},new String[]{"data-phigros-download","data-import","data-phigros-delete"});
-        LinearLayout phira=card(library);label(phira,"Phira / Pro");
+        LinearLayout phira=card(libraries);label(phira,"Phira / Pro");
         phiraCount=text(phira,"",13,MUTED,false);
         triad(phira,"Phira / Pro",new String[]{w("在线谱库","Online"),w("导入","Import"),w("删除","Delete")},new Runnable[]{()->OnlinePhiraLibraryUi.open(activity),()->{if(!RootPanel.blocked(activity))invoke(activity,"choosePhira");},()->PhiraLibraryManagement.open(activity)},new String[]{"data-phira-online","data-phira-import","data-phira-delete"});
         LinearLayout prepare=UiDesign.row(activity,UiDesign.SETTINGS,w("预计算触点","Prepare touch points"),w("调整设置后，重新准备已缓存谱面","Refresh prepared charts after changing settings"),()->PreparedChartsUi.open(activity));prepare.setTag("data-prepare-charts");library.addView(prepare,params(-1,-2,12));
-        LinearLayout controls=card(performance);label(controls,w("权限与设置","Access & settings"));permission=text(controls,"",12,MUTED,false);permission.setPadding(0,dp(8),0,dp(4));
+        LinearLayout systemTools=panels(performance);
+        LinearLayout controls=card(systemTools);label(controls,w("权限与设置","Access & settings"));permission=text(controls,"",12,MUTED,false);permission.setPadding(0,dp(8),0,dp(4));
         controls.addView(UiDesign.row(activity,UiDesign.SHIELD,w("权限与触控","Permissions & input"),w("无障碍、悬浮窗与 Root","Accessibility, overlay and Root"),this::permissions),new LinearLayout.LayoutParams(-1,-2));
         controls.addView(UiDesign.row(activity,UiDesign.SETTINGS,w("设置与工具","Settings & tools"),w("校准、识别、手势与语言","Calibration, recognition, gestures and language"),this::settings),new LinearLayout.LayoutParams(-1,-2));
         controls.addView(UiDesign.row(activity,UiDesign.PLAY,w("启动 Phira Pro","Open Phira Pro"),null,()->GameLaunch.phira(activity,true,true)),new LinearLayout.LayoutParams(-1,-2));
-        LinearLayout video=card(library);label(video,w("录屏","Recording"));
-        recording=new Switch(activity);recording.setText(w("打谱时自动录屏","Record performances"));recording.setTextSize(15);recording.setTextColor(INK);recording.setMinHeight(dp(56));recording.setPadding(0,dp(8),0,dp(8));
+        LinearLayout video=card(playTools);
+        recording=new Switch(activity);recording.setText(w("演奏时自动录屏","Record performances"));recording.setTextSize(17);recording.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);recording.setTextColor(INK);recording.setMinHeight(dp(48));recording.setSwitchPadding(dp(10));recording.setPadding(0,dp(2),0,dp(4));
         int[][] switchStates={{-android.R.attr.state_enabled},{android.R.attr.state_checked},{}};
         recording.setThumbTintList(new ColorStateList(switchStates,new int[]{0xff97a79e,ACCENT,MUTED}));
         recording.setTrackTintList(new ColorStateList(switchStates,new int[]{UiDesign.LINE,0xff9ed1b9,0xffbdc9c2}));
         recording.setChecked(new AppSettings(activity).flag("recording_on_play",true));video.addView(recording,new LinearLayout.LayoutParams(-1,-2));
         recording.setOnCheckedChangeListener((v,on)->{if(!RuntimeState.INSTANCE.getRunning().get()&&!RootPanel.isBusy())new AppSettings(activity).saveFlag("recording_on_play",on);});
-        text(video,w("演奏结束保存无声 MP4","Silent MP4 is saved when the performance ends"),12,MUTED,false);
-        video.addView(UiDesign.row(activity,UiDesign.VIDEO,w("分辨率与帧率","Resolution & frame rate"),w("按设备选择录屏档位","Choose a profile for your device"),()->io.github.phiscript.record.RecordingSettings.show(activity)),params(-1,-2,8));
+        recordingProfile=UiDesign.text(activity,"",13,MUTED,false);
+        recordingSettings=UiDesign.rowWithDetail(activity,UiDesign.VIDEO,w("画质与声音","Video & audio"),recordingProfile,()->io.github.phiscript.record.RecordingSettings.show(activity));
+        recordingSettings.setTag("data-recording-settings");video.addView(recordingSettings,params(-1,-2,4));
         video.addView(UiDesign.row(activity,UiDesign.HISTORY,w("最近录屏","Recent recordings"),w("查看或分享已保存的视频","View or share saved videos"),()->{try{activity.startActivity(io.github.phiscript.record.RecordingFiles.view(activity));}catch(Exception e){RootPanel.message(activity,tr("录屏位置"),tr("Android 10+：Movies/PhigrosScript；Android 8/9：应用录屏目录。\n\n")+e.getMessage());}}),new LinearLayout.LayoutParams(-1,-2));
-        LinearLayout diagnostics=card(performance),details=new LinearLayout(activity);details.setOrientation(1);details.setVisibility(View.GONE);
+        LinearLayout diagnostics=card(systemTools),details=new LinearLayout(activity);details.setOrientation(1);details.setVisibility(View.GONE);
         TextView expand=text(diagnostics,w("运行记录  ＋","Activity log  +"),14,MUTED,true);expand.setMinHeight(dp(48));expand.setGravity(Gravity.CENTER_VERTICAL);expand.setFocusable(true);expand.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
         expand.setContentDescription(w("展开运行记录","Expand activity log"));expand.setBackground(UiDesign.ripple(activity,android.graphics.Color.TRANSPARENT,10));
         expand.setOnClickListener(v->{boolean open=!UiMotion.expanded(details);UiMotion.toggle(details,open);expand.setText(open?w("运行记录  −","Activity log  −"):w("运行记录  ＋","Activity log  +"));expand.setContentDescription(open?w("收起运行记录","Collapse activity log"):w("展开运行记录","Expand activity log"));});UiMotion.bindPress(expand);diagnostics.addView(details,new LinearLayout.LayoutParams(-1,-2));
@@ -213,6 +230,8 @@ public final class HomeScreen {
         for(int i=0;i<labels.length;i++){
             Button b=UiDesign.button(activity,labels[i],false,actions[i]);b.setTag(tags[i]);
             b.setMinWidth(0);b.setMinimumWidth(0);b.setTextSize(14);b.setPadding(dp(8),dp(12),dp(8),dp(12));
+            b.setCompoundDrawablesWithIntrinsicBounds(null,UiDesign.mark(activity,i==0?UiDesign.DOWNLOAD:i==1?UiDesign.IMPORT:UiDesign.TRASH),null,null);
+            b.setCompoundDrawablePadding(dp(4));
             b.setContentDescription(platform+", "+labels[i]);row.addView(b);
         }
     }
@@ -279,7 +298,11 @@ public final class HomeScreen {
         UiMotion.state(phiraCount,phira==null?tr("未导入"):phira.getEntries().size()+tr(" 个谱面"));
         UiMotion.state(permission,io.github.phiscript.i18n.UiText.text((InputBackend.rootEnabled?tr("Root 触控"):tr("无障碍触控"))+"  ·  "+(TouchService.Companion.getCurrent()!=null?tr("无障碍已连接"):tr("无障碍未连接"))+"\n"+(Settings.canDrawOverlays(activity)?tr("悬浮窗已允许"):tr("悬浮窗待授权"))+tr("  ·  截屏权限在开始时申请")));
         recording.setEnabled(!running&&!busy);boolean enabled=prefs.flag("recording_on_play",true);if(recording.isChecked()!=enabled)recording.setChecked(enabled);
-        UiMotion.state(recording,io.github.phiscript.i18n.UiText.text(tr("打谱时录屏（")+io.github.phiscript.record.RecordingPreferences.load(activity).label()+"）"));
+        String profile=io.github.phiscript.record.RecordingPreferences.load(activity).label()+" · "+io.github.phiscript.record.RecordingSettings.audioLabel(activity);
+        if(!TextUtils.equals(recordingProfile.getText(),profile)){
+            UiMotion.state(recordingProfile,profile);
+            recordingSettings.setContentDescription(w("画质与声音","Video & audio")+", "+profile);
+        }
     }
     private void downloadCharts(){
         if(RootPanel.blocked(activity))return;
@@ -347,6 +370,42 @@ public final class HomeScreen {
     }
     private TextView field(String name){try{Field f=activity.getClass().getDeclaredField(name);f.setAccessible(true);return(TextView)f.get(activity);}catch(Exception e){RuntimeState.INSTANCE.log(tr("界面状态字段未读取：")+name);return null;}}
     private LinearLayout card(LinearLayout page){LinearLayout box=UiDesign.card(activity);page.addView(box,params(-1,-2,12));return box;}
+    private LinearLayout panels(LinearLayout page){
+        CardPair row=new CardPair(activity);
+        page.addView(row,new LinearLayout.LayoutParams(-1,-2));
+        return row;
+    }
+
+    /** The same two cards read in the same order in portrait, split screen and landscape. */
+    static final class CardPair extends LinearLayout {
+        CardPair(Activity activity){
+            super(activity);
+            setOrientation(VERTICAL);
+            setGravity(Gravity.TOP);
+            setBaselineAligned(false);
+        }
+
+        @Override protected void onMeasure(int widthSpec,int heightSpec){
+            int gap=UiDesign.dp(getContext(),12);
+            float fontScale=getResources().getConfiguration().fontScale;
+            int minColumn=UiDesign.dp(getContext(),280*Math.max(1f,fontScale));
+            boolean wide=MeasureSpec.getMode(widthSpec)!=MeasureSpec.UNSPECIFIED
+                    && MeasureSpec.getSize(widthSpec)>=2*minColumn+gap;
+            int orientation=wide?HORIZONTAL:VERTICAL;
+            if(getOrientation()!=orientation){
+                setOrientation(orientation);
+                for(int i=0;i<getChildCount();i++){
+                    View child=getChildAt(i);
+                    LayoutParams slot=(LayoutParams)child.getLayoutParams();
+                    slot.width=wide?0:LayoutParams.MATCH_PARENT;
+                    slot.weight=wide?1:0;
+                    slot.setMarginStart(wide&&i>0?gap:0);
+                    child.setLayoutParams(slot);
+                }
+            }
+            super.onMeasure(widthSpec,heightSpec);
+        }
+    }
     private void label(LinearLayout box,String title){TextView name=text(box,title,17,INK,true);if(android.os.Build.VERSION.SDK_INT>=28)name.setAccessibilityHeading(true);}
     private TextView text(LinearLayout parent,String value,int size,int color,boolean bold){TextView v=UiDesign.text(activity,value,size,color,bold);parent.addView(v,new LinearLayout.LayoutParams(-1,-2));return v;}
     private Button action(LinearLayout parent,String value,boolean main,Runnable click){Button b=UiDesign.button(activity,value,main,click);parent.addView(b,params(-1,-2,12));return b;}

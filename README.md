@@ -6,7 +6,7 @@
 
 ## 中文
 
-本分支构建 **data1.1.3-r2（Android 版本号 11006）**。演奏和谱库页面延伸到系统手势条下方。遇到大面积噪域时，导入器会优先把触点放在当前音符可判定的安全空隙中心。公开版 data1.1.3 用户请从 GitHub 下载 APK 覆盖安装，然后在谱库重新准备一次本地触点。[升级与使用说明](updates/data1.1.3-r2/README.md)
+本分支构建 **data1.1.3-r3（Android 版本号 11007）**。演奏和谱库页面延伸到系统手势条下方。遇到大面积噪域时，导入器会优先把触点放在当前音符可判定的安全空隙中心。r2 用户可在应用内检查更新。使用公开版 data1.1.3 的用户，请从 GitHub 下载 APK 覆盖安装，再到谱库重新准备一次本地触点。[升级与使用说明](updates/data1.1.3-r3/README.md)
 
 [GitHub 发行版](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases) · [data1.1.0 使用与构建](updates/data1.1.0/README.md) · [data1.1.0 验证记录](updates/data1.1.0/TESTING.md)
 
@@ -14,9 +14,11 @@ Phigros 默认使用云端预处理谱库。确认曲目和难度后，首次只
 
 Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导入删除与 Phira 管理并列显示。课题模式三首歌逐首校准；录屏提供 720p / 1080p、30 / 60fps 档位。界面采用统一卡片与图标，自定义动效统一线性，演奏时停止动效。
 
+打开「演奏 → 画质与声音」，启用「录制游戏声音」并保存，首次使用时允许系统录音权限。Android 10 及以上可录制当前游戏允许捕获的内部声音。手动和自动录屏共用此设置。游戏限制捕获或没有可用音轨时，仍会保存视频。可从「最近录屏」查看成片。
+
 支持 Root 与无障碍输入。验证覆盖最终签名 APK 的实际代码、原谱及 Android 主机模型；Android 真机界面、判定与录屏性能仍需实测，不保证任意谱面全连或满分。
 
-构建入口位于 [build_113r2.py](updates/data1.0.9-r15/patch/build_113r2.py)。根目录保留旧版 Alpha Gradle 工程。
+构建入口位于 [build_113r3.py](updates/data1.0.9-r15/patch/build_113r3.py)。根目录保留旧版 Alpha Gradle 工程。
 
 ## English
 
@@ -25,8 +27,9 @@ Phigros Script is an Android chart player for Phigros, Phira and Phira Pro. It r
 - **Phigros.** Confirm the song and difficulty to download its timeline, touch coordinates and noise areas. Once cached, the chart can be played offline. In Challenge Mode, the app recalibrates at the start of each of the three songs.
 - **Phira and Phira Pro.** Import a local chart, or find one in the online library by song recognition or chart ID. The app prepares its touch coordinates during import.
 - **Timing and recording.** The default retry delay is 1,700 ms for Phigros and 715 ms for Phira. Phira's chart offset is excluded by default. Recording supports 720p or 1080p at 30 or 60 fps.
+- **Game audio.** Open **Performance → Video & audio**, enable **Record game audio**, tap **Save**, and allow the audio permission. On Android 10 and later, both recording modes can include the active game's internal audio when the game permits capture. If audio is unavailable, the app saves the video. Open **Recent recordings** to view it.
 
-This branch builds **data1.1.3-r2 (Android version code 11006)**. Play and Library scroll beneath the system gesture handle. On charts with widespread noise, preparation prefers the center of a reachable gap inside the note’s judgment band. If you use the public data1.1.3 release, install the new APK from GitHub, then prepare your local charts once. [Build script](updates/data1.0.9-r15/patch/build_113r2.py) · [Upgrade and release notes](updates/data1.1.3-r2/README.md)
+This branch builds **data1.1.3-r3 (Android version code 11007)**. Play and Library scroll beneath the system gesture handle. On charts with widespread noise, preparation prefers the center of a reachable gap inside the note’s judgment band. If you use r2, check for updates in the app. If you use the public data1.1.3 release, install the new APK from GitHub, then prepare your local charts once. [Build script](updates/data1.0.9-r15/patch/build_113r3.py) · [Upgrade and release notes](updates/data1.1.3-r3/README.md)
 
 <details>
 <summary>原 Alpha 版本说明</summary>

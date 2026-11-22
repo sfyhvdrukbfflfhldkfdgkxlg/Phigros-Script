@@ -13,6 +13,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,12 +59,16 @@ public final class UiDesign {
     }
     public static TextView icon(Context c,int kind){TextView v=new TextView(c);v.setBackground(shape(c,RAISED,12));v.setCompoundDrawablesWithIntrinsicBounds(new Mark(c,kind),null,null,null);v.setPadding(dp(c,10),dp(c,10),dp(c,10),dp(c,10));v.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);return v;}
     public static LinearLayout row(Context c,int kind,String title,String subtitle,Runnable click){
+        TextView detail=TextUtils.isEmpty(subtitle)?null:text(c,subtitle,12,MUTED,false);
+        return rowWithDetail(c,kind,title,detail,click);
+    }
+    static LinearLayout rowWithDetail(Context c,int kind,String title,TextView detail,Runnable click){
         LinearLayout row=new LinearLayout(c);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(c,10),dp(c,12),dp(c,10),dp(c,12));row.setMinimumHeight(dp(c,68));row.setBackground(ripple(c,0x55ffffff,14));
         row.addView(icon(c,kind),new LinearLayout.LayoutParams(dp(c,42),dp(c,42)));
         LinearLayout copy=new LinearLayout(c);copy.setOrientation(1);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,-2,1);cp.setMarginStart(dp(c,12));row.addView(copy,cp);
-        copy.addView(text(c,title,15,INK,true));if(subtitle!=null&&!subtitle.isEmpty()){TextView detail=text(c,subtitle,12,MUTED,false);copy.addView(detail,space(c,-1,-2,5));}
+        copy.addView(text(c,title,15,INK,true));if(detail!=null)copy.addView(detail,space(c,-1,-2,5));
         TextView arrow=text(c,"›",24,MUTED,false);arrow.setGravity(Gravity.CENTER);row.addView(arrow,new LinearLayout.LayoutParams(dp(c,24),-2));
-        row.setFocusable(true);row.setClickable(true);row.setContentDescription(UiText.text(title)+(subtitle==null?"":", "+UiText.text(subtitle)));
+        row.setFocusable(true);row.setClickable(true);row.setContentDescription(UiText.text(title)+(detail==null?"":", "+detail.getText()));
         copy.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         row.setOnClickListener(v->click.run());UiMotion.bindPress(row);return row;
     }

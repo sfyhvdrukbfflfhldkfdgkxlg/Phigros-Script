@@ -20,7 +20,7 @@ APK_NAME="PhigrosScript_data1.0.9-r17.apk"
 
 def build(base,key,cert,output,release="data1.0.9-r17",code=41):
     assert hashlib.sha256(base.read_bytes()).hexdigest()==previous.BASE_SHA256,"Expected exact official R15 APK"
-    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001),("data1.1.2",11002),("data1.1.2",11003),("data1.1.2",11004),("data1.1.3",11005),("data1.1.3-r2",11006))
+    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001),("data1.1.2",11002),("data1.1.2",11003),("data1.1.2",11004),("data1.1.3",11005),("data1.1.3-r2",11006),("data1.1.3-r3",11007))
     sdk=ROOT/"tools/platform/android-35/android.jar"
     bt=ROOT/"tools/build-tools/android-15"
     ecj=ROOT/"tools/ecj.jar"
@@ -60,6 +60,11 @@ def build(base,key,cert,output,release="data1.0.9-r17",code=41):
         if code >= 11005:
             import glass_dialog_hooks
             glass_dialog_hooks.apply(decoded)
+        if code >= 11006:
+            import recording_audio_hooks
+            import recording_permissions
+            recording_audio_hooks.apply(decoded)
+            recording_permissions.apply_activity(decoded)
         after={str(p.relative_to(decoded)):hashlib.sha256(p.read_bytes()).hexdigest() for p in decoded.glob("smali*/**/*.smali")}
         changed=sorted(p for p in before.keys()|after.keys() if before.get(p)!=after.get(p))
         indexes=sorted({int(Path(p).parts[0].removeprefix("smali_classes")) for p in changed})
@@ -109,6 +114,8 @@ def build(base,key,cert,output,release="data1.0.9-r17",code=41):
                     data=replacements.get(name,original.read(name))
                     if name=="AndroidManifest.xml":
                         data=manifest_version(data,release,code)
+                        if code>=11006:
+                            data=recording_permissions.add_audio_permissions(data)
                     dst.writestr(info,data)
                 for name,data in replacements.items():
                     if name not in original.namelist():dst.writestr(name,data)

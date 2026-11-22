@@ -4,6 +4,7 @@ import static io.github.phiscript.i18n.AdditionalEnglish.tr;
 
 import android.content.Context;
 import android.media.Image;
+import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
@@ -15,9 +16,11 @@ import io.github.phiscript.input.TouchService;
 public final class CaptureVideo {
     private static volatile Context owner;
     private static volatile CaptureVideo active;
+    private static MediaProjection authorizedProjection;
     private static volatile RecordingPolicy.Profile sessionProfile=RecordingPolicy.DEFAULT;
     private final Context context;
     private final RecordingPolicy.Profile profile;
+    private final MediaProjection projection;
     private final HandlerThread thread=new HandlerThread("phi-video");
     private final Handler media;
     private final FramePixels[] pool={new FramePixels(),new FramePixels()};
@@ -26,8 +29,9 @@ public final class CaptureVideo {
     private long firstSource=-1,slot=-1,frame,epoch,received;
     private BitmapVideoEncoder encoder;
 
-    private CaptureVideo(Context c,RecordingPolicy.Profile profile){context=c.getApplicationContext();this.profile=profile;thread.start();media=new Handler(thread.getLooper());}
-    public static synchronized void begin(Context c){finished();sessionProfile=RecordingPreferences.load(c);owner=new AppSettings(c).flag("recording_on_play",true)?c:null;}
+    private CaptureVideo(Context c,RecordingPolicy.Profile profile){context=c.getApplicationContext();this.profile=profile;projection=authorizedProjection;thread.start();media=new Handler(thread.getLooper());}
+    public static synchronized void begin(Context c){finished();authorizedProjection=null;sessionProfile=RecordingPreferences.load(c);owner=new AppSettings(c).flag("recording_on_play",true)?c:null;}
+    public static synchronized void authorized(Context c,MediaProjection projection){if(c==owner)authorizedProjection=projection;}
     public static double captureScale(Context c,int w,int h,double limit){return RecordingPolicy.captureScale(w,h,limit,c==owner,sessionProfile);}
     public static synchronized void playing(){
         if(owner==null||active!=null)return;
@@ -62,6 +66,7 @@ public final class CaptureVideo {
             if(encoder==null){
                 encoder=new BitmapVideoEncoder(context,pixels.bitmap.getWidth(),pixels.bitmap.getHeight(),profile);
                 epoch=SystemClock.uptimeMillis();RuntimeState.INSTANCE.log(tr("开始录屏，")+profile.label());
+                if(projection!=null)encoder.startGameAudio(context,projection,System.nanoTime());
             }
             TouchService touch=TouchService.Companion.getCurrent();
             if(touch==null||!touch.getGameForeground()){end(true);return;}
@@ -85,5 +90,5 @@ public final class CaptureVideo {
         });
     }
     public static synchronized void finished(){CaptureVideo c=active;active=null;if(c!=null)c.end(true);}
-    public static synchronized void stop(Context c){if(c==owner){owner=null;finished();}}
+    public static synchronized void stop(Context c){if(c==owner){owner=null;authorizedProjection=null;finished();}}
 }

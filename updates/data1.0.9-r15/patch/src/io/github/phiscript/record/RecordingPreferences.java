@@ -15,4 +15,10 @@ public final class RecordingPreferences {
         prefs.save("recording_resolution",String.valueOf(profile.shortEdge));
         prefs.save("recording_fps",String.valueOf(profile.fps));
     }
+    public static boolean gameAudioEnabled(Context context){
+        return Boolean.parseBoolean(new AppSettings(context).text("recording_game_audio","false"));
+    }
+    static void setGameAudio(Context context,boolean enabled){
+        new AppSettings(context).save("recording_game_audio",Boolean.toString(enabled));
+    }
 }

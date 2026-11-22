@@ -8,6 +8,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.media.projection.MediaProjection;
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
@@ -24,6 +25,7 @@ import java.nio.FloatBuffer;
 /** A bounded single-thread bitmap -> GLES -> AVC encoder. Shares OCR capture, not its token. */
 final class BitmapVideoEncoder {
     private RecordingFiles output;
+    private GameRecordingAudio audio;
     private MediaCodec codec;
     private MediaMuxer muxer;
     private Surface surface;
@@ -106,6 +108,7 @@ final class BitmapVideoEncoder {
     }
     void close(boolean save){
         if(ended)return;ended=true;boolean valid=false;
+        if(audio!=null)audio.stopCapture();
         if(save&&codec!=null)try{codec.signalEndOfInputStream();drain(true);valid=muxing&&frames>1;}catch(Exception ignored){}
         if(muxer!=null){try{if(muxing)muxer.stop();}catch(Exception e){valid=false;}try{muxer.release();}catch(Exception ignored){}muxer=null;}
         if(codec!=null){try{codec.stop();}catch(Exception ignored){}try{codec.release();}catch(Exception ignored){}codec=null;}
@@ -116,6 +119,11 @@ final class BitmapVideoEncoder {
             if(context!=EGL14.EGL_NO_CONTEXT)EGL14.eglDestroyContext(egl,context);
             EGL14.eglReleaseThread();EGL14.eglTerminate(egl);
         }
-        if(surface!=null)surface.release();if(output!=null)output.finish(valid);
+        if(surface!=null)surface.release();
+        if(audio!=null)audio.finish(output,valid);
+        else if(output!=null)output.finish(valid);
+    }
+    void startGameAudio(Context context,MediaProjection projection,long epochNs){
+        audio=GameRecordingAudio.start(context,projection,epochNs);
     }
 }

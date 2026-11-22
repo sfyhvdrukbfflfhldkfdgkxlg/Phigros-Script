@@ -1,15 +1,17 @@
 """Restore and publish a verified, signed data1.1.3 build."""
+import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 from urllib.parse import quote
+from zipfile import ZipFile
 
 sys.path.insert(0, str(Path(__file__).parent / "data1_1_1"))
 from publish import REPO, api, check_assets
 from restore import manifest_at, metadata, require, restore
 
-VERSIONS = {"data1.1.3": 11005, "data1.1.3-r2": 11006}
+VERSIONS = {"data1.1.3": 11005, "data1.1.3-r2": 11006, "data1.1.3-r3": 11007}
 TAG = sys.argv[3] if len(sys.argv) > 3 else "data1.1.3"
 CODE = VERSIONS[TAG]
 DATA = Path("updates") / TAG / "release-data"
@@ -32,6 +34,22 @@ def find_release():
         page += 1
 
 
+def stage_r3_shard(dist):
+    name = "phigros-plans-v1-032.bin"
+    signed_apk = dist / f"PhigrosScript_{TAG}.apk"
+    with ZipFile(signed_apk) as apk:
+        index = json.loads(apk.read("assets/phigros-cloud-plans-v1.json"))
+    url = f"https://github.com/{REPO}/releases/download/{TAG}/{name}"
+    require(len(index["shards"]) == 33 and index["shards"][32]["github"] == url,
+            "Expected the new chart shard in the signed app index")
+    shard = index["shards"][32]
+    raw = (DATA / name).read_bytes()
+    info = metadata(raw)
+    require(info == {"size": shard["bytes"], "sha256": shard["sha256"]}, "Chart shard mismatch")
+    (dist / name).write_bytes(raw)
+    return {name: info}
+
+
 def publish(dist, baseline):
     require(os.environ["GITHUB_REPOSITORY"] == REPO and os.environ["GITHUB_REF"] == "refs/heads/main",
             "Run on the main branch of the release repository")
@@ -41,6 +59,8 @@ def publish(dist, baseline):
     require(patch == manifest["patch_tree"], "Signed patch source mismatch")
     restore(baseline, DATA, dist, TAG, CODE)
     assets = manifest["assets"].copy()
+    if TAG == "data1.1.3-r3":
+        assets.update(stage_r3_shard(dist))
     sums = "".join(f"{assets[name]['sha256']}  {name}\n" for name in sorted(assets)).encode("ascii")
     (dist / "SHA256SUMS.txt").write_bytes(sums)
     assets["SHA256SUMS.txt"] = metadata(sums)
@@ -68,7 +88,8 @@ def publish(dist, baseline):
         check_assets(api("GET", endpoint), assets, complete=True)
         api("PATCH", endpoint, body={"draft": False, "make_latest": "true", "body": notes})
     latest = api("GET", "releases/latest")
-    if TAG == "data1.1.3-r2" and latest["id"] != release["id"] and latest["tag_name"] == "data1.1.3":
+    previous = {"data1.1.3-r2": "data1.1.3", "data1.1.3-r3": "data1.1.3-r2"}.get(TAG)
+    if latest["id"] != release["id"] and latest["tag_name"] == previous:
         # Resume if the release became public before GitHub marked it latest.
         public = api("GET", endpoint)
         require(not public["draft"] and not public["prerelease"], "Release is not public and stable")
