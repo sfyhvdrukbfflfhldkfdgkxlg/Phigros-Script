@@ -177,6 +177,18 @@ public final class ChartMultiTouchPlayer {
                 while (cursor < events.size() && events.get(cursor).getStartMs() < end){
                     TouchEvent admitted=events.get(cursor++);work.put(admitted,null);newHeads.add(admitted);
                 }
+                // A tap is judged on DOWN. In moving noise, a short stationary stroke
+                // can survive two input ticks even when the following 48 ms path cannot.
+                if(noiseWindow && active.isEmpty() && !newHeads.isEmpty() && newHeads.size()==work.size()){
+                    long next=cursor<events.size()?timing.wallAt(events.get(cursor).getStartMs()):Long.MAX_VALUE;
+                    GestureBatch<TouchEvent> taps=noiseTapChord(newHeads,plan,chart,viewport,safety,screen,timing,next);
+                    if(taps!=null){
+                        long sent=SystemClock.uptimeMillis();
+                        for(TouchEvent e:newHeads)maxLate=Math.max(maxLate,timing.chartAt(sent+taps.startOffset(e))-Math.round(e.getNote().getTimeSeconds()*1000));
+                        channel.send(taps);
+                        continue;
+                    }
+                }
                 // A single independent TAP only needs its DOWN position. Building
                 // sampled geometry for its already-judged body can spend the
                 // whole window before dispatch and rebase it to a 1 ms touch.
@@ -345,6 +357,31 @@ public final class ChartMultiTouchPlayer {
         DisplayMetrics metrics = new DisplayMetrics();
         wm.getDefaultDisplay().getRealMetrics(metrics);
         return new int[]{metrics.widthPixels, metrics.heightPixels};
+    }
+
+    private static GestureBatch<TouchEvent> noiseTapChord(List<TouchEvent> heads,GesturePlan plan,Chart chart,Viewport view,
+            TouchSafety safety,int[] screen,ChartPlaybackClock.Slice timing,long nextWall){
+        long first=heads.get(0).getStartMs();
+        for(TouchEvent e:heads)if(e.getStartMs()!=first||e.getNote().getType()!=1||plan.isContinuous(e)||plan.hasFlickPath(e))return null;
+        long wall=SystemClock.uptimeMillis(),down=Math.max(wall,timing.wallAt(first));
+        long duration=Math.min(24,nextWall-down);
+        for(TouchEvent e:heads)duration=Math.min(duration,timing.wallAt(e.getEndMs())-down);
+        if(duration<16)return null;
+        long deadline=System.nanoTime()+8000000L;
+        GestureBatch<TouchEvent> batch=new GestureBatch<>();
+        for(TouchEvent e:heads){
+            try{
+                Point p=safety.point(plan,chart,e,timing.chartAt(down),view,screen,new boolean[1]);
+                long from=timing.chartAt(down),to=timing.chartAt(down+duration);
+                if(!plan.stationaryTap(e,p,from,to))TapMod.segment(chart,view,p,p,from,to,deadline);
+                batch.add(e,null,GestureChannel.path(p.getX(),p.getY(),p.getX(),p.getY()),down-wall,down-wall+duration,false,p.getX(),p.getY());
+            }catch(TapMod.NoSafePoint blocked){return null;}
+        }
+        long elapsed=SystemClock.uptimeMillis()-wall;
+        // Preserve the certified absolute UP and at least two input ticks.
+        if(elapsed>down-wall+duration-16 || System.nanoTime()>=deadline)return null;
+        batch.rebase(elapsed);
+        return batch;
     }
 
     private static void checkSubmittedPath(Chart chart,Viewport viewport,List<Point> points,ChartPlaybackClock.Slice timing,long downWall,long upWall,long deadline){

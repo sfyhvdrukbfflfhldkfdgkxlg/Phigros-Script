@@ -232,7 +232,7 @@ final class ContactPlanner {
     }
     private Anchor[] computeStroke(Anchor base,Note red,long start,long end){
         Point raw=base.at(chart,start,view,bounds),origin;
-        try{origin=TapMod.withinBounds(chart,base.note,start/1000.0,view,raw,bounds);}
+        try{origin=TapMod.withinBounds(chart,base.note,start/1000.0,view,raw,bounds,null,0,false,true);}
         catch(TapMod.NoSafePoint blocked){return null;}
         Point n=chart.judgeNormal(base.note,Math.max(0,start)/1000.0,view);
         float length=(float)Math.hypot(n.getX(),n.getY());

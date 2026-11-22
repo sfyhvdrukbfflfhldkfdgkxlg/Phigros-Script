@@ -1,4 +1,4 @@
-"""Restore and publish the verified, signed data1.1.3 build."""
+"""Restore and publish a verified, signed data1.1.3 build."""
 import os
 from pathlib import Path
 import subprocess
@@ -9,8 +9,9 @@ sys.path.insert(0, str(Path(__file__).parent / "data1_1_1"))
 from publish import REPO, api, check_assets
 from restore import manifest_at, metadata, require, restore
 
-TAG = "data1.1.3"
-CODE = 11005
+VERSIONS = {"data1.1.3": 11005, "data1.1.3-r2": 11006}
+TAG = sys.argv[3] if len(sys.argv) > 3 else "data1.1.3"
+CODE = VERSIONS[TAG]
 DATA = Path("updates") / TAG / "release-data"
 PATCH = "updates/data1.0.9-r15/patch"
 
@@ -67,6 +68,14 @@ def publish(dist, baseline):
         check_assets(api("GET", endpoint), assets, complete=True)
         api("PATCH", endpoint, body={"draft": False, "make_latest": "true", "body": notes})
     latest = api("GET", "releases/latest")
+    if TAG == "data1.1.3-r2" and latest["id"] != release["id"] and latest["tag_name"] == "data1.1.3":
+        # Resume if the release became public before GitHub marked it latest.
+        public = api("GET", endpoint)
+        require(not public["draft"] and not public["prerelease"], "Release is not public and stable")
+        check_assets(public, assets, complete=True)
+        require(api("GET", tag_ref)["object"]["sha"] == commit, "Published tag mismatch")
+        api("PATCH", endpoint, body={"make_latest": "true"})
+        latest = api("GET", "releases/latest")
     require(latest["id"] == release["id"] and not latest["draft"] and not latest["prerelease"],
             "Stable release is not latest")
     check_assets(latest, assets, complete=True)

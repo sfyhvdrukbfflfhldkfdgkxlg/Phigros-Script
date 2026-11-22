@@ -13,7 +13,7 @@ import android.view.WindowManager;
 final class HomeInsets {
     private HomeInsets() {}
 
-    static void install(Window window, View root) {
+    static void install(Window window, View root, View controls, Runnable updateScrollPadding) {
         View decor = window.getDecorView();
         window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.TRANSPARENT);
@@ -36,7 +36,11 @@ final class HomeInsets {
             window.setSoftInputMode((softInput & ~WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST)
                     | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         }
-        root.setOnApplyWindowInsetsListener(HomeInsets::apply);
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
+            apply(controls, insets);
+            updateScrollPadding.run();
+            return insets;
+        });
         root.requestApplyInsets();
     }
 
@@ -77,5 +81,14 @@ final class HomeInsets {
             view.setPadding(left, top, right, bottom);
         }
         return window;
+    }
+
+    /** ScrollView clips to its full bounds; this padding places the last action above the dock. */
+    static void padPage(View page, View controls, int dockHeight) {
+        int bottom=controls.getPaddingBottom()+dockHeight;
+        if(page.getPaddingLeft()!=controls.getPaddingLeft() || page.getPaddingTop()!=controls.getPaddingTop()
+                || page.getPaddingRight()!=controls.getPaddingRight() || page.getPaddingBottom()!=bottom) {
+            page.setPadding(controls.getPaddingLeft(),controls.getPaddingTop(),controls.getPaddingRight(),bottom);
+        }
     }
 }

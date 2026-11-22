@@ -51,6 +51,33 @@ public final class CloudProjectionRegression {
         AppSettings.values.put("tap_vertical_permille","20");TapMod.reload();
         rejects(()->PreparedChartStore.checkCloudGeometry(PROFILE,PHONE,TapMod.preparationSignature()));
     }
+    private static void legacyEdgeClearance()throws Exception{
+        AppSettings.values.put("tap_random_delay_ms","0");
+        AppSettings.values.put("tap_screen_drift_permille","0");
+        TapMod.reload();
+        Chart chart=Chart.Companion.fromNative$app_debug(Arrays.asList(note(1,1,.5,.5,.5)),0.0,
+                (n,t,v)->new Point(v.getWidth()*.5f,v.getHeight()*.5f),(n,t,v)->new Point(0,1));
+        GesturePlan original=GesturePlan.prepareForImport(chart,PROFILE,REFERENCE,FULL,null);
+        TouchEvent event=original.events.get(0);
+        long head=event.getStartMs();
+        Point authored=original.preparedPoint(event,head,null,head);
+        double edge=(authored.getX()-REFERENCE.getHeight()*.018)/REFERENCE.getWidth();
+        JSONObject area=new JSONObject().put("bottomLeftPercentage",xy(0,0)).put("topRightPercentage",xy(edge,1))
+                .put("enableTime",0).put("disableTime",1);
+        BlockAreaSet.capture(new JSONObject().put("blockAreaList",new JSONArray().put(area)));BlockAreaSet.bind(chart);
+        ok(TapMod.clearAt(chart,REFERENCE,authored,head/1000.0)&&BlockAreaSet.nearNoise(chart,REFERENCE,authored,head/1000.0),"invalid edge fixture");
+        GesturePlan migrated=map(chart,legacyFixture(original.encodePrepared(KEY)),REFERENCE,FULL);
+        Point repaired=migrated.preparedPoint(migrated.events.get(0),head,null,head);
+        ok(!BlockAreaSet.nearNoise(chart,REFERENCE,repaired,head/1000.0),"cloud tap still grazes the lone edge");
+        ok(Math.hypot(repaired.getX()-authored.getX(),repaired.getY()-authored.getY())<=REFERENCE.getHeight()/30,
+                "legacy contact moved beyond its local correction range");
+        GesturePlan reopened=GesturePlan.decodePrepared(chart,PROFILE,REFERENCE,FULL,migrated.encodePrepared(KEY),KEY);
+        TouchEvent tap=reopened.events.get(0);
+        ok(reopened.stationaryTap(tap,repaired,head,head+24),"certified stationary tap lost on cache reopen");
+        ok(!reopened.stationaryTap(tap,repaired,head,tap.getEndMs()+1),"certificate extended past the stored release");
+        ok(!reopened.stationaryTap(tap,new Point(repaired.getX()+1,repaired.getY()),head,head+24),
+                "different pixel accepted as a stationary tap");
+    }
     public static void main(String[] args)throws Exception{
         AppSettings.values.clear();
         AppSettings.smart=AppSettings.catchDrags=AppSettings.flicks=AppSettings.combos=AppSettings.edges=AppSettings.inward=true;
@@ -111,6 +138,7 @@ public final class CloudProjectionRegression {
         ok(blockedSamples>0&&clearSamples>0,"A blocked inset should suppress only unsafe samples");
         byte[] corrupt=encoded.clone();corrupt[corrupt.length-1]^=1;
         rejects(()->map(standalone,corrupt,PHONE,SAFE));
+        legacyEdgeClearance();
         stricterCloudGuard(encoded,standalone,reference.events.get(0).getStartMs());
         System.out.println("PASS cloud projection: saved tap/hold/flick/drag samples, accessibility pixels, ultrawide letterbox, noise, settings, corruption and calibration offset");
     }

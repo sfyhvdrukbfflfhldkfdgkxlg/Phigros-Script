@@ -41,14 +41,20 @@ final class GlassSurface extends Drawable {
                 new int[]{0x82ffffff, 0x20d9fffa, 0x00d9fffa}, null, Shader.TileMode.CLAMP));
     }
 
-    static Drawable backdrop() {
+    static Drawable backdrop(boolean translucent) {
         return new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{0xffc6e9dd, 0xffedf4ed, 0xffeef0fa, 0xffd5e8ed});
+                translucent ? new int[]{0xc7c6e9dd, 0xcbf1f7ed, 0xcceef0fa, 0xc7d5e8ed}
+                            : new int[]{0xffc6e9dd, 0xffedf4ed, 0xffeef0fa, 0xffd5e8ed});
     }
 
     static Drawable dialog(Context context) {
         // Keep body text readable even when power saving disables cross-window blur.
         return new GlassSurface(context, 22, new int[]{0xf4ffffff, 0xddf7fcfa, 0xeeeef4f8});
+    }
+
+    static Drawable dock(Context context) {
+        if (android.os.Build.VERSION.SDK_INT < 31) return new GlassSurface(context, 24, false);
+        return new GlassSurface(context, 24, new int[]{0xc4ffffff, 0x89edf9f4, 0xa7edf2fa});
     }
 
     @Override protected void onBoundsChange(Rect b) {

@@ -83,7 +83,7 @@ public final class TapMod {
     /** Exact preparation inputs; changing the safe-gap algorithm invalidates old paths. */
     static ContactVariation contactVariation(){return variation;}
     static String baseSignature(){
-        return "gesture-clearance-v5|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(enabled?vertical:0)
+        return "gesture-clearance-v6|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(enabled?vertical:0)
                 +"|"+Float.toHexString(enabled?jitter:0)+"|"+Float.toHexString(noiseAvoid?escape:0)
                 +"|"+(noiseAvoid?guard.backMs:0)+"|"+(noiseAvoid?guard.aheadMs:0)
                 +"|"+preparationEdgeGuard()+"|"+preparationInwardFlick();
@@ -132,7 +132,7 @@ public final class TapMod {
         long[] counts=planningQueryCounts.get();if(counts!=null)counts[0]++;
         checkDeadline(deadline);
         if(!avoids(c))return true;
-        if(deadline==Long.MAX_VALUE&&!BlockAreaSet.mayTouchPath(c,v,p,p,t-timing.back,t+timing.ahead))return true;
+        if(!BlockAreaSet.mayTouchPath(c,v,p,p,t-timing.back,t+timing.ahead)){checkDeadline(deadline);return true;}
         Point rounded=new Point(Math.round(p.getX()),Math.round(p.getY()));
         for(double shift:timing.shifts){
             checkDeadline(deadline);boolean first=blocked(c,v,p,t+shift);checkDeadline(deadline);if(first)return false;
@@ -149,8 +149,11 @@ public final class TapMod {
         return runtimeWithinBounds(c,n,time,v,p,bounds,previous,previousMs,n.getType()==3);
     }
     static Point runtimeWithinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs,boolean pureHold){
+        return runtimeWithinBounds(c,n,time,v,p,bounds,previous,previousMs,pureHold,n.getType()!=4);
+    }
+    static Point runtimeWithinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs,boolean pureHold,boolean preferInterior){
         Boolean old=runtimeSearch.get();runtimeSearch.set(true);
-        try{return withinBounds(c,n,time,v,p,bounds,previous,previousMs,pureHold);}
+        try{return withinBounds(c,n,time,v,p,bounds,previous,previousMs,pureHold,preferInterior);}
         catch(DeadlineExceeded exceeded){searchTimeouts.incrementAndGet();throw exceeded;}
         finally{if(old==null)runtimeSearch.remove();else runtimeSearch.set(old);}
     }
@@ -159,61 +162,103 @@ public final class TapMod {
         return withinBounds(c,n,time,v,p,bounds,previous,previousMs,n.getType()==3);
     }
     static Point withinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs,boolean pureHold) {
+        return withinBounds(c,n,time,v,p,bounds,previous,previousMs,pureHold,n.getType()!=4);
+    }
+    static Point withinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs,boolean pureHold,boolean preferInterior){
         Guard timing=guard;
         // Preflight may search exhaustively before the music clock starts.
         // Runtime search must yield to the dispatch loop so a held pointer is
         // lifted rather than left alive while an expensive search misses its tail.
         long deadline=avoids(c)&&Boolean.TRUE.equals(runtimeSearch.get())&&!Boolean.TRUE.equals(planning.get())?System.nanoTime()+SEARCH_BUDGET_MS*1000000L:Long.MAX_VALUE;
         Point start=new Point(bounds.x(p.getX()),bounds.y(p.getY()));
-        if(clearAt(c,v,start,time,timing,deadline)&&connects(c,v,previous,start,previousMs,time,deadline))
-            return start;
+        boolean originalClear=clearAt(c,v,start,time,timing,deadline)&&connects(c,v,previous,start,previousMs,time,deadline);
+        // A FLICK's planned endpoints already encode its direction and distance. Keep
+        // these endpoints during preparation; its origin was chosen before building the swipe.
+        boolean style=preferInterior && avoids(c);
+        boolean center=style && BlockAreaSet.largeCoverage(c,v,time);
+        if(originalClear && !center && (!style || !BlockAreaSet.nearNoise(c,v,start,time)))return start;
         Point d=normal(c,n,time,v);
         float nx=d.getX(),ny=d.getY();
         double max=v.getHeight()*escape/1000.0, radius=ContactPlanner.radius(v);
-        double clipping=(start.getX()-p.getX())*ny-(start.getY()-p.getY())*nx;
-        Point best=null;double nearest=Double.POSITIVE_INFINITY;
-        for(int lane=0;lane<=24;lane++) {
+        // A shared drag/flick anchor may already be displaced laterally. Measure any
+        // further escape against the note's actual judgement strip, not that anchor.
+        Boolean planningBefore=planning.get();
+        planning.set(true);
+        Point judge;
+        try{judge=c.position(n,time,v,false);}
+        finally{if(planningBefore==null)planning.remove();else planning.set(planningBefore);}
+        if(judge==null)judge=p;
+        double clipping=(start.getX()-judge.getX())*ny-(start.getY()-judge.getY())*nx;
+        Point best=originalClear?start:null;
+        boolean preferred=false;
+        double nearest=Double.POSITIVE_INFINITY;
+        ArrayList<Double> lanes=new ArrayList<>();
+        lanes.add(0.0);
+        for(int step=1;step<=12;step++){lanes.add(radius*step/12);lanes.add(-radius*step/12);}
+        for(int lane=0;lane<lanes.size();lane++) {
             checkSearchBudget(deadline);
-            double shift=lane==0?0:((lane+1)/2)*(radius/12)*(lane%2==0?-1:1);
+            double shift=lanes.get(lane);
             if(Math.abs(shift+clipping)>radius+.01 || Math.abs(shift)>max)continue;
             Point origin=new Point((float)(start.getX()+shift*ny),(float)(start.getY()-shift*nx));
             double reach=Math.sqrt(Math.max(0,max*max-shift*shift));
             double[] span={-reach,reach};
             if(!BlockAreaSet.clip(origin.getX(),nx,bounds.left,bounds.right,span) ||
                !BlockAreaSet.clip(origin.getY(),ny,bounds.top,bounds.bottom,span))continue;
-            ArrayList<Double> edges=new ArrayList<>();
-            edges.add(span[0]);edges.add(span[1]);edges.add(Math.max(span[0],Math.min(0,span[1])));
-            for(double shiftTime:timing.shifts){checkDeadline(deadline);BlockAreaSet.cuts(c,v,origin,nx,ny,time+shiftTime,span[0],span[1],edges);}
-            checkDeadline(deadline);
-            BlockAreaSet.cutsAtChanges(c,v,origin,nx,ny,time-timing.back,time+timing.ahead,span[0],span[1],edges);
-            checkDeadline(deadline);
-            Collections.sort(edges);
-            for(int i=1;i<edges.size();i++){
-                checkSearchBudget(deadline);
-                double lo=edges.get(i-1),hi=edges.get(i);
-                if(hi-lo<.001)continue;
-                // Follow the original gesture with the smallest displacement on this lane.
-                // The 2 px inset accommodates Android's integer touch coordinates.
-                double inset=Math.min(2,(hi-lo)*.5);
-                double k=Math.max(lo+inset,Math.min(0,hi-inset));
-                double dist=k*k+shift*shift;
-                if(dist>=nearest)continue;
-                Point point=at(bounds,origin,nx,ny,k);
-                if(clearAt(c,v,point,time,timing,deadline)&&connects(c,v,previous,point,previousMs,time,deadline)){
-                    best=point;nearest=dist;
-                }else if(previous!=null){
-                    // A moving edge may obstruct the nearest endpoint during the approach.
-                    // Try the previous finger's projection into this same interval.
-                    k=Math.max(lo+inset,Math.min((previous.getX()-origin.getX())*nx+(previous.getY()-origin.getY())*ny,hi-inset));
-                    dist=k*k+shift*shift;
-                    if(dist>=nearest)continue;
-                    point=at(bounds,origin,nx,ny,k);
+            List<double[]> gaps=safeGaps(c,v,origin,nx,ny,time,timing,span,deadline);
+            for(double[] gap:gaps){
+                double lo=gap[0],hi=gap[1],mid=(lo+hi)*.5;
+                // Distances here start at the boundary of the hard touch footprint.
+                // Preserve additional free space around a lone hazard; in a narrow opening
+                // the two preferred margins meet at its center.
+                double inset=style?Math.max(2,v.getHeight()*(1.0/30-1.0/108)+1):2;
+                double left=lo<=span[0]+.001?lo:Math.min(mid,lo+inset);
+                double right=hi>=span[1]-.001?hi:Math.max(mid,hi-inset);
+                double target=center?mid:Math.max(left,Math.min(0,right));
+                double projection=previous==null?0:(previous.getX()-origin.getX())*nx+(previous.getY()-origin.getY())*ny;
+                // If the styled point is unreachable during approach, also try the closest
+                // interior point and the previous finger's projection before giving up.
+                double hardInset=Math.min(2,(hi-lo)*.5);
+                double[] candidates={target,Math.max(lo+hardInset,Math.min(projection,hi-hardInset)),
+                        Math.max(lo+hardInset,Math.min(0,hi-hardInset))};
+                for(int attempt=0;attempt<candidates.length;attempt++){
+                    double k=candidates[attempt];
+                    if(attempt>0 && (k==target || attempt==2 && k==candidates[1]))continue;
+                    Point point=at(bounds,origin,nx,ny,k);
+                    boolean interior=(!style || !BlockAreaSet.nearNoise(c,v,point,time)) && (!center || attempt==0);
+                    // A centered narrow gap remains preferable to its edge even when the soft margin cannot fit.
+                    if(center && attempt==0 && hi-lo<2*inset)interior=true;
+                    double distance=k*k+shift*shift;
+                    if(best!=null && (preferred && !interior || preferred==interior && distance>=nearest))continue;
                     if(clearAt(c,v,point,time,timing,deadline)&&connects(c,v,previous,point,previousMs,time,deadline)){
-                        best=point;nearest=dist;
+                        best=point;nearest=distance;preferred=interior;
                     }
                 }
             }
-            if(lane==0&&best!=null)return best;
+            if(lane==0 && preferred)return best;
+            // The finite lateral grid can miss a narrow vertical opening altogether.
+            // Try actual gap centers across the judgement band at this note's position.
+            if(lane==0 && center){
+                double width=Math.min(max,radius);
+                double[] band={Math.max(-width,-radius-clipping),Math.min(width,radius-clipping)};
+                if(BlockAreaSet.clip(start.getX(),ny,bounds.left,bounds.right,band)
+                        && BlockAreaSet.clip(start.getY(),-nx,bounds.top,bounds.bottom,band)){
+                    int insert=1;
+                    Point across=null;double acrossDistance=Double.POSITIVE_INFINITY;
+                    for(double[] gap:safeGaps(c,v,start,ny,-nx,time,timing,band,deadline)){
+                        double mid=(gap[0]+gap[1])*.5;
+                        if(Math.abs(mid)>.001)lanes.add(insert++,mid);
+                        // A slit parallel to the judge normal can fall entirely between the
+                        // sampled lanes. Its transverse midpoint has the most edge reserve.
+                        if(gap[1]-gap[0]<band[1]-band[0]-.01 && Math.abs(mid)<acrossDistance){
+                            Point point=at(bounds,start,ny,-nx,mid);
+                            if(clearAt(c,v,point,time,timing,deadline) && connects(c,v,previous,point,previousMs,time,deadline)){
+                                across=point;acrossDistance=Math.abs(mid);
+                            }
+                        }
+                    }
+                    if(across!=null)return across;
+                }
+            }
         }
         if(best!=null)return best;
         // A held finger can already occupy a safe slit between two sampled lateral lanes.
@@ -227,6 +272,33 @@ public final class TapMod {
                     &&connects(c,v,previous,previous,previousMs,time,deadline))return previous;
         }
         throw new NoSafePoint(tr("噪域内找不到可触控的同判定带落点"));
+    }
+    /** Merge adjacent cells after positive and subtractive masks have been composed.
+     * A cancelled raw boundary must not shift the midpoint of a real opening. */
+    private static List<double[]> safeGaps(Chart chart,Viewport view,Point origin,float nx,float ny,double time,
+            Guard timing,double[] span,long deadline){
+        ArrayList<Double> edges=new ArrayList<>();
+        edges.add(span[0]);edges.add(span[1]);
+        for(double shift:timing.shifts){
+            checkDeadline(deadline);
+            BlockAreaSet.cuts(chart,view,origin,nx,ny,time+shift,span[0],span[1],edges);
+        }
+        BlockAreaSet.cutsAtChanges(chart,view,origin,nx,ny,time-timing.back,time+timing.ahead,span[0],span[1],edges);
+        Collections.sort(edges);
+        ArrayList<double[]> gaps=new ArrayList<>();
+        for(int i=1;i<edges.size();i++){
+            double lo=edges.get(i-1),hi=edges.get(i);
+            if(hi-lo<.00001)continue;
+            double mid=(lo+hi)*.5;
+            Point p=new Point((float)(origin.getX()+mid*nx),(float)(origin.getY()+mid*ny));
+            if(!clearAt(chart,view,p,time,timing,deadline))continue;
+            double[] last=gaps.isEmpty()?null:gaps.get(gaps.size()-1);
+            if(last!=null && Math.abs(last[1]-lo)<.00001 && clearAt(chart,view,
+                    new Point((float)(origin.getX()+lo*nx),(float)(origin.getY()+lo*ny)),time,timing,deadline))
+                last[1]=hi;
+            else gaps.add(new double[]{lo,hi});
+        }
+        return gaps;
     }
     private static Point at(TouchBounds bounds,Point origin,float nx,float ny,double offset){return new Point(bounds.x((float)(origin.getX()+offset*nx)),bounds.y((float)(origin.getY()+offset*ny)));}
     private static void checkSearchBudget(long deadline){
@@ -252,7 +324,7 @@ public final class TapMod {
         checkDeadline(deadline);
         Guard timing=guard;
         if(!avoids(c)||!BlockAreaSet.overlaps(c,from-timing.backMs,to+timing.aheadMs))return;
-        if(deadline==Long.MAX_VALUE&&!BlockAreaSet.mayTouchPath(c,v,a,b,from/1000.0-timing.back,to/1000.0+timing.ahead))return;
+        if(!BlockAreaSet.mayTouchPath(c,v,a,b,from/1000.0-timing.back,to/1000.0+timing.ahead)){checkDeadline(deadline);return;}
         for(double shift:timing.shifts){checkDeadline(deadline);boolean blocked=BlockAreaSet.crossesTranslation(c,v,a,b,from/1000.0+shift,to/1000.0+shift);checkDeadline(deadline);if(blocked)throw new NoSafePoint(tr("移动噪域将扫过连续触点，应在此抬指"));}
         double dx=b.getX()-a.getX(),dy=b.getY()-a.getY(),distance=Math.hypot(dx,dy);
         int slices=(int)Math.min(4096,Math.max(1,Math.ceil(Math.abs(to-from)/4.0)));

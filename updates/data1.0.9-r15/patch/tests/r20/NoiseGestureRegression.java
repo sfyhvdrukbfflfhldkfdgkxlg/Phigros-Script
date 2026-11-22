@@ -37,37 +37,54 @@ public final class NoiseGestureRegression {
     private static void clear(Chart c,Point p,double time){ok(TapMod.clearAt(c,V,p,time),"center was not clear over timing guard: "+p);ok(p.getX()>=B.left&&p.getX()<=B.right&&p.getY()>=B.top&&p.getY()<=B.bottom,"center escaped viewport");}
     private static void basic()throws Exception{
         Chart gap=strips(new Strip(-100,240,false),new Strip(360,700,false));
-        Point p=choose(gap,255);near(p.getY(),255,"clear gesture was shifted during active noise");near(p.getX(),500,"normal lane shifted laterally");clear(gap,p,.5);
-        near(choose(gap,200).getY(),240+600./108+2,"blocked point did not take the nearby safe route");
+        Point p=choose(gap,255);near(p.getY(),300,"large noise did not center the reachable gap");near(p.getX(),500,"normal lane shifted laterally");clear(gap,p,.5);
+        near(choose(gap,200).getY(),300,"blocked point did not take the center of the safe gap");
         Chart split=strips(new Strip(-100,240,false),new Strip(360,700,false),new Strip(290,310,false),new Strip(290,310,true));
-        near(choose(split,255).getY(),255,"raw cancelled XOR cuts split a composed gap");
+        near(choose(split,255).getY(),300,"raw cancelled XOR cuts split a composed gap");
         Chart cancelled=strips(new Strip(200,400,false),new Strip(200,400,true));near(choose(cancelled,245).getY(),245,"fully cancelled geometry moved an ordinary safe point");
         Chart parity=strips(new Strip(-100,240,false),new Strip(360,700,false),new Strip(290,310,true),new Strip(290,310,true));
-        near(choose(parity,255).getY(),255,"even subtract parity created a false gap boundary");
+        near(choose(parity,255).getY(),300,"even subtract parity created a false gap boundary");
         Chart narrow=strips(new Strip(-100,298,false),new Strip(302,700,false));try{choose(narrow,200);throw new AssertionError("4px gap accepted without edge clearance");}catch(TapMod.NoSafePoint expected){checks++;}
+        Chart lone=strips(new Strip(270,330,false));
+        Point nearLone=choose(lone,338);ok(nearLone.getY()>=350,"point stayed against the hard footprint of one area");clear(lone,nearLone,.5);
+        near(choose(lone,420).getY(),420,"single domain moved a point that already had enough clearance");
         Chart unrelated=chart(new Point(0,1),rect(50,100,100,500,false));near(choose(unrelated,245).getY(),245,"unrelated geometry recentered the viewport");
         Point unchanged=TapMod.withinBounds(gap,gap.getNotes().get(0),4,V,new Point(500,245),B);near(unchanged.getY(),245,"inactive domains changed a safe position");
+    }
+    private static void centeredVariation()throws Exception{
+        AppSettings.values.put("tapmod_enabled","true");
+        AppSettings.values.put("tap_random_delay_ms","20");
+        AppSettings.values.put("tap_screen_drift_permille","12");
+        try{
+            Chart c=strips(new Strip(-100,240,false),new Strip(360,700,false));
+            GesturePlan plan=GesturePlan.prepareForImport(c,GestureProfile.read(null),V,B,null);
+            TouchEvent event=plan.events.get(0);
+            near(event.getStartMs(),100,"random delay moved the centered head");
+            near(plan.preparedPoint(event,event.getStartMs(),null,0).getY(),300,"random drift moved the gap center");
+        }finally{
+            AppSettings.values.put("tapmod_enabled","false");AppSettings.values.remove("tap_random_delay_ms");
+            AppSettings.values.remove("tap_screen_drift_permille");TapMod.reload();
+        }
     }
     private static void continuityAndBand()throws Exception{
         Chart wall=strips(new Strip(270,330,false));Point previous=new Point(500,200);
         Point held=TapMod.withinBounds(wall,wall.getNotes().get(0),.508,V,new Point(500,400),B,previous,500);
-        near(held.getY(),270-600./108-2,"hold did not remain on reachable side of the barrier");TapMod.segment(wall,V,previous,held,500,508);checks++;
+        near(held.getY(),270-600./30-1,"hold did not remain on reachable side of the barrier");TapMod.segment(wall,V,previous,held,500,508);checks++;
         JSONObject flash=rect(-100,100,1100,120,false).put("appearTime",.520).put("enableTime",.520).put("disableTime",.530).put("disappearTime",.530);
         Chart earlier=chart(new Point(0,1),rect(-100,300,1100,330,false),flash);
         Point retained=TapMod.withinBounds(earlier,earlier.getNotes().get(0),.55,V,new Point(500,50),B,new Point(500,50),500);
         near(retained.getY(),50,"centering rejected a safe stationary hold across an earlier flash");TapMod.segment(earlier,V,new Point(500,50),retained,500,550);checks++;
         Chart side=chart(new Point(0,1),rect(490,-100,510,700,false));Point lateral=choose(side,250);
         clear(side,lateral,.5);ok(Math.abs(lateral.getX()-500)<=ContactPlanner.radius(V)+.02,"lateral fallback escaped legal judgement band");
-        // The only safe column lies halfway between the sampled lanes. A stationary hold
-        // can stay there even though no new touch starting on the nominal line would fit.
+        // The only safe column lies halfway between the sampled lanes. Both a new head and an existing
+        // hold must locate it despite the nominal lane being fully obstructed.
         JSONObject left=rect(-100,-100,497,700,false),right=rect(511,-100,1100,700,false);
         Chart slit=chart(new Point(0,1),left,right);
         Point prior=new Point(504,320),desired=new Point(500,300);
         Point saved=TapMod.withinBounds(slit,slit.getNotes().get(0),.55,V,desired,B,prior,500);
-        ok(saved==prior,"released a reachable previous contact between search lanes");
-        try{TapMod.withinBounds(slit,slit.getNotes().get(0),.55,V,desired,B,prior,500,false);
-            throw new AssertionError("stationary hold fallback applied to a mixed flick route");
-        }catch(TapMod.NoSafePoint expected){checks++;}
+        ok(Math.abs(saved.getX()-504)<.1,"missed a reachable midpoint between search lanes");
+        Point slitHead=TapMod.withinBounds(slit,slit.getNotes().get(0),.55,V,desired,B,null,0);
+        near(slitHead.getX(),504,"narrow lateral gap missed a fresh head");
         JSONObject shutter=rect(-100,-100,1100,700,false).put("enableTime",.521).put("disableTime",.522);
         Chart flashes=chart(new Point(0,1),left,right,shutter);
         try{TapMod.withinBounds(flashes,flashes.getNotes().get(0),.55,V,desired,B,prior,500);
@@ -87,10 +104,10 @@ public final class NoiseGestureRegression {
         JSONObject upper=rect(-100,-100,1100,240,false).put("moveEvents",new JSONArray().put(move(0,1-10/600.0)).put(move(1,1-130/600.0)));
         // The source rectangle center is y=70; the track above centers at10..130.
         Chart c=chart(new Point(0,1),upper,rect(-100,360,1100,700,false));Point p=choose(c,255);
-        near(p.getY(),255,"moving noise recentered an already clear gesture");clear(c,p,.5);
+        near(p.getY(),300.72,"moving noise did not center the timing-guarded gap");clear(c,p,.5);
         for(String profile:new String[]{"16","24"}){
             AppSettings.values.put("tap_noise_clock_guard_ms",profile);TapMod.reload();Point q=choose(c,255);clear(c,q,.5);
-            near(q.getY(),255,"guard displaced a clear point "+profile);
+            near(q.getY(),300+Integer.parseInt(profile)*.06,"moving gap did not follow timing guard "+profile);
         }
         AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.reload();
     }
@@ -151,7 +168,7 @@ public final class NoiseGestureRegression {
     }
     public static void main(String[] args)throws Exception{
         AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.init(new Context());
-        basic();continuityAndBand();movingAndGuard();independentIntervals();gestureRoutes();signature();
-        System.out.println("PASS "+checks+" noise gesture checks: composed XOR/parity, original safe positions, narrow gaps, moving guards, reachable holds, legal rotated bands, independent interval oracle and preparation cache inputs.");
+        basic();centeredVariation();continuityAndBand();movingAndGuard();independentIntervals();gestureRoutes();signature();
+        System.out.println("PASS "+checks+" noise gesture checks: composed XOR/parity, large-mask gap centers, single-area clearance, narrow gaps, moving guards, reachable holds, legal rotated bands, independent interval oracle and preparation cache inputs.");
     }
 }

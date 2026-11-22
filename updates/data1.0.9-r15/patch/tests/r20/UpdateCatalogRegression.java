@@ -31,6 +31,17 @@ public final class UpdateCatalogRegression {
     }
 
     public static void main(String[] args) throws Exception {
+        if(args.length>0 && "--revisions".equals(args[0])){
+            JSONObject r2=release("data1.1.3-r2",false,false);
+            JSONObject r10=release("data1.1.3-r10",false,false);
+            expect("data1.1.3","data1.1.3-r2",r2);
+            expect("data1.1.3-r2",null,r2,release("data1.1.3",false,false));
+            expect("data1.1.3-r2","data1.1.3-r10",r10,r2,release("data1.1.3-r20",false,true));
+            expect("data1.1.3-r10",null,r2);
+            expect("data1.1.3-r10","data1.1.4",r2,release("data1.1.4",false,false));
+            System.out.println("PASS stable numeric revisions: first upgrade, same-version suppression, numeric ordering, previews and future releases.");
+            return;
+        }
         JSONObject previous = release("data1.1.0", false, true);
         JSONObject stable = release("data1.1.1", false, false);
         JSONObject futurePreview = release("data1.2.0", false, true);

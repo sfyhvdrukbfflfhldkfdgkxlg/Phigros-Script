@@ -25,7 +25,11 @@ public final class BlockAreaSet {
     private final double[] changeTimes;
     private final java.util.concurrent.atomic.AtomicReferenceArray<WindowBounds> windows =
             new java.util.concurrent.atomic.AtomicReferenceArray<>(8);
+    private final java.util.concurrent.atomic.AtomicReferenceArray<MaskWindow> maskWindows =
+            new java.util.concurrent.atomic.AtomicReferenceArray<>(16);
     private boolean singleInvert;
+    private double coverageTime=Double.NaN,coverageAspect;
+    private boolean latestCoverage;
     // Radius in units of viewport height: 10 physical pixels at 1080p.
     private static final double TOUCH_RADIUS = 1.0 / 108.0;
     private static final Map<Object, BlockAreaSet> MAP = Collections.synchronizedMap(new WeakHashMap());
@@ -347,21 +351,52 @@ public final class BlockAreaSet {
         return set.touchCovered(x,y,seconds+chart.getOffsetSeconds(),(double)view.getWidth()/view.getHeight());
     }
 
+    private boolean touchCovered(double x,double y,double time,double aspect){
+        return touchCovered(x,y,time,aspect,TOUCH_RADIUS);
+    }
+
+    /** More room for Android's moving finger; the original footprint remains the hard limit in narrow gaps. */
+    public static boolean nearNoise(Chart chart,Viewport view,Point p,double seconds){
+        BlockAreaSet set=MAP.get(chart);
+        if(set==null || set==EMPTY)return false;
+        double x=(p.getX()-view.getLeft())/view.getWidth(),y=1.0-(p.getY()-view.getTop())/view.getHeight();
+        return set.touchCovered(x,y,seconds+chart.getOffsetSeconds(),(double)view.getWidth()/view.getHeight(),1.0/30);
+    }
+
+    /** The composed mask, including holes, decides when to center. The grid only selects a
+     * preference. The final candidate and the connection always pass the full geometric checks. */
+    public static boolean largeCoverage(Chart chart,Viewport view,double seconds){
+        BlockAreaSet set=MAP.get(chart);
+        if(set==null || set==EMPTY)return false;
+        double time=seconds+chart.getOffsetSeconds(),aspect=(double)view.getWidth()/view.getHeight();
+        if(!(set.normal.length>0 && set.normalIndex.overlaps(1,0,set.normal.length,time,time))
+                && !(set.subtract.length>0 && set.subtractIndex.overlaps(1,0,set.subtract.length,time,time)))return false;
+        synchronized(set){if(set.coverageTime==time && set.coverageAspect==aspect)return set.latestCoverage;}
+        int blocked=0;
+        for(int y=0;y<7;y++)for(int x=0;x<7;x++)
+            if(set.covered((x+.5)/7,(y+.5)/7,time,aspect))blocked++;
+        boolean large=blocked>=20;
+        synchronized(set){
+            set.coverageTime=time;set.coverageAspect=aspect;set.latestCoverage=large;
+        }
+        return large;
+    }
+
     /** Bound all inside/outside states of the touch footprint before composing the XOR mask.
      * Expanding a subtractive rectangle unconditionally would enlarge safe holes. */
-    private boolean touchCovered(double x,double y,double t,double aspect){
-        int possible=subtractIndex.count(x,y,t,aspect,TOUCH_RADIUS);
-        if(possible==0)return normalIndex.covers(x,y,t,aspect,TOUCH_RADIUS);
-        int certain=subtractIndex.count(x,y,t,aspect,-TOUCH_RADIUS);
+    private boolean touchCovered(double x,double y,double t,double aspect,double radius){
+        int possible=subtractIndex.count(x,y,t,aspect,radius);
+        if(possible==0)return normalIndex.covers(x,y,t,aspect,radius);
+        int certain=subtractIndex.count(x,y,t,aspect,-radius);
         boolean mayInvert=singleInvert ? certain<=1 && possible>=1 : possible!=certain || (certain&1)!=0;
         boolean mayKeep=singleInvert ? certain!=1 || possible!=1 : possible!=certain || (certain&1)==0;
-        boolean unsafe=(mayKeep && normalIndex.covers(x,y,t,aspect,TOUCH_RADIUS))
-            || (mayInvert && !normalIndex.covers(x,y,t,aspect,-TOUCH_RADIUS));
+        boolean unsafe=(mayKeep && normalIndex.covers(x,y,t,aspect,radius))
+            || (mayInvert && !normalIndex.covers(x,y,t,aspect,-radius));
         if(!unsafe || possible==certain || (possible==1 && normal.length==0) || covered(x,y,t,aspect))return unsafe;
         // A coincident positive and subtractive edge cannot change membership
         // independently. Preserve cancellation through the whole footprint,
         // including where translating or rotating edges exactly coincide.
-        return uncertainMaskCanBlock(x,y,t,aspect);
+        return uncertainMaskCanBlock(x,y,t,aspect,radius);
     }
 
     private static final class Footprint {
@@ -375,20 +410,20 @@ public final class BlockAreaSet {
         }
     }
 
-    private boolean uncertainMaskCanBlock(double x,double y,double time,double aspect){
+    private boolean uncertainMaskCanBlock(double x,double y,double time,double aspect,double radius){
         ArrayList<BlockArea> active=new ArrayList<>();
         if(normal.length>0)normalIndex.collectWindow(1,0,normal.length,time,time,active);
         if(subtract.length>0)subtractIndex.collectWindow(1,0,subtract.length,time,time,active);
         ArrayList<Footprint> shapes=new ArrayList<>();
         for(BlockArea area:active){
-            if(!area.covers(x,y,time,aspect,TOUCH_RADIUS))continue;
+            if(!area.covers(x,y,time,aspect,radius))continue;
             BlockArea.Geometry geometry=area.geometry(time,aspect);
             double w=(area.maxX-area.minX)*geometry.sx,h=(area.maxY-area.minY)*geometry.sy;
             Footprint match=null;
             for(Footprint existing:shapes)if(existing.same(geometry,w,h)){match=existing;break;}
             if(match==null){match=new Footprint(geometry,w,h);shapes.add(match);}
             if(area.isSubtract)match.inversions++;else match.positive=true;
-            match.definite|=area.covers(x,y,time,aspect,-TOUCH_RADIUS);
+            match.definite|=area.covers(x,y,time,aspect,-radius);
         }
         // Six states: positive union on/off, and zero, one or multiple
         // inversions (parity instead when the chart uses parity inversion).
@@ -421,7 +456,7 @@ public final class BlockAreaSet {
         double lo = Math.nextDown(from + chart.getOffsetSeconds()), hi = Math.nextUp(to + chart.getOffsetSeconds());
         double width = view.getWidth(), height = view.getHeight(), aspect = width / height;
         // Longer intervals and very large charts use the regular indexed sweep.
-        if (!(width > 0 && height > 0 && lo <= hi && hi - lo <= .125
+        if (!(width > 0 && height > 0 && aspect>=1.0/32 && aspect<=32 && lo <= hi && hi - lo <= .125
                 && Math.abs(lo) < Integer.MAX_VALUE && Math.abs(hi) < Integer.MAX_VALUE
                 && Math.abs(view.getLeft()) <= 32768 && Math.abs(view.getTop()) <= 32768
                 && width <= 32768 && height <= 32768
@@ -440,9 +475,104 @@ public final class BlockAreaSet {
                 window = new WindowBounds(set, key, aspect);
                 set.windows.set(slot, window);
             }
-            if (window.overlaps(x0, x1, y0, y1)) return true;
+            if(window.overlaps(x0,x1,y0,y1)){
+                // The full-screen inverse in Desultory Signals intersects every path AABB.
+                // A whole guarded stroke can still lie entirely inside a moving positive hole.
+                long firstCell=(long)Math.floor(Math.max(lo,key/16.0)*64);
+                long lastCell=(long)Math.floor(Math.min(hi,(key+1)/16.0)*64);
+                for(long cell=firstCell;cell<=lastCell;cell++){
+                    int maskSlot=(int)(cell & 15);
+                    MaskWindow mask=set.maskWindows.get(maskSlot);
+                    if(mask==null || mask.key!=cell || mask.aspect!=aspect){
+                        mask=new MaskWindow(set,cell,aspect);set.maskWindows.set(maskSlot,mask);
+                    }
+                    if(!mask.clear(x0,x1,y0,y1,set.singleInvert))return true;
+                }
+            }
         }
         return false;
+    }
+
+    /** Each pose bounds both the possible and the guaranteed extent of a shape for one
+     * short, binary-exact time window. Unknown motion remains possible but never certain. */
+    private static final class MaskWindow {
+        final long key;
+        final double aspect;
+        final ArrayList<PoseEnvelope> areas=new ArrayList<>();
+        MaskWindow(BlockAreaSet set,long key,double aspect){
+            this.key=key;this.aspect=aspect;
+            double from=key/64.0,to=(key+1)/64.0;
+            ArrayList<BlockArea> active=new ArrayList<>();
+            if(set.normal.length>0)set.normalIndex.collectWindow(1,0,set.normal.length,from,to,active);
+            if(set.subtract.length>0)set.subtractIndex.collectWindow(1,0,set.subtract.length,from,to,active);
+            for(BlockArea area:active)areas.add(new PoseEnvelope(area,aspect,from,to));
+        }
+        boolean clear(double x0,double x1,double y0,double y1,boolean single){
+            boolean possiblePositive=false,certainPositive=false;
+            int possibleInvert=0,certainInvert=0;
+            for(PoseEnvelope area:areas){
+                int state=area.containment((x0+x1)*.5*aspect,(y0+y1)*.5,(x1-x0)*.5*aspect,(y1-y0)*.5);
+                if(area.subtract){if(state>0)possibleInvert++;if(state==2)certainInvert++;}
+                else{possiblePositive|=state>0;certainPositive|=state==2;}
+            }
+            boolean mayInvert=single?certainInvert<=1 && possibleInvert>=1:certainInvert!=possibleInvert || (certainInvert&1)!=0;
+            boolean mayKeep=single?certainInvert!=1 || possibleInvert!=1:certainInvert!=possibleInvert || (certainInvert&1)==0;
+            return !(mayKeep && possiblePositive || mayInvert && !certainPositive);
+        }
+    }
+    private static final class PoseEnvelope {
+        final boolean subtract,alwaysActive;
+        boolean known;
+        double x,y,cos,sin,angleChange,centerTravel,minWidth,maxWidth,minHeight,maxHeight;
+        PoseEnvelope(BlockArea area,double aspect,double from,double to){
+            subtract=area.isSubtract;alwaysActive=area.appear<=from && area.disappear>to;
+            if(!area.proofInputsBounded)return;
+            double a=Math.max(from,area.appear),b=Math.min(to,area.disappear);
+            int m=BlockArea.last(area.move.time,a),r=BlockArea.last(area.rotate.time,a),s=BlockArea.last(area.scale.time,a);
+            if(m!=BlockArea.last(area.move.time,b)||r!=BlockArea.last(area.rotate.time,b)||s!=BlockArea.last(area.scale.time,b))return;
+            BlockArea.Geometry pose=area.geometry(a,aspect);
+            x=pose.x*aspect;y=pose.y;cos=pose.c;sin=pose.s;
+            // Within a single easing segment each axis is monotone, including step easing.
+            double mx=area.move.valueAt(m,a,true),my=area.move.valueAt(m,a,false);
+            centerTravel=Math.hypot((mx-area.move.valueAt(m,b,true))*aspect,my-area.move.valueAt(m,b,false));
+            double sx=area.scale.valueAt(s,a,true),sy=area.scale.valueAt(s,a,false);
+            double ex=area.scale.valueAt(s,b,true),ey=area.scale.valueAt(s,b,false);
+            if(sx*ex<=0 || sy*ey<=0)return;
+            minWidth=Math.min(Math.abs(sx),Math.abs(ex))*(area.maxX-area.minX)*aspect*.5;
+            maxWidth=Math.max(Math.abs(sx),Math.abs(ex))*(area.maxX-area.minX)*aspect*.5;
+            minHeight=Math.min(Math.abs(sy),Math.abs(ey))*(area.maxY-area.minY)*.5;
+            maxHeight=Math.max(Math.abs(sy),Math.abs(ey))*(area.maxY-area.minY)*.5;
+            if(Math.min(Math.min(Math.abs(sx),Math.abs(ex)),Math.min(Math.abs(sy),Math.abs(ey)))<1e-6)return;
+            if(s>=0 && s+1<area.scale.time.length){
+                double dx=(area.scaledCenterX[s]-area.scaleAnchor.x[s])*
+                        (BlockArea.ratio(sx,area.scale.x[s])-BlockArea.ratio(ex,area.scale.x[s]))*aspect;
+                double dy=(area.scaledCenterY[s]-area.scaleAnchor.y[s])*
+                        (BlockArea.ratio(sy,area.scale.y[s])-BlockArea.ratio(ey,area.scale.y[s]));
+                centerTravel+=Math.hypot(dx,dy);
+            }
+            angleChange=Math.min(2,Math.toRadians(Math.abs(area.rotate.valueAt(r,a,true)-area.rotate.valueAt(r,b,true))));
+            if(angleChange>0 && r>=0){
+                double dx=x-(mx-area.centerX+area.rotateAnchor.x[r])*aspect;
+                double dy=y-(my-area.centerY+area.rotateAnchor.y[r]);
+                centerTravel+=Math.hypot(dx,dy)*angleChange;
+            }
+            // Include the normalized epsilon used by BlockArea.covers, per-axis rounding
+            // and accumulated transforms. Huge or non-finite intermediates disable proof.
+            double extent=Math.max(Math.max(Math.abs(x),Math.abs(y)),Math.max(maxWidth,maxHeight));
+            centerTravel+=1e-7*(1+extent+Math.max(Math.abs(sx),Math.abs(ex))*aspect+Math.max(Math.abs(sy),Math.abs(ey)));
+            known=Double.isFinite(centerTravel) && Double.isFinite(extent) && extent<1e6;
+        }
+        int containment(double px,double py,double halfX,double halfY){
+            if(!known)return 1;
+            double dx=px-x,dy=py-y;
+            double localX=Math.abs(dx*cos+dy*sin),localY=Math.abs(dy*cos-dx*sin);
+            double margin=TOUCH_RADIUS+centerTravel+angleChange*(Math.hypot(dx,dy)+Math.hypot(halfX,halfY));
+            double deltaX=margin+Math.abs(cos)*halfX+Math.abs(sin)*halfY;
+            double deltaY=margin+Math.abs(sin)*halfX+Math.abs(cos)*halfY;
+            if(localX-deltaX>maxWidth || localY-deltaY>maxHeight)return 0;
+            if(alwaysActive && localX+deltaX<minWidth && localY+deltaY<minHeight)return 2;
+            return 1;
+        }
     }
 
     private static final class WindowBounds {
@@ -639,6 +769,7 @@ public final class BlockAreaSet {
         final Track scale;
         final Anchors scaleAnchor;
         private final double[] scaledCenterX,scaledCenterY;
+        private final boolean proofInputsBounded;
         private RotationPrefix[] rotationPrefixes;
         private int nextRotationPrefix,nextGeometry;
         private Geometry[] geometries;
@@ -690,6 +821,22 @@ public final class BlockAreaSet {
                 scaledCenterX[i+1]=scaleAnchor.x[i]+(scaledCenterX[i]-scaleAnchor.x[i])*ratio(scale.x[i+1],scale.x[i]);
                 scaledCenterY[i+1]=scaleAnchor.y[i]+(scaledCenterY[i]-scaleAnchor.y[i])*ratio(scale.y[i+1],scale.y[i]);
             }
+            // The inverse transform adds the original center even after a huge move cancels it.
+            // Bound source values and accumulated pivots once, before either broad-phase proof.
+            proofInputsBounded=Math.max(Math.max(Math.abs(minX),Math.abs(maxX)),
+                    Math.max(Math.abs(minY),Math.abs(maxY)))<=64
+                    && rotate.time.length<=256 && scale.time.length<=256
+                    && bounded(move.x,64) && bounded(move.y,64)
+                    && bounded(rotate.x,36000) && bounded(rotate.y,36000)
+                    && bounded(scale.x,128) && bounded(scale.y,128)
+                    && bounded(scaleAnchor.x,64) && bounded(scaleAnchor.y,64)
+                    && bounded(rotateAnchor.x,64) && bounded(rotateAnchor.y,64)
+                    && bounded(scaledCenterX,64) && bounded(scaledCenterY,64);
+        }
+
+        private static boolean bounded(double[] values,double limit){
+            for(double value:values)if(!(Math.abs(value)<=limit))return false;
+            return true;
         }
 
         static BlockArea parse(JSONObject jSONObject) {
@@ -884,6 +1031,7 @@ public final class BlockAreaSet {
         }
 
         boolean sweepBounds(double from, double to, double aspect, double[] box, int out) {
+            if(!proofInputsBounded)return false;
             double a = Math.max(from, appear), b = Math.min(to, disappear);
             // Each translation axis is monotone between consecutive Phigros
             // easing keys. A rotation, scale change or interior key needs the

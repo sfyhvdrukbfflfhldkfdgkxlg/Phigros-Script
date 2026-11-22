@@ -1,0 +1,70 @@
+{
+  "version": "data1.1.3-r2",
+  "version_code": 11006,
+  "base_sha256": "d7d38b37f3ba821261c5c9917366c5600d7432c5836a1b8fb4e2b27bba58c5b8",
+  "patch_tree": "c2b22f600a19c910d11835bedfc896f4b04726a6",
+  "assets": {
+    "PhigrosScript_data1.1.3-r2.apk": {
+      "size": 48710107,
+      "sha256": "63e9169028140b745efe5ac3bc3de0f449a98364b60f4a5d26f48dfe49b12756"
+    },
+    "PhigrosScript_data1.1.3-r2_Source.zip": {
+      "size": 1500785,
+      "sha256": "2d095c987be4024f1a6608356f714f0f91fef7d7965ea251da6b5e046cb92790"
+    }
+  },
+  "parts": [
+    {
+      "size": 196608,
+      "sha256": "ee989c2cc635661c8b433163f1c34b44e3304c416da70d75cf33869a251f69f4"
+    },
+    {
+      "size": 196608,
+      "sha256": "3e17cf1683b0a225166f73989aa01f8e217be1148d2767c0db11cf862b0e634e"
+    },
+    {
+      "size": 196608,
+      "sha256": "09f18cb1559bfc066a10aaedf24c3959f0406cd85cd68b0546afeae1551c130e"
+    },
+    {
+      "size": 196608,
+      "sha256": "8fd5bf202a5772f00fe7d534980de9875f53423f0693adf579bd5dfb577972e7"
+    },
+    {
+      "size": 196608,
+      "sha256": "517b8c0dec1f955dacc2889085664ed3e2c0e6644f7e2c3dc9752f438bbc2107"
+    },
+    {
+      "size": 196608,
+      "sha256": "92cc977b9249cf6f85757c301fc65529e74e9e3acacbb735dbb1df09cd9ba687"
+    },
+    {
+      "size": 196608,
+      "sha256": "2d70a21fd0bc92f5c467cb17b5aad8ab425526af4f5a3d6e3ea9b631f2bb71b9"
+    },
+    {
+      "size": 196608,
+      "sha256": "6f39120488f346e2c7b8111444982603f483e8454cbe2df62354b27cdcfc8c11"
+    },
+    {
+      "size": 196608,
+      "sha256": "eda8fc654458572792e677ec53c3f6c51a3c14a7dd7e5164dea20052971ed24f"
+    },
+    {
+      "size": 196608,
+      "sha256": "bce62c32b0a02205ab1856b0e5e8b990dd76efa87f71f64d2499abd40cc433bd"
+    },
+    {
+      "size": 196608,
+      "sha256": "562f70772f2084136e375fb0b221370f8b4454cdaf6b9cf0b8500b784d7373b2"
+    },
+    {
+      "size": 196608,
+      "sha256": "94b64250a8c2cd885e56f84ab3a8887e6f777648bab69518f1e2d890d6938a9f"
+    },
+    {
+      "size": 61534,
+      "sha256": "c48d5ade3bb32913743d33724d251488ec724d85930800f8c5bc8fe5d94fda25"
+    }
+  ]
+}

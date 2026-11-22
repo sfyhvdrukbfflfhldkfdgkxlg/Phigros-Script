@@ -136,6 +136,14 @@ public final class PreparedTrajectory {
     long boundary(TouchEvent e,long now,long end){Track t=tracks.get(e);return t==null?end:t.boundary(now,end);}
     boolean continuous(TouchEvent e){Track t=tracks.get(e);return t!=null&&t.continuous;}
     boolean flick(TouchEvent e){Track t=tracks.get(e);return t!=null&&t.flick;}
+    boolean stationaryTap(TouchEvent event,Point point,long from,long to){
+        Track t=tracks.get(event);
+        if(t==null||event.getNote().getType()!=1||t.continuous||t.flick||from<t.start||to<from||to>=t.start+(long)t.x.length)return false;
+        for(int i=(int)(from-t.start);i<=to-t.start;i++){
+            if(t.x[i]!=point.getX()||t.y[i]!=point.getY()||(i>from-t.start&&t.connected[i]==0))return false;
+        }
+        return true;
+    }
     public int sampleCount(){int n=0;for(Track t:tracks.values())n+=t.x.length;return n;}
     static PreparedTrajectory prepare(Chart chart,GesturePlan plan,GestureProfile profile,Viewport view,TouchBounds bounds,AtomicBoolean cancel){
         PreparedTrajectory out=new PreparedTrajectory(profile,view,bounds,TapMod.preparationSignature(),TapMod.preparationSalt(chart));
@@ -238,6 +246,20 @@ public final class PreparedTrajectory {
                 ContactPlanner.Route route=raw==null?null:raw.routes.get(before);
                 boolean anchored=(route==null||route.uses==1)&&HoldOscillation.stabilize(chart,view,event,
                         track.flick,track.x,track.y,track.connected,track.start,cancel,raw!=null);
+                if(event.getNote().getType()==1&&!track.continuous&&!track.flick&&TapMod.avoids(chart)
+                        &&BlockAreaSet.overlaps(chart,track.start-TapMod.noiseLookBackMs(),event.getEndMs()+TapMod.noiseLookAheadMs())
+                        &&Float.isFinite(track.x[0])){
+                    // Only the head is judged. Store the same contact through UP if its
+                    // complete lifetime, including timing guards, clears moving noise.
+                    Point head=new Point(track.x[0],track.y[0]);
+                    try{
+                        TapMod.segment(chart,view,head,head,track.start,event.getEndMs());
+                        Arrays.fill(track.x,head.getX());
+                        Arrays.fill(track.y,head.getY());
+                        Arrays.fill(track.connected,1,track.connected.length,(byte)1);
+                        anchored=true;
+                    }catch(TapMod.NoSafePoint movingEdge){/* Keep the independently checked moving track. */}
+                }
                 if(dy!=0||anchored){
                     for(int k=0;k<track.y.length;k++){
                         if(!Float.isFinite(track.x[k]))track.aospX[k]=track.aospY[k]=0;
@@ -270,6 +292,18 @@ public final class PreparedTrajectory {
             TouchEvent event=group.get(i);
             Track track=tracks.get(event);
             float dy=variation.drift(seed,event,track.y,view,bounds);
+            if((delay!=0||dy!=0)&&TapMod.avoids(chart)&&!track.flick&&Float.isFinite(track.x[0])){
+                double head=track.start/1000.0;
+                // Keep the chosen gap center at its certified chart time. A chord
+                // falls back together if one member needs its original timing.
+                if(BlockAreaSet.largeCoverage(chart,view,head)){
+                    if(delay!=0)return false;
+                    dy=0;
+                }else if(dy!=0&&BlockAreaSet.nearNoise(chart,view,
+                        new Point(track.x[0],bounds.y(track.y[0]+dy)),(track.start+delay)/1000.0)){
+                    dy=0;
+                }
+            }
             if(!ContactVariation.safe(chart,view,track.start,track.x,track.y,track.connected,delay,dy,cancel)){
                 if(dy==0||!ContactVariation.safe(chart,view,track.start,track.x,track.y,track.connected,delay,0,cancel))return false;
                 dy=0;
@@ -486,8 +520,10 @@ public final class PreparedTrajectory {
                 // Clipping at a system inset changes the certified segment. Do not publish a
                 // modified contact across a noise region, even if both endpoints remain clear.
                 if((legacyCloud||clipped||previousClipped)&&BlockAreaSet.overlaps(chart,time-1-TapMod.noiseLookBackMs(),time+TapMod.noiseLookAheadMs())){
-                    if(!TapMod.clearAt(chart,view,current,time/1000.0)){
-                        current=legacyCloud?nearbyCloudPoint(chart,current,time):null;
+                    Point authored=current;
+                    boolean safe=TapMod.clearAt(chart,view,current,time/1000.0);
+                    if(!safe || legacyCloud && !track.flick && BlockAreaSet.nearNoise(chart,view,current,time/1000.0)){
+                        current=legacyCloud?nearbyCloudPoint(chart,current,time,safe):null;
                     }
                     if(current==null){
                         track.x[i]=track.y[i]=Float.NaN;
@@ -497,12 +533,19 @@ public final class PreparedTrajectory {
                         previous=null;previousClipped=false;
                         continue;
                     }
-                    track.x[i]=current.getX();
-                    track.y[i]=current.getY();
                     if(track.connected[i]!=0&&previous!=null){
                         try{TapMod.segment(chart,view,previous,current,time-1,time);}
-                        catch(TapMod.NoSafePoint blocked){track.connected[i]=0;}
+                        catch(TapMod.NoSafePoint blocked){
+                            if(safe && authored!=current){
+                                try{
+                                    TapMod.segment(chart,view,previous,authored,time-1,time);
+                                    current=authored;
+                                }catch(TapMod.NoSafePoint disconnected){track.connected[i]=0;}
+                            }else track.connected[i]=0;
+                        }
                     }
+                    track.x[i]=current.getX();
+                    track.y[i]=current.getY();
                 }
                 if(previous==null)track.connected[i]=0;
                 previous=current;previousClipped=clipped;
@@ -515,17 +558,22 @@ public final class PreparedTrajectory {
 
     // Legacy cloud archives contain routed contacts but no moving judge-line normals.
     // Keep repairs local to the authored contact and certify continuity separately.
-    private Point nearbyCloudPoint(Chart chart,Point origin,long time){
+    private Point nearbyCloudPoint(Chart chart,Point origin,long time,boolean originSafe){
         float step=Math.max(1f,view.getHeight()/216f);
-        for(int ring=1;ring<=3;ring++){
+        Point fallback=originSafe?origin:null;
+        // The cloud timeline lacks the judge-line normal. Limit the correction to
+        // 3.3% of the play height, independently of orientation and display size.
+        for(int ring=1;ring<=7;ring++){
             for(int direction=0;direction<8;direction++){
                 double angle=direction*Math.PI/4;
                 Point trial=new Point(bounds.x(origin.getX()+(float)Math.cos(angle)*step*ring),
                         bounds.y(origin.getY()+(float)Math.sin(angle)*step*ring));
-                if(TapMod.clearAt(chart,view,trial,time/1000.0))return trial;
+                if(!TapMod.clearAt(chart,view,trial,time/1000.0))continue;
+                if(!BlockAreaSet.nearNoise(chart,view,trial,time/1000.0))return trial;
+                if(fallback==null)fallback=trial;
             }
         }
-        return null;
+        return fallback;
     }
     static byte[] encode(GesturePlan plan,PreparedTrajectory p,String fingerprint)throws IOException{
         if(fingerprint==null||fingerprint.isEmpty()||fingerprint.length()>512)throw new IOException(tr("谱面指纹无效"));

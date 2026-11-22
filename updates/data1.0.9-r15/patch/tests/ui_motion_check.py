@@ -21,3 +21,6 @@ def check(work, api):
         if 'io/github/phiscript/root/HomeInsets.class' in classes.namelist():
             compile_to(tests,host,'patch/tests/r20/ui/HomeInsetsRegression.java')
             run('java','-cp',host,'io.github.phiscript.root.HomeInsetsRegression')
+        if 'io/github/phiscript/root/GlassStage.class' in classes.namelist():
+            compile_to(tests,host,'patch/tests/r20/ui/DockInsetsRegression.java')
+            run('java','-cp',host,'io.github.phiscript.root.DockInsetsRegression')

@@ -30,6 +30,9 @@ public final class GesturePlan {
     final IdentityHashMap<TouchEvent,ContactPlanner.Route> routes=new IdentityHashMap<>();
     private PreparedTrajectory precomputed;
     public boolean hasPreparedTrajectory(){return precomputed!=null;}
+    boolean stationaryTap(TouchEvent event,Point point,long from,long to){
+        return precomputed!=null&&precomputed.stationaryTap(event,point,from,to);
+    }
     public int preparedSampleCount(){return precomputed==null?0:precomputed.sampleCount();}
     public static void discardPrepared(Chart chart){synchronized(CACHE){CACHE.remove(chart);}}
     public static void clearPrepared(){synchronized(CACHE){CACHE.clear();}}

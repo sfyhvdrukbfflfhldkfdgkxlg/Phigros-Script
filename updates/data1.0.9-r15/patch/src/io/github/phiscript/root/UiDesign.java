@@ -78,14 +78,11 @@ public final class UiDesign {
         if(window!=null){
             int state=window.getAttributes().softInputMode & ~android.view.WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST;
             window.setSoftInputMode(state|android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            GlassWindows.dialog(window);
         }
         UiMotion.show(dialog);
         if(window!=null){
-            window.setBackgroundDrawable(GlassSurface.dialog(dialog.getContext()));
-            window.setDimAmount(.27f);
             if(android.os.Build.VERSION.SDK_INT>=29)window.getDecorView().setForceDarkAllowed(false);
-            if(android.os.Build.VERSION.SDK_INT>=31&&UiMotion.enabled())
-                window.setBackgroundBlurRadius(Math.min(64,dp(dialog.getContext(),20)));
         }
         tint(dialog.getWindow()==null?null:dialog.getWindow().getDecorView());
         for(int id:new int[]{AlertDialog.BUTTON_POSITIVE,AlertDialog.BUTTON_NEGATIVE,AlertDialog.BUTTON_NEUTRAL}){
@@ -93,6 +90,11 @@ public final class UiDesign {
         }
         ListView list=dialog.getListView();if(list!=null){list.setDividerHeight(dp(list.getContext(),1));list.setDivider(new android.graphics.drawable.ColorDrawable(LINE));list.setSelector(ripple(list.getContext(),SURFACE,8));list.setOnHierarchyChangeListener(new ViewGroup.OnHierarchyChangeListener(){public void onChildViewAdded(View parent,View child){tint(child);}public void onChildViewRemoved(View parent,View child){}});}
         return dialog;
+    }
+    public static AlertDialog showNative(AlertDialog.Builder builder){
+        AlertDialog dialog=builder.create();
+        if(dialog.getWindow()!=null)GlassWindows.dialog(dialog.getWindow());
+        return UiMotion.show(dialog);
     }
     private static void tint(View view){
         if(view==null)return;

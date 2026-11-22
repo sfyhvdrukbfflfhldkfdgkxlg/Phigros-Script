@@ -125,7 +125,7 @@ public final class TouchSafety {
      * connection for these chart milliseconds, including both timing guards.
      * PreparedTrajectory relies on this instead of checking it a second time. */
     Point preparePoint(GesturePlan plan,Chart chart,TouchEvent event,long time,Viewport viewport,int[] screen,boolean[] bounded,Point previous,long previousTime){return calculate(plan,chart,event,time,viewport,screen,bounded,previous,previousTime,true);}
-    private Point escape(Chart chart,io.github.phiscript.engine.Note note,double time,Viewport viewport,Point p,Point previous,long previousTime,boolean offline,boolean pureHold){
+    private Point escape(Chart chart,io.github.phiscript.engine.Note note,double time,Viewport viewport,Point p,Point previous,long previousTime,boolean offline,boolean pureHold,boolean preferInterior){
         if(offline){
             long now=Math.round(time*1000),from=previous==null?now:Math.min(previousTime,now),to=previous==null?now:Math.max(previousTime,now);
             // With no active geometry anywhere over the entire connection and
@@ -134,7 +134,7 @@ public final class TouchSafety {
             // a short region can activate between two otherwise clear points.
             if(!TapMod.avoids(chart)||!io.github.phiscript.engine.BlockAreaSet.overlaps(chart,from-TapMod.noiseLookBackMs(),to+TapMod.noiseLookAheadMs()))return new Point(bounds.x(p.getX()),bounds.y(p.getY()));
         }
-        return offline?TapMod.withinBounds(chart,note,time,viewport,p,bounds,previous,previousTime,pureHold):TapMod.runtimeWithinBounds(chart,note,time,viewport,p,bounds,previous,previousTime,pureHold);
+        return offline?TapMod.withinBounds(chart,note,time,viewport,p,bounds,previous,previousTime,pureHold,preferInterior):TapMod.runtimeWithinBounds(chart,note,time,viewport,p,bounds,previous,previousTime,pureHold,preferInterior);
     }
     private Point calculate(GesturePlan plan,Chart chart,TouchEvent event,long time,Viewport viewport,int[] screen,boolean[] bounded,Point previous,long previousTime,boolean offline){
         ContactPlanner.Route route=plan.routes.get(event);
@@ -143,9 +143,9 @@ public final class TouchSafety {
             Boolean priorPlanning=TapMod.planning.get();TapMod.planning.set(true);Point p;
             try{p=route.at(chart,time,viewport,bounds);}
             finally{if(priorPlanning==null)TapMod.planning.remove();else TapMod.planning.set(priorPlanning);}
-            return escape(chart,route.anchor(time).note,time/1000.0,viewport,p,previous,previousTime,offline,pureHold);
+            return escape(chart,route.anchor(time).note,time/1000.0,viewport,p,previous,previousTime,offline,pureHold,!plan.hasFlickPath(event));
         }
-        if(!enabled&&!inwardFlick)return escape(chart,event.getNote(),time/1000.0,viewport,plan.point(chart,event,time,viewport,screen,bounded),previous,previousTime,offline,pureHold);
+        if(!enabled&&!inwardFlick)return escape(chart,event.getNote(),time/1000.0,viewport,plan.point(chart,event,time,viewport,screen,bounded),previous,previousTime,offline,pureHold,!plan.hasFlickPath(event));
         Point p;
         if(plan.hasFlickPath(event))p=plan.point(chart,event,time,viewport,screen,bounded,bounds);
         else if(event.getNote().getType()==4&&inwardFlick){
@@ -158,6 +158,6 @@ public final class TouchSafety {
             p=new Point(x+(target[0]-x)*progress,y+(target[1]-y)*progress);
         }else p=plan.point(chart,event,time,viewport,screen,bounded);
         float x=bounds.x(p.getX()),y=bounds.y(p.getY());if(x!=p.getX()||y!=p.getY())bounded[0]=true;
-        return escape(chart,event.getNote(),time/1000.0,viewport,new Point(x,y),previous,previousTime,offline,pureHold);
+        return escape(chart,event.getNote(),time/1000.0,viewport,new Point(x,y),previous,previousTime,offline,pureHold,!plan.hasFlickPath(event));
     }
 }

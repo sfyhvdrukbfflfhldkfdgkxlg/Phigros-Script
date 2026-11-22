@@ -89,6 +89,7 @@ public final class HomeScreen {
     private LinearLayout page(FrameLayout viewport,int index,String title){
         ScrollView scroll=new ScrollView(activity);pages[index]=scroll;
         scroll.setFillViewport(true);scroll.setVerticalScrollBarEnabled(false);
+        scroll.setClipToPadding(false);
         scroll.setTag(index==PERFORMANCE?"data-performance-page":"data-library-page");
         viewport.addView(scroll,new FrameLayout.LayoutParams(-1,-1));scroll.setVisibility(View.GONE);
         LinearLayout content=new LinearLayout(activity);content.setOrientation(LinearLayout.VERTICAL);
@@ -112,17 +113,30 @@ public final class HomeScreen {
         if(android.os.Build.VERSION.SDK_INT>=28){heading.setAccessibilityHeading(true);scroll.setAccessibilityPaneTitle(title);}
         return content;
     }
-    private void navigation(){
+    private void navigation(GlassStage stage){
+        FrameLayout controls=new FrameLayout(activity);
+        stage.addView(controls,new FrameLayout.LayoutParams(-1,-1));
         LinearLayout bar=new LinearLayout(activity);bar.setGravity(Gravity.CENTER);
-        bar.setBackground(new GlassSurface(activity,24,false));bar.setElevation(dp(3));
+        bar.setBackground(GlassSurface.dock(activity));bar.setElevation(dp(3));
         bar.setPadding(dp(6),dp(4),dp(6),dp(4));
         // Keep the two tabs within thumb reach in a broad landscape or tablet window.
         int width=activity.getResources().getConfiguration().screenWidthDp;
         int margin=dp(Math.max(12,(width-440)/2));
-        LinearLayout.LayoutParams dock=new LinearLayout.LayoutParams(-1,-2);
-        dock.setMargins(margin,dp(4),margin,dp(6));root.addView(bar,dock);
+        FrameLayout.LayoutParams dock=new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM);
+        dock.setMargins(margin,dp(4),margin,dp(6));controls.addView(bar,dock);
         navItem(bar,PERFORMANCE,w("演奏","Play"),UiDesign.PLAY);
         navItem(bar,LIBRARY,w("谱库","Library"),UiDesign.LIBRARY);
+        stage.setDock(bar);
+        for(ScrollView page:pages)stage.followScroll(page);
+        Runnable updateScrollPadding=()->{
+            int dockHeight=dock.bottomMargin+bar.getHeight()+dp(10);
+            for(ScrollView page:pages)HomeInsets.padPage(page,controls,dockHeight);
+        };
+        bar.addOnLayoutChangeListener((v,l,t,r,b,oldL,oldT,oldR,oldB)->{
+            updateScrollPadding.run();
+            stage.invalidate();
+        });
+        HomeInsets.install(activity.getWindow(),root,controls,updateScrollPadding);
     }
     private void navItem(LinearLayout bar,int index,String label,int kind){
         Button tab=UiDesign.button(activity,label,false,()->selectPage(index));tabs[index]=tab;
@@ -147,10 +161,11 @@ public final class HomeScreen {
     private void build(){
         TextView oldStatus=field("statusView"),oldAccess=field("accessibilityView"),oldLog=field("logView");
         activity.setTheme(android.R.style.Theme_Material_Light_NoActionBar);
-        root.removeAllViews();root.setPadding(0,0,0,0);root.setGravity(Gravity.TOP);
-        root.setBackground(GlassSurface.backdrop());HomeInsets.install(activity.getWindow(),root);
-        FrameLayout viewport=new FrameLayout(activity);
-        root.addView(viewport,new LinearLayout.LayoutParams(-1,0,1));
+        root.removeAllViews();root.setBackground(null);root.setPadding(0,0,0,0);root.setGravity(Gravity.TOP);
+        GlassStage stage=new GlassStage(activity);
+        root.addView(stage,new LinearLayout.LayoutParams(-1,-1));
+        FrameLayout viewport=stage.pages;
+        GlassWindows.home(activity.getWindow(),viewport);
         LinearLayout performance=page(viewport,PERFORMANCE,w("演奏台","Performance"));
         LinearLayout library=page(viewport,LIBRARY,w("谱库","Library"));
         LinearLayout transport=card(performance);transport.setBackground(new GlassSurface(activity,20,true));
@@ -189,7 +204,7 @@ public final class HomeScreen {
         expand.setContentDescription(w("展开运行记录","Expand activity log"));expand.setBackground(UiDesign.ripple(activity,android.graphics.Color.TRANSPARENT,10));
         expand.setOnClickListener(v->{boolean open=!UiMotion.expanded(details);UiMotion.toggle(details,open);expand.setText(open?w("运行记录  −","Activity log  −"):w("运行记录  ＋","Activity log  +"));expand.setContentDescription(open?w("收起运行记录","Collapse activity log"):w("展开运行记录","Expand activity log"));});UiMotion.bindPress(expand);diagnostics.addView(details,new LinearLayout.LayoutParams(-1,-2));
         for(TextView v:new TextView[]{oldStatus,oldAccess,oldLog})if(v!=null){if(v.getParent() instanceof ViewGroup)((ViewGroup)v.getParent()).removeView(v);v.setTextColor(MUTED);v.setTextSize(12);v.setPadding(0,dp(8),0,dp(8));details.addView(v,new LinearLayout.LayoutParams(-1,-2));}
-        navigation();
+        navigation(stage);
         selectPage(activity.getPreferences(0).getInt("home_page",PERFORMANCE)==LIBRARY?LIBRARY:PERFORMANCE);
         update();
     }

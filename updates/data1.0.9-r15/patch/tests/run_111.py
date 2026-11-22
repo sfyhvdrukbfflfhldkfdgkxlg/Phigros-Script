@@ -42,6 +42,8 @@ def main(version, code):
         compile_to(timing, routing_cp, "patch/tests/r12/TimingRegression.java")
         run("java", "-cp", routing_cp, "io.github.phiscript.TimingRegression")
         extra(work, api, host, models, tests)
+        if code >= 11006:
+            run("java", "-cp", host, "io.github.phiscript.update.UpdateCatalogRegression", "--revisions")
         replay = ("java", "-Dfile.encoding=UTF-8", "-Xmx1800m", "-cp", host,
                   "io.github.phiscript.input.DesultoryPlaybackRegression")
         paths = [source.resolve() for source in args.replay]
