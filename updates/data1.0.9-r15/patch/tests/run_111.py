@@ -19,7 +19,7 @@ def check_download_menu(jar):
         assert action not in home and action in adapter, f"Expected a hidden, retained loader: {action}"
 
 def main(version, code):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=f"Verify the signed {version} APK and its playback paths.")
     parser.add_argument("apk", type=Path)
     parser.add_argument("--replay", type=Path, nargs="+", default=[],
                         help="Optional original Desultory Signals JSON charts to check")
@@ -42,9 +42,14 @@ def main(version, code):
         compile_to(timing, routing_cp, "patch/tests/r12/TimingRegression.java")
         run("java", "-cp", routing_cp, "io.github.phiscript.TimingRegression")
         extra(work, api, host, models, tests)
-        for source in args.replay:
-            run("java", "-Dfile.encoding=UTF-8", "-Xmx1800m", "-cp", host,
-                "io.github.phiscript.input.DesultoryPlaybackRegression", *(["--standalone"] if code >= 11002 else []), source.resolve())
+        replay = ("java", "-Dfile.encoding=UTF-8", "-Xmx1800m", "-cp", host,
+                  "io.github.phiscript.input.DesultoryPlaybackRegression")
+        paths = [source.resolve() for source in args.replay]
+        for source in paths:
+            run(*replay, *(["--standalone"] if code >= 11002 else []),
+                *(["--clearance"] if code >= 11004 else []), source)
+            if code >= 11004:
+                run(*replay, "--standalone", "--random", "--clearance", source)
     # Keep the disk-capacity fixtures beside the build and release them after the run.
     with tempfile.TemporaryDirectory(prefix="release-temp-", dir=ROOT) as scratch:
         options = os.environ.get("JAVA_TOOL_OPTIONS", "")

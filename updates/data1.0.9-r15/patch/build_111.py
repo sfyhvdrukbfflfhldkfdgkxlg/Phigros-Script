@@ -7,7 +7,7 @@ VERSION = "data1.1.1"
 VERSION_CODE = 11001
 
 def main(version, code):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=f"Build {version} from the verified R15 baseline.")
     parser.add_argument("base", type=Path)
     parser.add_argument("--key", type=Path, required=True)
     parser.add_argument("--cert", type=Path, required=True)

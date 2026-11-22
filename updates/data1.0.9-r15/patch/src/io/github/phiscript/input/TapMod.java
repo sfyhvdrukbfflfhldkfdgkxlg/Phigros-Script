@@ -44,25 +44,56 @@ public final class TapMod {
     private static final Map<Chart,Long> salts=Collections.synchronizedMap(new WeakHashMap<Chart,Long>());
     private static final SecureRandom random=new SecureRandom();
     public static void init(Context c){if(c!=null)app=c.getApplicationContext();reload();}
-    public static synchronized void reload(){
-        Properties f=new Properties();try(InputStream in=new FileInputStream("/sdcard/PhigrosScript/tapmod.conf")){f.load(in);}catch(Exception ignored){}
-        enabled=bool(raw(f,"tapmod_enabled","true"));noiseAvoid=bool(raw(f,"tap_noise_avoid","true"));
-        vertical=value(raw(f,"tap_vertical_permille","35"),35,0,200);
-        jitter=value(raw(f,"tap_jitter_permille","6"),6,0,20);
-        int delay=Math.round(value(raw(f,"tap_random_delay_ms","6"),6,0,20));
-        float drift=value(raw(f,"tap_screen_drift_permille","3"),3,0,12);
-        variation=enabled?new ContactVariation(delay,drift):ContactVariation.OFF;
-        escape=value(raw(f,"tap_noise_escape_permille","2000"),2000,0,2000);
-        String clock=raw(f,"tap_noise_clock_guard_ms","0");guard=new Guard("16".equals(clock)?16:"24".equals(clock)?24:0);
+    /** The editor and both input backends use the same overrides, bounds and defaults. */
+    public static final class Settings {
+        public final boolean enabled,noiseAvoid;
+        public final float vertical,jitter,drift,escape;
+        public final int delay,clock;
+        private Settings(AppSettings prefs,Properties file){
+            enabled=bool(raw(prefs,file,"tapmod_enabled","true"));
+            noiseAvoid=bool(raw(prefs,file,"tap_noise_avoid","true"));
+            vertical=value(raw(prefs,file,"tap_vertical_permille","35"),35,0,200);
+            jitter=value(raw(prefs,file,"tap_jitter_permille","6"),6,0,20);
+            delay=Math.round(value(raw(prefs,file,"tap_random_delay_ms","6"),6,0,20));
+            drift=value(raw(prefs,file,"tap_screen_drift_permille","3"),3,0,12);
+            escape=value(raw(prefs,file,"tap_noise_escape_permille","2000"),2000,0,2000);
+            String setting=raw(prefs,file,"tap_noise_clock_guard_ms","0");
+            clock="16".equals(setting)?16:"24".equals(setting)?24:0;
+        }
+        private static String raw(AppSettings prefs,Properties file,String key,String fallback){
+            String override=prefs==null?"":prefs.text(key,"");
+            return override.isEmpty()?file.getProperty(key,fallback):override;
+        }
     }
-    private static String raw(Properties f,String k,String d){String v=app==null?"":new AppSettings(app).text(k,"");return v.isEmpty()?f.getProperty(k,d):v;}
+    public static Settings readSettings(Context context){
+        Properties file=new Properties();
+        try(InputStream in=new FileInputStream("/sdcard/PhigrosScript/tapmod.conf")){file.load(in);}catch(Exception ignored){}
+        return new Settings(context==null?null:new AppSettings(context),file);
+    }
+    public static synchronized void reload(){
+        Settings settings=readSettings(app);
+        enabled=settings.enabled;noiseAvoid=settings.noiseAvoid;
+        vertical=settings.vertical;jitter=settings.jitter;escape=settings.escape;
+        variation=enabled?new ContactVariation(settings.delay,settings.drift):ContactVariation.OFF;
+        guard=new Guard(settings.clock);
+    }
     private static boolean bool(String s){return "true".equalsIgnoreCase(s)||"1".equals(s)||"yes".equalsIgnoreCase(s)||"on".equalsIgnoreCase(s);}
     private static float value(String s,float d,float lo,float hi){try{float v=Float.parseFloat(s);return Float.isFinite(v)?Math.max(lo,Math.min(hi,v)):d;}catch(Exception e){return d;}}
     public static void begin(Chart c){reload();salts.put(c,random.nextLong());searchTimeouts.set(0);}
     /** Exact preparation inputs; changing the safe-gap algorithm invalidates old paths. */
     static ContactVariation contactVariation(){return variation;}
-    static String baseSignature(){return "gesture-variation-v4|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(vertical)+"|"+Float.toHexString(jitter)+"|"+Float.toHexString(escape)+"|"+guard.backMs+"|"+guard.aheadMs+"|"+preparationEdgeGuard()+"|"+preparationInwardFlick();}
+    static String baseSignature(){
+        return "gesture-clearance-v5|"+enabled+"|"+noiseAvoid+"|"+Float.toHexString(enabled?vertical:0)
+                +"|"+Float.toHexString(enabled?jitter:0)+"|"+Float.toHexString(noiseAvoid?escape:0)
+                +"|"+(noiseAvoid?guard.backMs:0)+"|"+(noiseAvoid?guard.aheadMs:0)
+                +"|"+preparationEdgeGuard()+"|"+preparationInwardFlick();
+    }
     public static String preparationSignature(){return baseSignature()+"|"+variation.maxDelay+"|"+Float.toHexString(variation.maxDrift);}
+    /** The distributed tracks already contain the base offset and note routing.
+     * Timing guards and the final delay/drift are applied when installing each legacy track. */
+    static boolean supportsCloudRouting(){
+        return enabled&&noiseAvoid&&vertical==35&&jitter==6&&escape==2000&&preparationEdgeGuard()&&preparationInwardFlick();
+    }
     public static boolean preparationEdgeGuard(){return app==null||new AppSettings(app).flag("gesture_edge_guard",true);}
     public static boolean preparationInwardFlick(){return app==null||new AppSettings(app).flag("gesture_flick_inward",true);}
     public static long preparationSalt(Chart c){synchronized(salts){Long salt=salts.get(c);if(salt==null){salt=random.nextLong();salts.put(c,salt);}return salt;}}
@@ -101,6 +132,7 @@ public final class TapMod {
         long[] counts=planningQueryCounts.get();if(counts!=null)counts[0]++;
         checkDeadline(deadline);
         if(!avoids(c))return true;
+        if(deadline==Long.MAX_VALUE&&!BlockAreaSet.mayTouchPath(c,v,p,p,t-timing.back,t+timing.ahead))return true;
         Point rounded=new Point(Math.round(p.getX()),Math.round(p.getY()));
         for(double shift:timing.shifts){
             checkDeadline(deadline);boolean first=blocked(c,v,p,t+shift);checkDeadline(deadline);if(first)return false;
@@ -114,13 +146,19 @@ public final class TapMod {
         return withinBounds(c,n,time,v,p,bounds,null,0);
     }
     static Point runtimeWithinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs){
+        return runtimeWithinBounds(c,n,time,v,p,bounds,previous,previousMs,n.getType()==3);
+    }
+    static Point runtimeWithinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs,boolean pureHold){
         Boolean old=runtimeSearch.get();runtimeSearch.set(true);
-        try{return withinBounds(c,n,time,v,p,bounds,previous,previousMs);}
+        try{return withinBounds(c,n,time,v,p,bounds,previous,previousMs,pureHold);}
         catch(DeadlineExceeded exceeded){searchTimeouts.incrementAndGet();throw exceeded;}
         finally{if(old==null)runtimeSearch.remove();else runtimeSearch.set(old);}
     }
     /** Prefer a reachable point in the same judgement band before releasing a held finger. */
     static Point withinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs) {
+        return withinBounds(c,n,time,v,p,bounds,previous,previousMs,n.getType()==3);
+    }
+    static Point withinBounds(Chart c,Note n,double time,Viewport v,Point p,TouchBounds bounds,Point previous,long previousMs,boolean pureHold) {
         Guard timing=guard;
         // Preflight may search exhaustively before the music clock starts.
         // Runtime search must yield to the dispatch loop so a held pointer is
@@ -178,6 +216,16 @@ public final class TapMod {
             if(lane==0&&best!=null)return best;
         }
         if(best!=null)return best;
+        // A held finger can already occupy a safe slit between two sampled lateral lanes.
+        // Retain it only inside the current judgement band and escape distance, and certify
+        // the entire stationary connection against moving noise at the actual chart times.
+        if(pureHold&&previous!=null&&previous.getX()==bounds.x(previous.getX())&&previous.getY()==bounds.y(previous.getY())){
+            double dx=previous.getX()-start.getX(),dy=previous.getY()-start.getY();
+            double lateral=clipping+dx*ny-dy*nx;
+            if(dx*dx+dy*dy<=max*max&&Math.abs(lateral)<=radius
+                    &&clearAt(c,v,previous,time,timing,deadline)
+                    &&connects(c,v,previous,previous,previousMs,time,deadline))return previous;
+        }
         throw new NoSafePoint(tr("噪域内找不到可触控的同判定带落点"));
     }
     private static Point at(TouchBounds bounds,Point origin,float nx,float ny,double offset){return new Point(bounds.x((float)(origin.getX()+offset*nx)),bounds.y((float)(origin.getY()+offset*ny)));}
@@ -204,6 +252,7 @@ public final class TapMod {
         checkDeadline(deadline);
         Guard timing=guard;
         if(!avoids(c)||!BlockAreaSet.overlaps(c,from-timing.backMs,to+timing.aheadMs))return;
+        if(deadline==Long.MAX_VALUE&&!BlockAreaSet.mayTouchPath(c,v,a,b,from/1000.0-timing.back,to/1000.0+timing.ahead))return;
         for(double shift:timing.shifts){checkDeadline(deadline);boolean blocked=BlockAreaSet.crossesTranslation(c,v,a,b,from/1000.0+shift,to/1000.0+shift);checkDeadline(deadline);if(blocked)throw new NoSafePoint(tr("移动噪域将扫过连续触点，应在此抬指"));}
         double dx=b.getX()-a.getX(),dy=b.getY()-a.getY(),distance=Math.hypot(dx,dy);
         int slices=(int)Math.min(4096,Math.max(1,Math.ceil(Math.abs(to-from)/4.0)));

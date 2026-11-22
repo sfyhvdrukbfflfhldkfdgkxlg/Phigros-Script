@@ -23,6 +23,8 @@ public final class BlockAreaSet {
     private final BlockArea[] subtract;
     private final ActiveIndex normalIndex,subtractIndex;
     private final double[] changeTimes;
+    private final java.util.concurrent.atomic.AtomicReferenceArray<WindowBounds> windows =
+            new java.util.concurrent.atomic.AtomicReferenceArray<>(8);
     private boolean singleInvert;
     // Radius in units of viewport height: 10 physical pixels at 1080p.
     private static final double TOUCH_RADIUS = 1.0 / 108.0;
@@ -411,6 +413,72 @@ public final class BlockAreaSet {
         return (set.normal.length>0&&set.normalIndex.overlaps(1,0,set.normal.length,from,to)) || (set.subtract.length>0&&set.subtractIndex.overlaps(1,0,set.subtract.length,from,to));
     }
 
+    /** Broad phase for import. A negative result proves the full path, including
+     * Android pixel rounding, misses every expanded positive and subtractive area. */
+    public static boolean mayTouchPath(Chart chart, Viewport view, Point a, Point b, double from, double to) {
+        BlockAreaSet set = MAP.get(chart);
+        if (set == null || set == EMPTY) return false;
+        double lo = Math.nextDown(from + chart.getOffsetSeconds()), hi = Math.nextUp(to + chart.getOffsetSeconds());
+        double width = view.getWidth(), height = view.getHeight(), aspect = width / height;
+        // Longer intervals and very large charts use the regular indexed sweep.
+        if (!(width > 0 && height > 0 && lo <= hi && hi - lo <= .125
+                && Math.abs(lo) < Integer.MAX_VALUE && Math.abs(hi) < Integer.MAX_VALUE
+                && Math.abs(view.getLeft()) <= 32768 && Math.abs(view.getTop()) <= 32768
+                && width <= 32768 && height <= 32768
+                && Math.abs(a.getX()) <= 65536 && Math.abs(a.getY()) <= 65536
+                && Math.abs(b.getX()) <= 65536 && Math.abs(b.getY()) <= 65536)
+                || set.normal.length + set.subtract.length > 2048) return true;
+        double x0 = (Math.min(a.getX(), b.getX()) - (double)view.getLeft() - 1) / width;
+        double x1 = (Math.max(a.getX(), b.getX()) - (double)view.getLeft() + 1) / width;
+        double y0 = 1 - (Math.max(a.getY(), b.getY()) - (double)view.getTop() + 1) / height;
+        double y1 = 1 - (Math.min(a.getY(), b.getY()) - (double)view.getTop() - 1) / height;
+        long last = (long)Math.floor(hi * 16);
+        for (long key = (long)Math.floor(lo * 16); key <= last; key++) {
+            int slot = (int)(key & 7);
+            WindowBounds window = set.windows.get(slot);
+            if (window == null || window.key != key || window.aspect != aspect) {
+                window = new WindowBounds(set, key, aspect);
+                set.windows.set(slot, window);
+            }
+            if (window.overlaps(x0, x1, y0, y1)) return true;
+        }
+        return false;
+    }
+
+    private static final class WindowBounds {
+        final long key;
+        final double aspect;
+        final double[] rectangles;
+
+        WindowBounds(BlockAreaSet set, long key, double aspect) {
+            this.key = key;
+            this.aspect = aspect;
+            // Binary-exact bucket boundaries. Both ends are included, even if
+            // an area's key or activation lands exactly on a bucket boundary.
+            double from = key / 16.0, to = (key + 1) / 16.0;
+            ArrayList<BlockArea> active = new ArrayList<>();
+            if (set.normal.length > 0) set.normalIndex.collectWindow(1, 0, set.normal.length, from, to, active);
+            if (set.subtract.length > 0) set.subtractIndex.collectWindow(1, 0, set.subtract.length, from, to, active);
+            double[] boxes = new double[4 * active.size()];
+            for (int i = 0; i < active.size(); i++) {
+                if (!active.get(i).sweepBounds(from, to, aspect, boxes, 4 * i)) {
+                    boxes = null;
+                    break;
+                }
+            }
+            rectangles = boxes;
+        }
+
+        boolean overlaps(double x0, double x1, double y0, double y1) {
+            if (rectangles == null) return true;
+            for (int i = 0; i < rectangles.length; i += 4) {
+                if (!(x1 < rectangles[i] || x0 > rectangles[i+1]
+                        || y1 < rectangles[i+2] || y0 > rectangles[i+3])) return true;
+            }
+            return false;
+        }
+    }
+
     /** Cut a screen-space line at all active positive and subtractive rectangle edges. */
     public static void cuts(Chart chart, Viewport v, Point p, float dx, float dy, double t,
                             double low, double high, java.util.List<Double> edges) {
@@ -502,33 +570,18 @@ public final class BlockAreaSet {
             this.defaultY = d2;
         }
 
-        double value(double d, boolean z) {
-            int length = this.time.length;
-            if (length != 0) {
-                int i = 0;
-                if (d >= this.time[0]) {
-                    int i2 = length - 1;
-                    int i3 = i2;
-                    int i4 = 0;
-                    while (i <= i3) {
-                        int i5 = (i + i3) >>> 1;
-                        if (this.time[i5] <= d) {
-                            i = i5 + 1;
-                            i4 = i5;
-                        } else {
-                            i3 = i5 - 1;
-                        }
-                    }
-                    double d2 = z ? this.x[i4] : this.y[i4];
-                    if (i4 >= i2) {
-                        return d2;
-                    }
-                    int i6 = i4 + 1;
-                    double d3 = this.time[i6] - this.time[i4];
-                    return d2 + (((z ? this.x[i6] : this.y[i6]) - d2) * BlockAreaSet.ease(d3 <= 0.0d ? 1.0d : (d - this.time[i4]) / d3, z ? this.easeX[i4] : this.easeY[i4]));
-                }
-            }
-            return z ? this.defaultX : this.defaultY;
+        double value(double stamp, boolean horizontal) {
+            return valueAt(BlockArea.last(time, stamp), stamp, horizontal);
+        }
+
+        double valueAt(int i, double stamp, boolean horizontal) {
+            if (i < 0) return horizontal ? defaultX : defaultY;
+            double[] values = horizontal ? x : y;
+            double value = values[i];
+            if (i + 1 == time.length) return value;
+            double span = time[i+1] - time[i];
+            double progress = span <= 0 ? 1 : (stamp - time[i]) / span;
+            return value + (values[i+1] - value) * ease(progress, horizontal ? easeX[i] : easeY[i]);
         }
     }
 
@@ -589,7 +642,7 @@ public final class BlockAreaSet {
         private RotationPrefix[] rotationPrefixes;
         private int nextRotationPrefix,nextGeometry;
         private Geometry[] geometries;
-        private Geometry recentGeometry;
+        private volatile Geometry recentGeometry;
         // Ring retention remains 96 immutable exact-time snapshots. The lookup
         // index has a fixed 256 primitive slots; no boxing or temporal rounding.
         private int[] geometryLookup;
@@ -743,10 +796,15 @@ public final class BlockAreaSet {
         double[] center(double t,double aspect){
             Geometry g=geometry(t,aspect);return new double[]{g.x,g.y};
         }
-        private synchronized Geometry geometry(double t,double aspect){
+        private Geometry geometry(double t,double aspect){
             long timeBits=Double.doubleToLongBits(t),aspectBits=Double.doubleToLongBits(aspect);
             Geometry recent=recentGeometry;
             if(recent!=null&&recent.time==timeBits&&recent.aspect==aspectBits)return recent;
+            // Keep D8's monitor-enter/exit region small and single-return. The
+            // immutable most recent sample is safe to read without the lock.
+            synchronized(this){return geometryLocked(t,aspect,timeBits,aspectBits);}
+        }
+        private Geometry geometryLocked(double t,double aspect,long timeBits,long aspectBits){
             if(geometryLookup!=null){
                 int slot=geometryHash(timeBits,aspectBits),entry;
                 while((entry=geometryLookup[slot])!=0){
@@ -756,12 +814,13 @@ public final class BlockAreaSet {
                 }
             }
             int at=last(scale.time,t);double x=at<0?centerX:scaledCenterX[at],y=at<0?centerY:scaledCenterY[at];
-            double scaleX=scale.value(t,true),scaleY=scale.value(t,false),rotation=rotate.value(t,true);
+            double scaleX=scale.valueAt(at,t,true),scaleY=scale.valueAt(at,t,false);
             if(at>=0&&at+1<scale.time.length){
                 x=scaleAnchor.x[at]+(x-scaleAnchor.x[at])*ratio(scaleX,scale.x[at]);
                 y=scaleAnchor.y[at]+(y-scaleAnchor.y[at])*ratio(scaleY,scale.y[at]);
             }
             at=last(rotate.time,t);
+            double rotation=rotate.valueAt(at,t,true);
             if(at>=0&&rotate.time.length>1){
                 if(at>0){
                     if(rotationPrefixes==null)rotationPrefixes=new RotationPrefix[2];RotationPrefix prefix=null;
@@ -776,7 +835,8 @@ public final class BlockAreaSet {
                     double dx=(x-ax)*aspect,dy=y-ay;x=ax+(dx*cos-dy*sin)/aspect;y=ay+dx*sin+dy*cos;
                 }
             }
-            Geometry result=new Geometry(t,aspect,x+move.value(t,true)-centerX,y+move.value(t,false)-centerY,Math.abs(scaleX),Math.abs(scaleY),Math.toRadians(rotation));
+            int moveIndex = last(move.time,t);
+            Geometry result=new Geometry(t,aspect,x+move.valueAt(moveIndex,t,true)-centerX,y+move.valueAt(moveIndex,t,false)-centerY,Math.abs(scaleX),Math.abs(scaleY),Math.toRadians(rotation));
             if(geometries==null){geometries=new Geometry[96];geometryLookup=new int[256];}
             if(geometries[nextGeometry]!=null)removeGeometry(nextGeometry);
             geometries[nextGeometry]=result;insertGeometry(nextGeometry);recentGeometry=result;
@@ -822,6 +882,29 @@ public final class BlockAreaSet {
         boolean translationOnly(double a,double b){
             return scale.value(a,true)==scale.value(b,true)&&scale.value(a,false)==scale.value(b,false)&&rotate.value(a,true)==rotate.value(b,true);
         }
+
+        boolean sweepBounds(double from, double to, double aspect, double[] box, int out) {
+            double a = Math.max(from, appear), b = Math.min(to, disappear);
+            // Each translation axis is monotone between consecutive Phigros
+            // easing keys. A rotation, scale change or interior key needs the
+            // exact sweep, since the extrema may lie between the endpoints.
+            if (last(move.time, a) != last(move.time, b) || last(scale.time, a) != last(scale.time, b)
+                    || last(rotate.time, a) != last(rotate.time, b) || !translationOnly(a, b)) return false;
+            Geometry start = geometry(a, aspect), end = geometry(b, aspect);
+            double halfX = (maxX - minX) * .5 * start.sx + TOUCH_RADIUS / aspect + 1e-8 * start.sx;
+            double halfY = (maxY - minY) * .5 * start.sy + TOUCH_RADIUS + 1e-8 * start.sy;
+            double width = Math.abs(start.c) * halfX + Math.abs(start.s) * halfY / aspect;
+            double height = Math.abs(start.s) * halfX * aspect + Math.abs(start.c) * halfY;
+            // Pathological coordinates can magnify roundoff in the inverse transform.
+            double magnitude = Math.max(Math.max(Math.abs(minX),Math.abs(maxX)), Math.max(Math.abs(minY),Math.abs(maxY)));
+            double tolerance = 1e-9 * (1 + magnitude) * (1 + Math.max(start.sx, start.sy))
+                    * (1 + aspect + 1/aspect);
+            box[out] = Math.min(start.x, end.x) - width - tolerance;
+            box[out+1] = Math.max(start.x, end.x) + width + tolerance;
+            box[out+2] = Math.min(start.y, end.y) - height - tolerance;
+            box[out+3] = Math.max(start.y, end.y) + height + tolerance;
+            return true;
+        }
         double[] local(double x,double y,double time,double aspect){
             Geometry g=geometry(time,aspect);if(g.sx<1e-6||g.sy<1e-6)return null;
             double dx=(x-g.x)*aspect,dy=y-g.y;
@@ -842,11 +925,19 @@ public final class BlockAreaSet {
         return z;
     }
 
+    private static final double[][] EASING_KNOTS = easingKnots();
+    private static double[][] easingKnots() {
+        double[][] table = new double[15][101];
+        for (int type = 0; type < table.length; type++)
+            for (int i = 0; i <= 100; i++) table[type][i] = easeRaw(i / 100.0, type);
+        return table;
+    }
     static double ease(double p,int type){
         if(type==13)return 0;if(type==14)return 1;
         double q=Math.max(0,Math.min(1,p))*100;int k=(int)q;
         if(k>=100)return 1;
-        return easeRaw(k/100.0,type)+(easeRaw((k+1)/100.0,type)-easeRaw(k/100.0,type))*(q-k);
+        double[] knots = EASING_KNOTS[type];
+        return knots[k] + (knots[k+1] - knots[k]) * (q-k);
     }
     private static double easeRaw(double d, int i) {
         if (d <= 0.0d) {

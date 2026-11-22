@@ -6,7 +6,7 @@
 
 ## 中文
 
-本分支为 **data1.1.2** 重新发行版，versionCode 为 **11003**。浅色首页分为「演奏」和「谱库」两页。确认歌曲后从缓存读取时间轴和触点。Phira 默认重试延迟为 715 毫秒，默认不叠加谱面偏移，Phigros 默认为 1700 毫秒。[新版使用说明](updates/data1.1.2/REISSUE.md)
+本分支构建 **data1.1.3（11005）**。浅色玻璃界面的「演奏」和「谱库」两页会为系统手势条留出空间。从已发布的 data1.1.2 升级后，请在谱库重新准备本地谱面一次。确认歌曲后从缓存读取时间轴和触点。Phira 默认重试延迟为 715 毫秒，默认不叠加谱面偏移，Phigros 默认为 1700 毫秒。[升级与使用说明](updates/data1.1.3/README.md)
 
 [GitHub 发行版](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases) · [data1.1.0 使用与构建](updates/data1.1.0/README.md) · [data1.1.0 验证记录](updates/data1.1.0/TESTING.md)
 
@@ -16,7 +16,7 @@ Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导
 
 支持 Root 与无障碍输入。验证覆盖最终签名 APK 的实际代码、原谱及 Android 主机模型；Android 真机界面、判定与录屏性能仍需实测，不保证任意谱面全连或满分。
 
-重新发行版的构建入口位于 [build_112.py](updates/data1.0.9-r15/patch/build_112.py)。根目录保留旧版 Alpha Gradle 工程。
+构建入口位于 [build_113.py](updates/data1.0.9-r15/patch/build_113.py)。根目录保留旧版 Alpha Gradle 工程。
 
 ## English
 
@@ -26,7 +26,7 @@ Phigros Script is an Android chart player for Phigros, Phira and Phira Pro. It r
 - **Phira and Phira Pro.** Import a local chart, or find one in the online library by song recognition or chart ID. The app prepares its touch coordinates during import.
 - **Timing and recording.** The default retry delay is 1,700 ms for Phigros and 715 ms for Phira. Phira's chart offset is excluded by default. Recording supports 720p or 1080p at 30 or 60 fps.
 
-This branch builds the **data1.1.2** reissue (Android version code 11003). The light interface has separate Play and Library pages. Gesture preparation supports per-contact timing and vertical variation, holds steady during sustained vertical oscillation, and keeps touches clear of noise boundaries. [Build script](updates/data1.0.9-r15/patch/build_112.py) · [Reissue notes](updates/data1.1.2/REISSUE.md)
+This branch builds **data1.1.3 (11005)**. The light glass interface keeps the Play and Library controls clear of the system navigation handle. If upgrading from a published data1.1.2 build, prepare local charts once to use the new noise paths. Gesture preparation supports per-contact timing and vertical variation, holds steady during sustained vertical oscillation, and keeps touches clear of noise boundaries. [Build script](updates/data1.0.9-r15/patch/build_113.py) · [Upgrade and release notes](updates/data1.1.3/README.md)
 
 <details>
 <summary>原 Alpha 版本说明</summary>

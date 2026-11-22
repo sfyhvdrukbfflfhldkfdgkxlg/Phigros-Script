@@ -34,13 +34,23 @@ public final class UiDesign {
     public static int dp(Context c,float n){return Math.round(n*c.getResources().getDisplayMetrics().density);}
     public static String words(String chinese,String english){return UiText.english()?english:UiText.text(chinese);}
     public static GradientDrawable shape(Context c,int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(c,radius));return d;}
-    public static RippleDrawable ripple(Context c,int color,int radius){return new RippleDrawable(ColorStateList.valueOf(color==ACCENT||color==DANGER?0x33ffffff:0x24216950),shape(c,color,radius),shape(c,0xffffffff,radius));}
+    public static RippleDrawable ripple(Context c,int color,int radius){
+        ColorStateList tint=ColorStateList.valueOf(color==ACCENT||color==DANGER?0x33ffffff:0x24216950);
+        Drawable mask=shape(c,0xffffffff,radius);
+        if(color==MINT||color==RAISED){
+            GlassSurface glass=new GlassSurface(c,radius,color==MINT);
+            return new RippleDrawable(tint,glass,mask){
+                @Override public void setHotspot(float x,float y){super.setHotspot(x,y);glass.setHotspot(x,y);}
+            };
+        }
+        return new RippleDrawable(tint,shape(c,color,radius),mask);
+    }
     public static LinearLayout.LayoutParams space(Context c,int width,int height,int top){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(width,height);p.topMargin=dp(c,top);return p;}
     public static TextView text(Context c,String value,int size,int color,boolean bold){
         TextView v=new TextView(c);v.setText(UiText.text(value));v.setTextSize(size);v.setTextColor(color);v.setLineSpacing(dp(c,3),1);v.setIncludeFontPadding(false);v.setTag(STYLED_TEXT,true);
         if(bold)v.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return v;
     }
-    public static LinearLayout card(Context c){LinearLayout box=new LinearLayout(c);box.setOrientation(1);box.setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));GradientDrawable panel=shape(c,SURFACE,18);panel.setStroke(dp(c,1),LINE);box.setBackground(panel);return box;}
+    public static LinearLayout card(Context c){LinearLayout box=new LinearLayout(c);box.setOrientation(1);box.setBackground(new GlassSurface(c,20,false));box.setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));box.setElevation(dp(c,1));return box;}
     public static Button button(Context c,String title,boolean primary,Runnable click){
         Button b=new Button(c);b.setText(UiText.text(title));b.setAllCaps(false);b.setTextSize(primary?17:14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setTextColor(primary?ON_ACCENT:INK);b.setStateListAnimator(null);
         b.setMinHeight(dp(c,primary?56:48));b.setMinimumHeight(dp(c,primary?56:48));b.setPadding(dp(c,12),dp(c,12),dp(c,12),dp(c,12));b.setBackground(ripple(c,primary?ACCENT:RAISED,14));
@@ -48,7 +58,7 @@ public final class UiDesign {
     }
     public static TextView icon(Context c,int kind){TextView v=new TextView(c);v.setBackground(shape(c,RAISED,12));v.setCompoundDrawablesWithIntrinsicBounds(new Mark(c,kind),null,null,null);v.setPadding(dp(c,10),dp(c,10),dp(c,10),dp(c,10));v.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);return v;}
     public static LinearLayout row(Context c,int kind,String title,String subtitle,Runnable click){
-        LinearLayout row=new LinearLayout(c);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(c,10),dp(c,12),dp(c,10),dp(c,12));row.setMinimumHeight(dp(c,68));row.setBackground(ripple(c,SURFACE,14));
+        LinearLayout row=new LinearLayout(c);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(c,10),dp(c,12),dp(c,10),dp(c,12));row.setMinimumHeight(dp(c,68));row.setBackground(ripple(c,0x55ffffff,14));
         row.addView(icon(c,kind),new LinearLayout.LayoutParams(dp(c,42),dp(c,42)));
         LinearLayout copy=new LinearLayout(c);copy.setOrientation(1);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,-2,1);cp.setMarginStart(dp(c,12));row.addView(copy,cp);
         copy.addView(text(c,title,15,INK,true));if(subtitle!=null&&!subtitle.isEmpty()){TextView detail=text(c,subtitle,12,MUTED,false);copy.addView(detail,space(c,-1,-2,5));}
@@ -57,10 +67,26 @@ public final class UiDesign {
         copy.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         row.setOnClickListener(v->click.run());UiMotion.bindPress(row);return row;
     }
-    public static AlertDialog.Builder dialog(Activity a,String title){return new AlertDialog.Builder(a,android.R.style.Theme_Material_Light_Dialog_Alert).setTitle(UiText.text(title));}
+    public static AlertDialog.Builder dialog(Activity a,String title){
+        // Background blur requires windowIsTranslucent before Android creates the dialog window.
+        Context base=android.os.Build.VERSION.SDK_INT>=31
+                ?new android.view.ContextThemeWrapper(a,android.R.style.Theme_Translucent):a;
+        return new AlertDialog.Builder(base,android.R.style.Theme_Material_Light_Dialog_Alert).setTitle(UiText.text(title));
+    }
     public static AlertDialog show(AlertDialog dialog){
+        android.view.Window window=dialog.getWindow();
+        if(window!=null){
+            int state=window.getAttributes().softInputMode & ~android.view.WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST;
+            window.setSoftInputMode(state|android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
         UiMotion.show(dialog);
-        if(dialog.getWindow()!=null){dialog.getWindow().setBackgroundDrawable(shape(dialog.getContext(),SURFACE,22));dialog.getWindow().setDimAmount(.34f);if(android.os.Build.VERSION.SDK_INT>=29)dialog.getWindow().getDecorView().setForceDarkAllowed(false);}
+        if(window!=null){
+            window.setBackgroundDrawable(GlassSurface.dialog(dialog.getContext()));
+            window.setDimAmount(.27f);
+            if(android.os.Build.VERSION.SDK_INT>=29)window.getDecorView().setForceDarkAllowed(false);
+            if(android.os.Build.VERSION.SDK_INT>=31&&UiMotion.enabled())
+                window.setBackgroundBlurRadius(Math.min(64,dp(dialog.getContext(),20)));
+        }
         tint(dialog.getWindow()==null?null:dialog.getWindow().getDecorView());
         for(int id:new int[]{AlertDialog.BUTTON_POSITIVE,AlertDialog.BUTTON_NEGATIVE,AlertDialog.BUTTON_NEUTRAL}){
             Button b=dialog.getButton(id);if(b!=null){b.setTextColor(ACCENT);b.setAllCaps(false);b.setMinHeight(dp(b.getContext(),48));UiMotion.bindPress(b);}

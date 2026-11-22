@@ -49,6 +49,7 @@ final class GestureBatch<K> {
         }
         return rejected;
     }
+    long normalizedEndOffset(){normalize();return endOffset();}
     long endOffset(){long end=0;for(Item<K> item:items)end=Math.max(end,item.up);return end;}
     void rebase(long elapsed) {
         if(elapsed<=0)return;

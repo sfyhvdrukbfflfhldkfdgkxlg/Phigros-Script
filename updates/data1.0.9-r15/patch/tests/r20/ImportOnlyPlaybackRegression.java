@@ -37,6 +37,7 @@ public final class ImportOnlyPlaybackRegression {
 
     public static void main(String[] args) throws Exception {
         portraitImportBounds();
+        legacyNavigationBounds();
         TapMod.init(new android.content.Context());
         for(boolean root:new boolean[]{false,true}){
             InputBackend.rootEnabled=root;
@@ -61,6 +62,40 @@ public final class ImportOnlyPlaybackRegression {
         InputBackend.rootEnabled=false;
         System.out.println("PASS landscape insets restored at import and six Root/accessibility misses rejected before planning, connection or dispatch.");
     }
+    private static void legacyNavigationBounds() {
+        int api = android.os.Build.VERSION.SDK_INT;
+        boolean oldEdges = AppSettings.edges;
+        try {
+            android.os.Build.VERSION.SDK_INT = 29;
+            AppSettings.edges = true;
+            TouchService service = new TouchService();
+            android.view.Display.usableWidth = 1000;
+            android.view.Display.usableHeight = 540;
+            TouchBounds bottom = TouchSafety.read(service,1000,600,VIEW).bounds;
+            if (bottom.bottom != 537) throw new AssertionError("Bottom navigation strip was touchable");
+            android.view.Display.usableHeight = 600;
+            android.view.Display.usableWidth = 936;
+            android.view.Display.rotation = 1;
+            TouchBounds right = TouchSafety.read(service,1000,600,VIEW).bounds;
+            if (right.right != 933 || right.left != 20) throw new AssertionError("Right navigation strip");
+            android.view.Display.rotation = 3;
+            TouchBounds left = TouchSafety.read(service,1000,600,VIEW).bounds;
+            if (left.left != 66 || left.right != 979) throw new AssertionError("Left navigation strip");
+            android.view.Display.usableWidth = 1000;
+            TouchBounds restored = TouchSafety.read(new android.content.Context(),1000,600,VIEW,true).bounds;
+            if (!PreparedTrajectory.same(left,restored)) throw new AssertionError("Portrait legacy import");
+            AppSettings.edges = false;
+            if (TouchSafety.read(service,1000,600,VIEW).bounds.left != 0)
+                throw new AssertionError("Explicit edge guard setting ignored");
+        } finally {
+            android.os.Build.VERSION.SDK_INT = api;
+            AppSettings.edges = oldEdges;
+            android.view.Display.usableWidth = 1000;
+            android.view.Display.usableHeight = 600;
+            android.view.Display.rotation = 0;
+        }
+    }
+
     private static void portraitImportBounds(){
         AppSettings.edges=true;
         TouchService service=new TouchService();

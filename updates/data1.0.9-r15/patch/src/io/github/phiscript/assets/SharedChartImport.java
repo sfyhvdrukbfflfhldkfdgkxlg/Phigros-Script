@@ -8,7 +8,14 @@ import org.json.JSONException;
 public final class SharedChartImport {
     private SharedChartImport() {}
     public static Chart parseJson(String text){
-        try{Chart chart=PhiraChartParser.INSTANCE.parse(text,0.0);io.github.phiscript.input.PreparedChartStore.bind(chart,text);return chart;}
+        Chart chart = parseForImport(text);
+        io.github.phiscript.input.PreparedChartStore.bind(chart,text);
+        return chart;
+    }
+    // The importers bind the exact source bytes after validation. Avoid encoding and
+    // hashing a second, chart-sized UTF-8 buffer just to replace that binding.
+    static Chart parseForImport(String text){
+        try { return PhiraChartParser.INSTANCE.parse(text,0.0); }
         finally{ImportCache.clear();ImportCache.takeChart();}
     }
     public static void preserveAreas(JSONObject root,JSONObject normalized)throws JSONException{

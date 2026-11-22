@@ -24,6 +24,9 @@ import kotlin.jvm.functions.Function1;
 
 /** Shared by every chart decoder, independent of song identity and chart format. */
 public final class ChartMultiTouchPlayer {
+    // A continued pointer stays physically down while Android completes the batch.
+    // Reserve the next 8 ms input tick and the 1 ms stroke required to lift it.
+    private static final int CONTINUATION_RELEASE_MS = 9;
     private ChartMultiTouchPlayer() {}
 
     public static void play(TouchService service, Chart chart, long epoch,
@@ -122,7 +125,7 @@ public final class ChartMultiTouchPlayer {
                             if(!keep)return true;
                             if(retireTiming.chartAt(retireWall)-retireTiming.chartAt(retireStart)>maxAge||System.nanoTime()>=retireDeadline)return false;
                             Point p=new Point(prior.x,prior.y);
-                            try{TapMod.segment(chart,viewport,p,p,retireTiming.chartAt(retireStart),retireTiming.chartAt(retireWall+upOffset+8),retireDeadline);return System.nanoTime()<retireDeadline;}
+                            try{TapMod.segment(chart,viewport,p,p,retireTiming.chartAt(retireStart),retireTiming.chartAt(retireWall+upOffset+CONTINUATION_RELEASE_MS),retireDeadline);return System.nanoTime()<retireDeadline;}
                             catch(TapMod.NoSafePoint blocked){return false;}
                         });
                         long done=SystemClock.uptimeMillis();maxSafetyMs=Math.max(maxSafetyMs,done-retireWall);
@@ -261,7 +264,7 @@ public final class ChartMultiTouchPlayer {
                 // Geometry may have used most of this batch's wall-clock window.
                 // Rebase changes its speed and a moving area may have advanced:
                 // check the exact submitted constant-arc-length path again.
-                if(TapMod.avoids(chart)&&BlockAreaSet.overlaps(chart,timing.chartAt(submitted)-TapMod.noiseLookBackMs(),timing.chartAt(submitted+batch.endOffset())+TapMod.noiseLookAheadMs())){
+                if(TapMod.avoids(chart)&&BlockAreaSet.overlaps(chart,timing.chartAt(submitted)-TapMod.noiseLookBackMs(),timing.chartAt(submitted+batch.normalizedEndOffset()+CONTINUATION_RELEASE_MS)+TapMod.noiseLookAheadMs())){
                     final long safetyWall=submitted,computeWall=wall,maxAge=Math.max(1,TapMod.noiseLookAheadMs()-4);
                     final ChartPlaybackClock.Slice safetyTiming=timing;
                     final long safetyDeadline=System.nanoTime()+8000000L;
@@ -275,6 +278,14 @@ public final class ChartMultiTouchPlayer {
                         try{
                             if(prior!=null){Point held=new Point(prior.x,prior.y);TapMod.segment(chart,viewport,held,held,safetyTiming.chartAt(computeWall),safetyTiming.chartAt(safetyWall),safetyDeadline);}
                             checkSubmittedPath(chart,viewport,points,safetyTiming,safetyWall+downOffset,safetyWall+upOffset,safetyDeadline);
+                            if(keep){
+                                // rejectUnsafe provides the normalized UP, including other fingers'
+                                // delayed starts. Preserve a way to lift at this point in the next batch.
+                                Point last=points.get(points.size()-1);
+                                long arrival=safetyWall+upOffset;
+                                TapMod.segment(chart,viewport,last,last,safetyTiming.chartAt(arrival),
+                                        safetyTiming.chartAt(arrival+CONTINUATION_RELEASE_MS),safetyDeadline);
+                            }
                             return System.nanoTime()<safetyDeadline;
                         }
                         catch(TapMod.NoSafePoint blocked){return false;}

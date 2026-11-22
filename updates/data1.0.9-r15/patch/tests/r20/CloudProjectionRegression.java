@@ -23,6 +23,34 @@ public final class CloudProjectionRegression {
     private static GesturePlan map(Chart chart,byte[] tracks,Viewport v,TouchBounds b)throws Exception{
         return PreparedTrajectory.readCloud(chart,PROFILE,REFERENCE,FULL,new ByteArrayInputStream(tracks),tracks.length,KEY,v,b,new AtomicBoolean());
     }
+    private static byte[] legacyFixture(byte[] encoded)throws Exception{
+        DataInputStream input=new DataInputStream(new ByteArrayInputStream(encoded,0,encoded.length-32));
+        ByteArrayOutputStream body=new ByteArrayOutputStream();
+        DataOutputStream out=new DataOutputStream(body);
+        out.writeInt(input.readInt());out.writeInt(input.readInt());out.writeUTF(input.readUTF());
+        input.readUTF();out.writeUTF(PreparedChartStore.LEGACY_CLOUD_SETTINGS);
+        byte[] remaining=new byte[input.available()];input.readFully(remaining);out.write(remaining);
+        byte[] checksum=java.security.MessageDigest.getInstance("SHA-256").digest(body.toByteArray());
+        out.write(checksum);return body.toByteArray();
+    }
+    private static void stricterCloudGuard(byte[] reference,Chart chart,long head)throws Exception{
+        byte[] legacy=legacyFixture(reference);
+        AppSettings.values.put("tap_random_delay_ms","0");AppSettings.values.put("tap_screen_drift_permille","0");
+        double open=(head+19)/1000.,close=(head+20)/1000.;
+        JSONObject flash=new JSONObject().put("bottomLeftPercentage",xy(-.1,-.1)).put("topRightPercentage",xy(1.1,1.1))
+                .put("enableTime",open+chart.getOffsetSeconds()).put("disableTime",close+chart.getOffsetSeconds());
+        BlockAreaSet.capture(new JSONObject().put("blockAreaList",new JSONArray().put(flash)));BlockAreaSet.bind(chart);
+        for(String guard:new String[]{"0","16","24"}){
+            AppSettings.values.put("tap_noise_clock_guard_ms",guard);TapMod.reload();
+            PreparedChartStore.checkCloudGeometry(PROFILE,PHONE,TapMod.preparationSignature());
+            GesturePlan loaded=map(chart,legacy,PHONE,SAFE);TouchEvent first=loaded.events.get(0);
+            boolean present=true;
+            try{loaded.preparedPoint(first,head,null,head);}catch(TapMod.NoSafePoint blocked){present=false;}
+            ok(present==!guard.equals("24"),"cloud ignored selected guard "+guard);
+        }
+        AppSettings.values.put("tap_vertical_permille","20");TapMod.reload();
+        rejects(()->PreparedChartStore.checkCloudGeometry(PROFILE,PHONE,TapMod.preparationSignature()));
+    }
     public static void main(String[] args)throws Exception{
         AppSettings.values.clear();
         AppSettings.smart=AppSettings.catchDrags=AppSettings.flicks=AppSettings.combos=AppSettings.edges=AppSettings.inward=true;
@@ -81,8 +109,9 @@ public final class CloudProjectionRegression {
             }
         }
         ok(blockedSamples>0&&clearSamples>0,"A blocked inset should suppress only unsafe samples");
-        encoded[encoded.length-1]^=1;
-        rejects(()->map(standalone,encoded,PHONE,SAFE));
+        byte[] corrupt=encoded.clone();corrupt[corrupt.length-1]^=1;
+        rejects(()->map(standalone,corrupt,PHONE,SAFE));
+        stricterCloudGuard(encoded,standalone,reference.events.get(0).getStartMs());
         System.out.println("PASS cloud projection: saved tap/hold/flick/drag samples, accessibility pixels, ultrawide letterbox, noise, settings, corruption and calibration offset");
     }
 }

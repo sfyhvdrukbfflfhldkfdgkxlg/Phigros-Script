@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 
 /** Two native pages with independent scroll positions and one shared transport state. */
 public final class HomeScreen {
-    private static final int BG=UiDesign.BG,CARD=UiDesign.SURFACE,INK=UiDesign.INK,MUTED=UiDesign.MUTED,ACCENT=UiDesign.ACCENT;
+    private static final int INK=UiDesign.INK,MUTED=UiDesign.MUTED,ACCENT=UiDesign.ACCENT;
     private final Activity activity;
     private final LinearLayout root;
     private TextView badge,summary,phigrosCount,phiraCount,permission,mode;
@@ -86,24 +86,6 @@ public final class HomeScreen {
         return null;
     }
     private String w(String zh,String en){return UiDesign.words(zh,en);}
-    private void configureBars(){
-        android.view.Window window=activity.getWindow();
-        window.setStatusBarColor(BG);window.setNavigationBarColor(CARD);
-        View decor=window.getDecorView();
-        int flags=decor.getSystemUiVisibility()|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-        if(android.os.Build.VERSION.SDK_INT<30)flags&=~(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        decor.setSystemUiVisibility(flags);
-        if(android.os.Build.VERSION.SDK_INT>=29)decor.setForceDarkAllowed(false);
-        if(android.os.Build.VERSION.SDK_INT>=30){
-            window.setDecorFitsSystemWindows(false);
-            root.setOnApplyWindowInsetsListener((view,insets)->{
-                android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars()|android.view.WindowInsets.Type.displayCutout());
-                view.setPadding(bars.left,bars.top,bars.right,bars.bottom);
-                return insets;
-            });
-            root.requestApplyInsets();
-        }
-    }
     private LinearLayout page(FrameLayout viewport,int index,String title){
         ScrollView scroll=new ScrollView(activity);pages[index]=scroll;
         scroll.setFillViewport(true);scroll.setVerticalScrollBarEnabled(false);
@@ -131,9 +113,14 @@ public final class HomeScreen {
         return content;
     }
     private void navigation(){
-        View line=new View(activity);line.setBackgroundColor(UiDesign.LINE);root.addView(line,new LinearLayout.LayoutParams(-1,dp(1)));
-        LinearLayout bar=new LinearLayout(activity);bar.setGravity(Gravity.CENTER);bar.setBackgroundColor(CARD);
-        bar.setPadding(dp(12),dp(5),dp(12),dp(5));root.addView(bar,new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout bar=new LinearLayout(activity);bar.setGravity(Gravity.CENTER);
+        bar.setBackground(new GlassSurface(activity,24,false));bar.setElevation(dp(3));
+        bar.setPadding(dp(6),dp(4),dp(6),dp(4));
+        // Keep the two tabs within thumb reach in a broad landscape or tablet window.
+        int width=activity.getResources().getConfiguration().screenWidthDp;
+        int margin=dp(Math.max(12,(width-440)/2));
+        LinearLayout.LayoutParams dock=new LinearLayout.LayoutParams(-1,-2);
+        dock.setMargins(margin,dp(4),margin,dp(6));root.addView(bar,dock);
         navItem(bar,PERFORMANCE,w("演奏","Play"),UiDesign.PLAY);
         navItem(bar,LIBRARY,w("谱库","Library"),UiDesign.LIBRARY);
     }
@@ -153,7 +140,7 @@ public final class HomeScreen {
         for(int i=0;i<tabs.length;i++){
             boolean active=i==index;TextView tab=tabs[i];tab.setSelected(active);
             tab.setTextColor(active?ACCENT:MUTED);tab.setCompoundDrawableTintList(ColorStateList.valueOf(active?ACCENT:MUTED));
-            tab.setBackground(UiDesign.ripple(activity,active?UiDesign.MINT:CARD,14));
+            tab.setBackground(UiDesign.ripple(activity,active?UiDesign.MINT:android.graphics.Color.TRANSPARENT,20));
         }
         activity.getPreferences(0).edit().putInt("home_page",index).apply();
     }
@@ -161,15 +148,15 @@ public final class HomeScreen {
         TextView oldStatus=field("statusView"),oldAccess=field("accessibilityView"),oldLog=field("logView");
         activity.setTheme(android.R.style.Theme_Material_Light_NoActionBar);
         root.removeAllViews();root.setPadding(0,0,0,0);root.setGravity(Gravity.TOP);
-        root.setBackgroundColor(BG);configureBars();
+        root.setBackground(GlassSurface.backdrop());HomeInsets.install(activity.getWindow(),root);
         FrameLayout viewport=new FrameLayout(activity);
         root.addView(viewport,new LinearLayout.LayoutParams(-1,0,1));
         LinearLayout performance=page(viewport,PERFORMANCE,w("演奏台","Performance"));
         LinearLayout library=page(viewport,LIBRARY,w("谱库","Library"));
-        LinearLayout transport=card(performance);transport.setBackground(UiDesign.shape(activity,UiDesign.MINT,20));
+        LinearLayout transport=card(performance);transport.setBackground(new GlassSurface(activity,20,true));
         badge=text(transport,"",13,ACCENT,true);badge.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         mode=text(transport,"",22,INK,true);mode.setPadding(0,dp(12),dp(8),dp(10));mode.setMinHeight(dp(52));mode.setGravity(Gravity.CENTER_VERTICAL);mode.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
-        mode.setBackground(UiDesign.ripple(activity,UiDesign.MINT,10));mode.setFocusable(true);mode.setOnClickListener(v->PlayEntry.choose(activity));UiMotion.bindPress(mode);
+        mode.setBackground(UiDesign.ripple(activity,android.graphics.Color.TRANSPARENT,10));mode.setFocusable(true);mode.setOnClickListener(v->PlayEntry.choose(activity));UiMotion.bindPress(mode);
         summary=text(transport,"",13,MUTED,false);summary.setMinHeight(dp(42));
         primary=action(transport,w("开始打谱","Start performance"),true,()->{
             if(RootPhiraImport.isBusy()||PhiraImportControl.isBusy()){RootPhiraImport.cancel();PhiraImportControl.cancel();}
@@ -199,7 +186,7 @@ public final class HomeScreen {
         video.addView(UiDesign.row(activity,UiDesign.HISTORY,w("最近录屏","Recent recordings"),w("查看或分享已保存的视频","View or share saved videos"),()->{try{activity.startActivity(io.github.phiscript.record.RecordingFiles.view(activity));}catch(Exception e){RootPanel.message(activity,tr("录屏位置"),tr("Android 10+：Movies/PhigrosScript；Android 8/9：应用录屏目录。\n\n")+e.getMessage());}}),new LinearLayout.LayoutParams(-1,-2));
         LinearLayout diagnostics=card(performance),details=new LinearLayout(activity);details.setOrientation(1);details.setVisibility(View.GONE);
         TextView expand=text(diagnostics,w("运行记录  ＋","Activity log  +"),14,MUTED,true);expand.setMinHeight(dp(48));expand.setGravity(Gravity.CENTER_VERTICAL);expand.setFocusable(true);expand.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
-        expand.setContentDescription(w("展开运行记录","Expand activity log"));expand.setBackground(UiDesign.ripple(activity,CARD,10));
+        expand.setContentDescription(w("展开运行记录","Expand activity log"));expand.setBackground(UiDesign.ripple(activity,android.graphics.Color.TRANSPARENT,10));
         expand.setOnClickListener(v->{boolean open=!UiMotion.expanded(details);UiMotion.toggle(details,open);expand.setText(open?w("运行记录  −","Activity log  −"):w("运行记录  ＋","Activity log  +"));expand.setContentDescription(open?w("收起运行记录","Collapse activity log"):w("展开运行记录","Expand activity log"));});UiMotion.bindPress(expand);diagnostics.addView(details,new LinearLayout.LayoutParams(-1,-2));
         for(TextView v:new TextView[]{oldStatus,oldAccess,oldLog})if(v!=null){if(v.getParent() instanceof ViewGroup)((ViewGroup)v.getParent()).removeView(v);v.setTextColor(MUTED);v.setTextSize(12);v.setPadding(0,dp(8),0,dp(8));details.addView(v,new LinearLayout.LayoutParams(-1,-2));}
         navigation();

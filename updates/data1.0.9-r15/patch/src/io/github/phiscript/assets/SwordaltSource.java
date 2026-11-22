@@ -126,7 +126,7 @@ public final class SwordaltSource {
         }
         byte[] bytes=data(c,catalog,entry,cancel);
         check(cancel);
-        Chart chart=SharedChartImport.parseJson(new String(bytes,StandardCharsets.UTF_8));
+        Chart chart=SharedChartImport.parseForImport(new String(bytes,StandardCharsets.UTF_8));
         check(cancel);
         PreparedChartStore.prepareImported(c,chart,bytes,16.0/9,false,cancel);
         // Also index pre-upgrade offline packs whose metadata only had the Git blob hash.

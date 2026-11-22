@@ -58,6 +58,21 @@ public final class NoiseGestureRegression {
         near(retained.getY(),50,"centering rejected a safe stationary hold across an earlier flash");TapMod.segment(earlier,V,new Point(500,50),retained,500,550);checks++;
         Chart side=chart(new Point(0,1),rect(490,-100,510,700,false));Point lateral=choose(side,250);
         clear(side,lateral,.5);ok(Math.abs(lateral.getX()-500)<=ContactPlanner.radius(V)+.02,"lateral fallback escaped legal judgement band");
+        // The only safe column lies halfway between the sampled lanes. A stationary hold
+        // can stay there even though no new touch starting on the nominal line would fit.
+        JSONObject left=rect(-100,-100,497,700,false),right=rect(511,-100,1100,700,false);
+        Chart slit=chart(new Point(0,1),left,right);
+        Point prior=new Point(504,320),desired=new Point(500,300);
+        Point saved=TapMod.withinBounds(slit,slit.getNotes().get(0),.55,V,desired,B,prior,500);
+        ok(saved==prior,"released a reachable previous contact between search lanes");
+        try{TapMod.withinBounds(slit,slit.getNotes().get(0),.55,V,desired,B,prior,500,false);
+            throw new AssertionError("stationary hold fallback applied to a mixed flick route");
+        }catch(TapMod.NoSafePoint expected){checks++;}
+        JSONObject shutter=rect(-100,-100,1100,700,false).put("enableTime",.521).put("disableTime",.522);
+        Chart flashes=chart(new Point(0,1),left,right,shutter);
+        try{TapMod.withinBounds(flashes,flashes.getNotes().get(0),.55,V,desired,B,prior,500);
+            throw new AssertionError("retained a contact through a transient full-width obstruction");
+        }catch(TapMod.NoSafePoint expected){checks++;}
         for(int degree=0;degree<360;degree+=15){
             double theta=Math.toRadians(degree);Point normal=new Point((float)Math.cos(theta),(float)Math.sin(theta));
             Chart c=chart(normal,rect(450,250,550,350,false));Point q=choose(c,300);clear(c,q,.5);
@@ -125,6 +140,14 @@ public final class NoiseGestureRegression {
         AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.reload();ok(signature.equals(TapMod.preparationSignature()),"canonical signature did not restore");
         AppSettings.edges=!AppSettings.edges;ok(!signature.equals(TapMod.preparationSignature()),"edge guard flag did not invalidate preparation signature");AppSettings.edges=!AppSettings.edges;
         AppSettings.inward=!AppSettings.inward;ok(!signature.equals(TapMod.preparationSignature()),"inward flick flag did not invalidate preparation signature");AppSettings.inward=!AppSettings.inward;
+        AppSettings.values.put("tap_jitter_permille","17");TapMod.reload();
+        ok(signature.equals(TapMod.preparationSignature()),"inactive random offset invalidated cache");
+        AppSettings.values.put("tap_noise_avoid","false");TapMod.reload();String withoutNoise=TapMod.preparationSignature();
+        AppSettings.values.put("tap_noise_clock_guard_ms","24");AppSettings.values.put("tap_noise_escape_permille","5");TapMod.reload();
+        ok(withoutNoise.equals(TapMod.preparationSignature()),"inactive guard or escape range invalidated cache");
+        AppSettings.values.put("tapmod_enabled","on");AppSettings.values.put("tap_noise_avoid","1");
+        TapMod.Settings effective=TapMod.readSettings(new Context());
+        ok(effective.enabled&&effective.noiseAvoid&&effective.clock==24&&effective.jitter==17,"editor and playback disagreed on settings");
     }
     public static void main(String[] args)throws Exception{
         AppSettings.values.put("tapmod_enabled","false");AppSettings.values.put("tap_noise_avoid","true");AppSettings.values.put("tap_noise_clock_guard_ms","0");TapMod.init(new Context());

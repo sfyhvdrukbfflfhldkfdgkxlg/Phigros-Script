@@ -34,7 +34,7 @@ public final class ExternalCharts {
         // would immediately evict most of the generated coordinate cache.
         File[] files=cache(context).listFiles(f->f.getName().endsWith(".json"));
         if(files==null)return 0;
-        int done=0;for(File f:files){ChartDownload.check(cancel);byte[] bytes=read(new FileInputStream(f),32*1024*1024);Chart chart=SharedChartImport.parseJson(new String(bytes,StandardCharsets.UTF_8));io.github.phiscript.input.PreparedChartStore.prepareImported(context,chart,bytes,16.0/9,false,cancel);done++;}return done;
+        int done=0;for(File f:files){ChartDownload.check(cancel);byte[] bytes=read(new FileInputStream(f),32*1024*1024);Chart chart=SharedChartImport.parseForImport(new String(bytes,StandardCharsets.UTF_8));io.github.phiscript.input.PreparedChartStore.prepareImported(context,chart,bytes,16.0/9,false,cancel);done++;}return done;
     }
     public static boolean isBusy(){return busy.get();}
     static void message(Activity a,String title,String msg){if(!a.isFinishing()&&!a.isDestroyed())UiDesign.show(UiDesign.dialog(a,title).setMessage(msg).setPositiveButton(tr("确定"),null).create());}
@@ -161,7 +161,7 @@ public final class ExternalCharts {
         }
         byte[] cached=readCloudCache(e,destination,metadata,cancel);
         if(cached!=null){
-            Chart chart=SharedChartImport.parseJson(new String(cached,StandardCharsets.UTF_8));
+            Chart chart=SharedChartImport.parseForImport(new String(cached,StandardCharsets.UTF_8));
             ChartDownload.check(cancel);
             PreparedChartStore.prepareImported(a.context,chart,cached,16.0/9,false,cancel);
             return chart;
@@ -173,7 +173,7 @@ public final class ExternalCharts {
         ChartDownload.check(cancel);String json;
         if(e.name.toLowerCase(Locale.ROOT).endsWith(".json")){json=new String(data,StandardCharsets.UTF_8);if(json.startsWith("\uFEFF"))json=json.substring(1);}
         else json=PhiraImportDecoder.INSTANCE.decode(new ByteArrayInputStream(data),e.name).getNormalizedJson();
-        Chart chart=SharedChartImport.parseJson(json);ChartDownload.check(cancel);
+        Chart chart=SharedChartImport.parseForImport(json);ChartDownload.check(cancel);
         if(e.resource!=null&&e.resource.optInt("noiseCount",-1)>=0&&io.github.phiscript.engine.BlockAreaSet.count(chart)!=e.resource.getInt("noiseCount"))throw new IllegalStateException(tr("谱面噪域数量与清单不一致，未启用该文件"));
         if(!io.github.phiscript.engine.BlockAreaSet.hasMetadata(chart))RuntimeState.INSTANCE.log(tr("提示：该文件未包含噪域数据；如果游戏中有噪域，请导入保留 blockAreaList 的谱面。"));
         if(chart.getNotes().isEmpty())throw new IllegalStateException(tr("下载的谱面没有可演奏音符"));

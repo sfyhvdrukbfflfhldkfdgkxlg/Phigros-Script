@@ -32,7 +32,6 @@ public final class PreparedChartStore {
     private static final Viewport CLOUD_VIEW=new Viewport(0,0,1920,1080);
     private static final TouchBounds CLOUD_BOUNDS=new TouchBounds(0,0,1919,1079);
     static final String LEGACY_CLOUD_SETTINGS="gesture-noise-v2|true|true|0x1.18p5|0x1.8p2|0x1.f4p10|4|12|true|true";
-    private static final String CLOUD_SETTINGS="gesture-variation-v4|true|true|0x1.18p5|0x1.8p2|0x1.f4p10|4|12|true|true";
     private static final ThreadLocal<ImportGeometry> importBatch=new ThreadLocal<>();
     private static final class Geometry {
         final Viewport viewport;final TouchBounds bounds;
@@ -57,8 +56,19 @@ public final class PreparedChartStore {
     }
     private PreparedChartStore(){}
     public static String digest(byte[] bytes){
-        try{StringBuilder out=new StringBuilder();for(byte b:MessageDigest.getInstance("SHA-256").digest(bytes))out.append(String.format(Locale.ROOT,"%02x",b&255));return out.toString();}
-        catch(Exception e){throw new IllegalStateException(e);}
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(bytes);
+            String digits = "0123456789abcdef";
+            char[] hex = new char[hash.length * 2];
+            for (int i = 0; i < hash.length; i++) {
+                int value = hash[i] & 255;
+                hex[i * 2] = digits.charAt(value >>> 4);
+                hex[i * 2 + 1] = digits.charAt(value & 15);
+            }
+            return new String(hex);
+        } catch (java.security.NoSuchAlgorithmException unavailable) {
+            throw new IllegalStateException(unavailable);
+        }
     }
     public static void bind(Chart chart,String json){if(chart!=null&&json!=null)sources.put(chart,new Binding(digest(json.getBytes(StandardCharsets.UTF_8)),null));}
     public static void bind(Chart chart,Context context,byte[] bytes){sources.put(chart,new Binding(digest(bytes),context.getApplicationContext()));}
@@ -129,10 +139,10 @@ public final class PreparedChartStore {
         return new ImportGeometry(service!=null&&service.getGameForeground()?service:context);
     }
     static void checkCloudGeometry(GestureProfile profile,Viewport view,String signature)throws IOException{
-        if(!GestureProfile.read(null).equals(profile)||!CLOUD_SETTINGS.equals(TapMod.baseSignature())||!TapMod.preparationSignature().equals(signature)){
+        if(!GestureProfile.read(null).equals(profile)||!TapMod.supportsCloudRouting()||!TapMod.preparationSignature().equals(signature)){
             throw new IOException(io.github.phiscript.root.UiDesign.words(
-                    "云端轨迹使用默认手势和噪域设置。请在 Swordalt 谱库按当前设置准备这张谱面。",
-                    "Cloud tracks use the default gesture and noise settings. Prepare this chart in the Swordalt library to use your settings."));
+                    "云端轨迹支持自定义时钟保护、随机延迟和上下漂移。当前手势、偏移或避让范围需要在 Swordalt 谱库按本机设置准备。",
+                    "Cloud tracks support custom timing guards, delay and vertical drift. Prepare this chart in Swordalt to apply your gesture, offset or avoidance settings."));
         }
         // Native judge-line rotations use viewport width for both axes. Stretching a
         // 16:9 track to a tablet or a custom aspect would move hits off the judge line.
