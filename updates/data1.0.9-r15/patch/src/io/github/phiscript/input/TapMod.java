@@ -325,6 +325,29 @@ public final class TapMod {
         Guard timing=guard;
         if(!avoids(c)||!BlockAreaSet.overlaps(c,from-timing.backMs,to+timing.aheadMs))return;
         if(!BlockAreaSet.mayTouchPath(c,v,a,b,from/1000.0-timing.back,to/1000.0+timing.ahead)){checkDeadline(deadline);return;}
+        // A fast diagonal can share its overall bounding box with a moving mask
+        // while remaining separated at every instant. Certify the actual swept
+        // pieces with the same complete timing guard, including both endpoints.
+        long duration=to-from;
+        if(deadline!=Long.MAX_VALUE && duration>1 && duration<=32
+                && Math.max(Math.abs(b.getX()-a.getX()),Math.abs(b.getY()-a.getY()))>2){
+            int pieces=(int)Math.min(duration,8);
+            Point previous=a;
+            boolean separated=true;
+            for(int i=1;i<=pieces;i++){
+                checkDeadline(deadline);
+                double f=i/(double)pieces;
+                Point next=i==pieces?b:new Point((float)(a.getX()+((double)b.getX()-a.getX())*f),
+                        (float)(a.getY()+((double)b.getY()-a.getY())*f));
+                double start=(from+duration*((i-1)/(double)pieces))/1000.0;
+                double finish=(from+duration*f)/1000.0;
+                if(BlockAreaSet.mayTouchPath(c,v,previous,next,start-timing.back,finish+timing.ahead)){
+                    separated=false;break;
+                }
+                previous=next;
+            }
+            if(separated){checkDeadline(deadline);return;}
+        }
         for(double shift:timing.shifts){checkDeadline(deadline);boolean blocked=BlockAreaSet.crossesTranslation(c,v,a,b,from/1000.0+shift,to/1000.0+shift);checkDeadline(deadline);if(blocked)throw new NoSafePoint(tr("移动噪域将扫过连续触点，应在此抬指"));}
         double dx=b.getX()-a.getX(),dy=b.getY()-a.getY(),distance=Math.hypot(dx,dy);
         int slices=(int)Math.min(4096,Math.max(1,Math.ceil(Math.abs(to-from)/4.0)));

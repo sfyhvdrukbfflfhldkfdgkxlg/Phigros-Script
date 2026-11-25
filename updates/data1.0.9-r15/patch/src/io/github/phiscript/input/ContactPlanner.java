@@ -8,14 +8,18 @@ import java.util.*;
 /** Reserve fresh heads first. DRAG checks an occupied judgement strip; FLICK needs movement. */
 final class ContactPlanner {
     static final int LIMIT=6;
-    private static final int RED_DOWN_MS=12,RED_TAIL_MS=16;
+    private static final int RED_DOWN_MS=20,RED_TAIL_MS=18;
+    // Reserve at least one 60 Hz frame for a fresh tap or an occupied drag strip.
+    private static final int HEAD_SETTLE_MS=20,DRAG_DWELL_MS=20;
     static float radius(Viewport v){return Math.min(v.getWidth()*.098f,v.getHeight()*.20f);}
     static long hit(Note n){return Math.round(n.getTimeSeconds()*1000);}
     static final class Anchor {
         final Note note;
         final float dx,dy;
-        final boolean pin;
-        Anchor(Note n,float dx,float dy,boolean pin){this.note=n;this.dx=dx;this.dy=dy;this.pin=pin;}
+        final boolean pin,precise;
+        Anchor(Note n,float dx,float dy,boolean pin){this(n,dx,dy,pin,false);}
+        Anchor(Note n,float dx,float dy,boolean pin,boolean precise){this.note=n;this.dx=dx;this.dy=dy;this.pin=pin;this.precise=precise;}
+        Anchor certified(){return new Anchor(note,dx,dy,pin,true);}
         Anchor(Note n){this(n,0,0,false);}
         Point at(Chart chart,long t,Viewport v,TouchBounds b){
             if(pin)return new Point(b.x(v.getLeft()+v.getWidth()*dx),b.y(v.getTop()+v.getHeight()*dy));
@@ -50,7 +54,7 @@ final class ContactPlanner {
         final NavigableMap<Long,Anchor> keys=new TreeMap<>();
         Route(Note n,Anchor a,long start,long end){
             head=n;this.start=start;this.end=end;
-            free=n.getType()==3?end:n.getType()==1?start+12:start;
+            free=n.getType()==3?end:n.getType()==1?Math.min(end,start+HEAD_SETTLE_MS):start;
             keys.put(start,a);keys.put(free,a);
         }
         Anchor anchor(long t){Map.Entry<Long,Anchor> e=keys.floorEntry(t);return (e==null?keys.firstEntry():e).getValue();}
@@ -88,6 +92,9 @@ final class ContactPlanner {
     final Occupancy total=new Occupancy(),yellow=new Occupancy();
     final Set<Note> pinned=Collections.newSetFromMap(new IdentityHashMap<Note,Boolean>());
     final IdentityHashMap<Note,Route> heads=new IdentityHashMap<>();
+    final NavigableMap<Long,List<Note>> headTimes=new TreeMap<>();
+    final Map<Long,List<Note>> dragTimes=new HashMap<>();
+    final Map<Long,Boolean> stableChords=new HashMap<>();
     int shared,sections,missed;
     private static final ThreadLocal<long[]> LAST_STATS=new ThreadLocal<>();
     static long[] lastStats(){long[] stats=LAST_STATS.get();return stats==null?new long[6]:stats.clone();}
@@ -104,6 +111,10 @@ final class ContactPlanner {
     private static final class Band {
         final Point center,direction;final double magnitude;
         Band(Point center,Point direction){this.center=center;this.direction=direction;magnitude=direction==null?0:Math.hypot(direction.getX(),direction.getY());}
+        double distance(Point p){
+            if(center==null||magnitude<1e-7)return Double.POSITIVE_INFINITY;
+            return Math.abs((p.getX()-center.getX())*direction.getY()-(p.getY()-center.getY())*direction.getX())/magnitude;
+        }
     }
     ContactPlanner(Chart c,Viewport v,TouchBounds b,GestureProfile p){chart=c;view=v;bounds=b;profile=p;}
     static GesturePlan build(Chart c,Viewport v,TouchBounds b,GestureProfile p){
@@ -159,14 +170,20 @@ final class ContactPlanner {
         total.reserve(r.end,end);if(r.head.getType()==2)yellow.reserve(r.end,end);r.end=end;
     }
     private Point actual(Route r,long t){
-        return TapMod.withinBounds(chart,r.anchor(t).note,t/1000.0,view,r.at(chart,t,view,bounds),bounds);
+        Anchor a=r.anchor(t);
+        return TapMod.withinBounds(chart,a.note,t/1000.0,view,r.at(chart,t,view,bounds),bounds,null,0,a.note.getType()==3,!a.precise&&a.note.getType()!=4);
     }
     private boolean catchHeld(Note n,long time){
         for(Route r:live){
             if(time<r.start||time>=r.end)continue;
+            long until=Math.min(time+DRAG_DWELL_MS,r.end-1);
+            long from=until-DRAG_DWELL_MS;
+            if(from<r.start||from<hit(n)-40)continue;
             try{
-                if(covered(n,time,actual(r,time))){
-                    r.retain(Math.min(time+5,r.end-1));shared++;return true;
+                if(covered(n,from,actual(r,from)) &&
+                        covered(n,from+DRAG_DWELL_MS/2,actual(r,from+DRAG_DWELL_MS/2)) &&
+                        covered(n,until,actual(r,until))){
+                    r.retain(until);r.uses++;shared++;return true;
                 }
             }catch(TapMod.NoSafePoint blocked){/* Check the other active fingers. */}
         }
@@ -195,14 +212,243 @@ final class ContactPlanner {
         }
         return best;
     }
-    private boolean mobileEligible(Route r,long time,long end,boolean red){long free=Math.max(r.free,r.pulse),gap=time-free;return gap>=0&&gap<=(red?360:1200)&&room(r,r.end,end,!red)&&(r.end>=time||(red?profile.connectFlicks||profile.combineShots:profile.connectDrags||profile.catchDrags));}
+    private boolean mobileEligible(Route r,long time,long end,boolean red){
+        long gap=time-Math.max(r.free,r.pulse);
+        // A released blue head only links to a nearby special note when tap
+        // combinations are enabled. Long drag-chain gaps apply to drags themselves.
+        if(r.uses==1 && r.head.getType()==1 && time>r.end &&
+                (!profile.combineShots || time-hit(r.head)>160))return false;
+        return gap>=0 && gap<=(red?360:1200) && room(r,r.end,end,!red) &&
+                (r.end>=time || (red?profile.connectFlicks||profile.combineShots:profile.connectDrags||profile.catchDrags));
+    }
     private boolean mayMobile(long time,long end,boolean red){for(Route r:live)if(mobileEligible(r,time,end,red))return true;return false;}
+    private List<TouchEvent> sourceEvents(){
+        List<TouchEvent> events=new ArrayList<>();
+        PriorityQueue<Long> releases=new PriorityQueue<>();
+        for(TouchEvent e:TouchEvent.Companion.forChart(chart)){
+            Note n=e.getNote();
+            if(n.getType()==1 || n.getType()==3){
+                long start=hit(n);
+                long end=n.getType()==1?start+48:Math.max(start+1,Math.round(n.getEndSeconds()*1000));
+                while(!releases.isEmpty() && releases.peek()<=start)releases.remove();
+                // Keep the original HOLD (including native position animation) and a separate
+                // DOWN for every head. Use the stacked-hold fallback only under real pressure.
+                if(releases.size()>=10)return ChordPlanner.forChart(chart,false,false);
+                releases.add(end);
+                e=new TouchEvent(n,start,end);
+            }
+            events.add(e);
+        }
+        return events;
+    }
+    private Band band(Note n,long ms){
+        double seconds=Math.max(0,ms)/1000.;
+        return new Band(chart.position(n,seconds,view,false),chart.judgeNormal(n,seconds,view));
+    }
+    private int competitors(Point point,List<Band[]> other){
+        int count=0;
+        // Phira Pro uses X_DIFF_MAX = .23625 in a two-unit-wide world.
+        double threshold=view.getWidth()*.119+2;
+        for(Band[] strip:other)for(Band pose:strip){
+            if(pose.distance(point)<=threshold){count++;break;}
+        }
+        return count;
+    }
+    private int chordRisk(Point point,Band[] own,List<Band[]> other){
+        int score=0;
+        double width=view.getWidth();
+        for(Band[] peer:other){
+            boolean overlaps=false,canSteal=false;
+            for(int i=0;i<peer.length;i++){
+                double distance=peer[i].distance(point);
+                if(distance>width*.119+2)continue;
+                overlaps=true;
+                // All distances within the native .13175-unit core have equal
+                // rank. A point near the edge may still prefer its own head
+                // when the strips cannot be separated within the touch bounds.
+                if(distance<=Math.max(width*.065875,own[i].distance(point))+width*.008)canSteal=true;
+            }
+            if(overlaps)score++;
+            if(canSteal)score+=other.size()+1;
+        }
+        return score;
+    }
+    private boolean stableChord(List<Note> notes,long start){
+        int count=notes.size();
+        if(count>6)return false;
+        Point[] original=new Point[count];
+        try{
+            for(int i=0;i<count;i++){
+                Note n=notes.get(i);
+                original[i]=TapMod.withinBounds(chart,n,start/1000.,view,new Anchor(n).at(chart,start,view,bounds),bounds);
+            }
+        }catch(TapMod.NoSafePoint blocked){return false;}
+        double width=view.getWidth();
+        for(long t=start;t<=start+16;t+=8){
+            double[][] ranks=new double[count][count];
+            for(int j=0;j<count;j++){
+                Band band=band(notes.get(j),t);
+                for(int i=0;i<count;i++){
+                    double distance=band.distance(original[i]);
+                    ranks[i][j]=distance>width*.116?Double.POSITIVE_INFINITY:Math.max(distance,width*.065875);
+                }
+            }
+            int all=(1<<count)-1;
+            if(!everyOrderMatches(ranks,all,all,width*.006,new HashSet<Integer>()))return false;
+        }
+        return true;
+    }
+    private boolean everyOrderMatches(double[][] ranks,int fingers,int notes,double tolerance,Set<Integer> verified){
+        if(fingers==0)return true;
+        int key=(fingers<<ranks.length)|notes;
+        if(verified.contains(key))return true;
+        for(int i=0;i<ranks.length;i++){
+            if((fingers&(1<<i))==0)continue;
+            double best=Double.POSITIVE_INFINITY;
+            for(int j=0;j<ranks.length;j++)if((notes&(1<<j))!=0)best=Math.min(best,ranks[i][j]);
+            if(!Double.isFinite(best))return false;
+            for(int j=0;j<ranks.length;j++){
+                if((notes&(1<<j))!=0 && ranks[i][j]<=best+tolerance &&
+                    !everyOrderMatches(ranks,fingers^(1<<i),notes^(1<<j),tolerance,verified))return false;
+            }
+        }
+        verified.add(key);
+        return true;
+    }
+    private Anchor specialDown(Anchor target,long start,long arrival){
+        if(arrival<=start)return target;
+        List<Band[]> heads=new ArrayList<>();
+        // A new finger for a drag/flick is still a click to Phira. It can
+        // consume an upcoming head before the special note is recognised.
+        for(List<Note> notes:headTimes.subMap(start-18,true,start+220,true).values()){
+            for(Note n:notes)heads.add(new Band[]{band(n,start),band(n,start+12)});
+        }
+        if(heads.isEmpty())return target;
+        Point origin=target.at(chart,start,view,bounds);
+        int initial=competitors(origin,heads);
+        if(initial==0)return target;
+        int bestCount=initial;double shortest=Double.POSITIVE_INFINITY;
+        Anchor best=target;
+        for(float normal:new float[]{0,-.18f,.18f,-.36f,.36f,-.56f,.56f})
+        for(float lateral:new float[]{0,-.85f,.85f,-1.7f,1.7f}){
+            TapMod.checkPlanningCancelled();
+            Anchor candidate=new Anchor(target.note,lateral,normal,false);
+            Point p=candidate.at(chart,start,view,bounds);
+            int count=competitors(p,heads);
+            double distance=Math.hypot(p.getX()-origin.getX(),p.getY()-origin.getY());
+            if(count>=initial||count>bestCount||(count==bestCount&&distance>=shortest))continue;
+            if(!TapMod.clearAt(chart,view,p,start/1000.))continue;
+            Anchor fixed=pixel(target.note,p).certified();
+            if(!bridgeClear(fixed,start,target,arrival))continue;
+            best=fixed;bestCount=count;shortest=distance;
+        }
+        return best;
+    }
+    private Anchor distinctHead(Note n,long start,Point nominal){
+        List<Note> chord=headTimes.get(start);
+        if(chord==null||chord.size()<2)return null;
+        // Preserve a complete, order-independent native chord. Moving a HOLD
+        // sideways for extra head clearance can steer its tail into moving noise.
+        if(stableChords.computeIfAbsent(start,ignored->chord.stream().anyMatch(head->head.getType()==3)&&stableChord(chord,start)))return null;
+        List<Band[]> other=new ArrayList<>();
+        for(Note peer:chord)if(peer!=n){
+            other.add(new Band[]{band(peer,start),band(peer,start+8),band(peer,start+16)});
+        }
+        Band[] own={band(n,start),band(n,start+8),band(n,start+16)};
+        int initial=chordRisk(nominal,own,other);
+        if(initial==0)return null;
+        int bestCount=initial;double shortest=Double.POSITIVE_INFINITY;
+        Anchor best=null;
+        for(float normal:new float[]{0,.16f,-.16f,.34f,-.34f,.55f,-.55f,.8f,-.8f})
+        for(float lateral:new float[]{0,.45f,-.45f,.84f,-.84f}){
+            TapMod.checkPlanningCancelled();
+            Anchor proposal=new Anchor(n,lateral,normal,false);
+            Point p=proposal.at(chart,start,view,bounds);
+            if(chordRisk(p,own,other)>=initial)continue;
+            try{p=TapMod.withinBounds(chart,n,start/1000.,view,p,bounds);}
+            catch(TapMod.NoSafePoint blocked){continue;}
+            boolean accepts=true;
+            for(Band strip:own)if(strip.distance(p)>radius(view)){accepts=false;break;}
+            if(!accepts)continue;
+            int count=chordRisk(p,own,other);
+            double travel=Math.hypot(p.getX()-nominal.getX(),p.getY()-nominal.getY());
+            if(count>=initial || count>bestCount || (count==bestCount && travel>=shortest))continue;
+            // A HOLD retains its original moving judgement axis. The tap only
+            // needs this unique, stationary DOWN and can release on the same spot.
+            Anchor candidate=n.getType()==3?proposal:pixel(n,p);
+            if(n.getType()==1){
+                try{TapMod.segment(chart,view,p,p,start,start+48);}
+                catch(TapMod.NoSafePoint movingNoise){continue;}
+            }
+            best=candidate.certified();bestCount=count;shortest=travel;
+        }
+        return best;
+    }
+    private Anchor catchChordDrag(Note tap,long start,Anchor head){
+        List<Note> drags=dragTimes.get(start);
+        if(tap.getType()!=1 || drags==null || headTimes.get(start).size()!=1)return head;
+        Point original=head.at(chart,start,view,bounds);
+        Band own=band(tap,start);
+        List<Band[]> strips=new ArrayList<>();
+        for(Note drag:drags)strips.add(new Band[]{band(drag,start),band(drag,start+10),band(drag,start+20)});
+        Anchor best=head;int bestCount=0;double shortest=Double.POSITIVE_INFINITY;
+        for(float normal:new float[]{0,.12f,-.12f,.24f,-.24f,.36f,-.36f,.52f,-.52f,.75f,-.75f,1,-1})
+        for(float lateral:new float[]{0,.4f,-.4f,.72f,-.72f,.92f,-.92f,1.12f,-1.12f}){
+            Point p;
+            if(normal==0&&lateral==0)p=original;
+            else {
+                double nx=own.direction.getX()/own.magnitude,ny=own.direction.getY()/own.magnitude;
+                p=new Point(bounds.x((float)(original.getX()+nx*normal*view.getHeight()+ny*lateral*radius(view))),
+                    bounds.y((float)(original.getY()+ny*normal*view.getHeight()-nx*lateral*radius(view))));
+            }
+            // Keep the shared DOWN inside the native click strip even when the
+            // centre of that strip is forbidden by a noise area.
+            if(own.distance(p)>view.getWidth()*.113)continue;
+            int count=0;
+            for(Band[] strip:strips)if(strip[0].distance(p)<radius(view)*.88 && strip[1].distance(p)<radius(view)*.88 && strip[2].distance(p)<radius(view)*.88)count++;
+            double travel=Math.hypot(p.getX()-original.getX(),p.getY()-original.getY());
+            if(count==0 || count<bestCount || count==bestCount&&travel>=shortest)continue;
+            try{TapMod.segment(chart,view,p,p,start,start+48);}
+            catch(TapMod.NoSafePoint blocked){continue;}
+            best=pixel(tap,p).certified();bestCount=count;shortest=travel;
+            if(travel==0&&count==strips.size())return best;
+        }
+        return best;
+    }
+    private Anchor headAnchor(TouchEvent e){
+        Note n=e.getNote();
+        Anchor follow=new Anchor(n);
+        long start=e.getStartMs();
+        try{
+            Point down=TapMod.withinBounds(chart,n,start/1000.0,view,follow.at(chart,start,view,bounds),bounds);
+            Anchor distinct=distinctHead(n,start,down);
+            if(distinct!=null)return distinct;
+            if(n.getType()!=1)return follow;
+            TapMod.segment(chart,view,down,down,start,e.getEndMs());
+            return catchChordDrag(n,start,pixel(n,down));
+        }catch(TapMod.NoSafePoint movingNoise){return follow;}
+    }
     private GesturePlan schedule(){
-        List<TouchEvent> events=ChordPlanner.forChart(chart,false,false);
+        List<TouchEvent> events=sourceEvents();
         events.sort((a,b)->{int t=Long.compare(hit(a.getNote()),hit(b.getNote()));return t!=0?t:Integer.compare(a.getNote().getId(),b.getNote().getId());});
+        for(TouchEvent event:events){
+            Note n=event.getNote();
+            if(n.getType()==1 || n.getType()==3)headTimes.computeIfAbsent(hit(n),ignored->new ArrayList<>()).add(n);
+            if(n.getType()==2)dragTimes.computeIfAbsent(hit(n),ignored->new ArrayList<>()).add(n);
+        }
         for(TouchEvent e:events){
             Note n=e.getNote();if(n.getType()!=1 && n.getType()!=3)continue;
-            Route r=new Route(n,new Anchor(n),e.getStartMs(),e.getEndMs());
+            Anchor head=headAnchor(e);
+            Route r=new Route(n,head,e.getStartMs(),e.getEndMs());
+            if(n.getType()==3 && head.precise && r.end-r.start>HEAD_SETTLE_MS+32){
+                long settled=r.start+HEAD_SETTLE_MS,returnAt=settled+32;
+                Anchor follow=new Anchor(n);
+                if(bridgeClear(head,settled,follow,returnAt)){
+                    r.keys.put(settled,head);
+                    r.keys.put(returnAt,follow);
+                    r.keys.put(r.end,follow);
+                }
+            }
             heads.put(n,r);routes.add(r);total.reserve(r.start,r.end);
         }
         fullRuns(events);
@@ -247,7 +493,10 @@ final class ContactPlanner {
                 TapMod.checkPlanningCancelled();strokeCandidates++;
                 Point a=new Point(bounds.x(origin.getX()-dx*center),bounds.y(origin.getY()-dy*center));
                 Point b=new Point(bounds.x(a.getX()+dx),bounds.y(a.getY()+dy));
-                if(Math.hypot(b.getX()-a.getX(),b.getY()-a.getY())<Math.hypot(dx,dy)*.88)continue;
+                double distance=Math.hypot(b.getX()-a.getX(),b.getY()-a.getY());
+                // Phira Pro uses a two-unit-wide world and tests speed on the second MOVE.
+                // Leave room above its 1.14 units/s threshold after integer pixel rounding.
+                if(distance<Math.hypot(dx,dy)*.88 || distance<view.getWidth()*.00065*(end-start)+1)continue;
                 boolean clear=true;Point[] samples=new Point[9];long[] times=new long[9];
                 for(int step=0;step<=8;step++) {
                     float f=step/8f;long t=start+Math.round((end-start)*f);
@@ -271,6 +520,15 @@ final class ContactPlanner {
         lastRedHit=hit;
         strokeMemo=new IdentityHashMap<>();bands=new IdentityHashMap<>();try{redCandidates(n,hit);}finally{strokeMemo=null;bands=null;}
     }
+    private static void placeStroke(Route route,Anchor[] stroke,long start,long end){
+        Anchor from=stroke[0],to=stroke[1];
+        long middle=start+(end-start)/2;
+        float f=(middle-start)/(float)(end-start);
+        route.keys.put(start,from);
+        route.keys.put(middle,new Anchor(from.note,from.dx+(to.dx-from.dx)*f,from.dy+(to.dy-from.dy)*f,true));
+        route.keys.put(end,to);
+        route.flick=true;
+    }
     private void redCandidates(Note n,long hit){
         // Prefer a timely continuing finger. A late reuse must not beat a fresh
         // contact that can start and move during the actual judgement window.
@@ -285,8 +543,8 @@ final class ContactPlanner {
                     if(r.head.getType()!=3 || approach>=start || Math.round(r.head.getEndSeconds()*1000)<end+RED_TAIL_MS)continue;
                     Anchor base=new Anchor(r.head);Anchor[] stroke=stroke(base,n,start,end);
                     if(stroke==null||!bridgeClear(base,approach,stroke[0],start)||!bridgeClear(stroke[1],end,base,end+RED_TAIL_MS))continue;
-                    r.keys.put(approach,base);r.keys.put(start,stroke[0]);r.keys.put(end,stroke[1]);r.keys.put(end+RED_TAIL_MS,base);
-                    r.flick=true;r.pulse=end+RED_TAIL_MS;r.uses++;return;
+                    r.keys.put(approach,base);placeStroke(r,stroke,start,end);r.keys.put(end+RED_TAIL_MS,base);
+                    r.pulse=end+RED_TAIL_MS;r.uses++;return;
                 }
             }
             // If no route meets mobile's time/capacity/noise prerequisites,
@@ -301,15 +559,16 @@ final class ContactPlanner {
                 Point at=stroke[0].at(chart,down,view,bounds);
                 try{TapMod.segment(chart,view,at,at,down,start);}
                 catch(TapMod.NoSafePoint blocked){continue;}
-                r=create(n,stroke[0],down,up);
+                r=create(n,specialDown(stroke[0],down,start),down,up);
             }else{extend(r,up);r.uses++;}
-            r.keys.put(start,stroke[0]);r.keys.put(end,stroke[1]);r.flick=true;r.free=end;r.pulse=end;return;
+            placeStroke(r,stroke,start,end);r.free=end;r.pulse=end;return;
         }
         missed++;
     }
     private void drags(List<Note> pending,long hit){
         for(int delay:new int[]{0,20,40,60}){
             long t=hit+delay;
+            long until=t+DRAG_DWELL_MS;
             pending.removeIf(n->catchHeld(n,t) || delay==0 && (catchHeld(n,t-8) || catchHeld(n,t-16)));
             List<Note> deferred=new ArrayList<>();
             while(!pending.isEmpty()){
@@ -320,7 +579,7 @@ final class ContactPlanner {
                     catch(TapMod.NoSafePoint blocked){continue;}
                     if(!covered(first,t,p))continue;
                     int count=0;for(Note n:pending)if(covered(n,t,p))count++;
-                    Route reuse=mobile(a,t,t+16,false);
+                    Route reuse=mobile(a,t,until+1,false);
                     if(best==null || reuse!=null&&selected==null || (reuse==null)==(selected==null)&&count>score){
                         best=a;selected=reuse;score=count;
                     }
@@ -331,12 +590,12 @@ final class ContactPlanner {
                     if(delay<40 && (catchHeld(first,t+8) || catchHeld(first,t+16))){
                         pending.remove(0);continue;
                     }
-                    long start=t-16;
-                    if(!room(null,start,t+16,true))start=t;
-                    if(!room(null,start,t+16,true)){deferred.add(pending.remove(0));continue;}
-                    selected=create(best.note,best,start,t+16);
-                }else{if(selected.head.getType()!=2)yellow.reserve(selected.end,t+16);extend(selected,t+16);selected.uses++;}
-                selected.keys.put(t,best);selected.keys.put(t+8,best);selected.free=t+8;
+                    long start=t-DRAG_DWELL_MS;
+                    if(!room(null,start,until+1,true))start=t;
+                    if(!room(null,start,until+1,true)){deferred.add(pending.remove(0));continue;}
+                    selected=create(best.note,specialDown(best,start,t),start,until+1);
+                }else{if(selected.head.getType()!=2)yellow.reserve(selected.end,until+1);extend(selected,until+1);selected.uses++;}
+                selected.keys.put(t,best);selected.keys.put(until,best);selected.free=until;
                 Point p=actual(selected,t);int before=pending.size();
                 pending.removeIf(n->covered(n,t,p));
                 if(before==pending.size())throw new IllegalStateException(tr("黄键分配与实际轨迹不一致"));

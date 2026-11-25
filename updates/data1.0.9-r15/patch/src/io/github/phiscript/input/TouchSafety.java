@@ -143,7 +143,8 @@ public final class TouchSafety {
             Boolean priorPlanning=TapMod.planning.get();TapMod.planning.set(true);Point p;
             try{p=route.at(chart,time,viewport,bounds);}
             finally{if(priorPlanning==null)TapMod.planning.remove();else TapMod.planning.set(priorPlanning);}
-            return escape(chart,route.anchor(time).note,time/1000.0,viewport,p,previous,previousTime,offline,pureHold,!plan.hasFlickPath(event));
+            ContactPlanner.Anchor anchor=route.anchor(time);
+            return escape(chart,anchor.note,time/1000.0,viewport,p,previous,previousTime,offline,pureHold,!anchor.precise&&!plan.hasFlickPath(event));
         }
         if(!enabled&&!inwardFlick)return escape(chart,event.getNote(),time/1000.0,viewport,plan.point(chart,event,time,viewport,screen,bounded),previous,previousTime,offline,pureHold,!plan.hasFlickPath(event));
         Point p;

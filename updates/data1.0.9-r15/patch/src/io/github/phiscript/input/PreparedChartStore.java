@@ -51,8 +51,9 @@ public final class PreparedChartStore {
         }
     }
     private static final class Binding {
-        final String fingerprint;final Context context;
-        Binding(String fingerprint,Context context){this.fingerprint=fingerprint;this.context=context;}
+        final String fingerprint;final Context context;final boolean phira;
+        Binding(String fingerprint,Context context){this(fingerprint,context,false);}
+        Binding(String fingerprint,Context context,boolean phira){this.fingerprint=fingerprint;this.context=context;this.phira=phira;}
     }
     private PreparedChartStore(){}
     public static String digest(byte[] bytes){
@@ -97,6 +98,13 @@ public final class PreparedChartStore {
         for(float n:new float[]{v.getLeft(),v.getTop(),v.getWidth(),v.getHeight(),b.left,b.top,b.right,b.bottom})value+="|"+Float.toHexString(n);
         return digest(value.getBytes(StandardCharsets.UTF_8));
     }
+    // Phira imports carry the original note data. Version their generated contacts
+    // independently of the signed Phigros cloud archives and their device caches.
+    private static File playbackFile(Context context,String fingerprint,GestureProfile profile,Geometry geometry,boolean phira)throws IOException{
+        String geometryKey=key(profile,geometry.viewport,geometry.bounds);
+        if(phira)geometryKey=digest(("phira-contacts-v7|"+geometryKey).getBytes(StandardCharsets.UTF_8));
+        return file(context,fingerprint+"."+geometryKey+".ptg");
+    }
     private static GesturePlan restore(File target,String fingerprint,Chart chart,GestureProfile profile,Viewport view,TouchBounds bounds)throws IOException{
         try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(new BufferedInputStream(file))){
             PlaybackArchive archive=PlaybackArchive.readHeader(in,file.getChannel().size(),fingerprint);
@@ -118,16 +126,22 @@ public final class PreparedChartStore {
     }
     /** Called after selection. Open the exact imported generation before retry or course calibration starts. */
     public static Chart openPlayback(Context context,String fingerprint,double aspect,boolean force)throws IOException{
+        return openPlayback(context,fingerprint,aspect,force,false);
+    }
+    public static Chart openPhiraPlayback(Context context,String fingerprint,double aspect,boolean force)throws IOException{
+        return openPlayback(context,fingerprint,aspect,force,true);
+    }
+    private static Chart openPlayback(Context context,String fingerprint,double aspect,boolean force,boolean phira)throws IOException{
         if(fingerprint==null||!fingerprint.matches("[0-9a-f]{64}"))throw new IOException(notPrepared());
         ImportGeometry window=playbackWindow(context);
         Geometry geometry=window.get(aspect,force);
         synchronized(diskLock){
-            File target=file(context,fingerprint+"."+key(window.profile,geometry.viewport,geometry.bounds)+".ptg");
+            File target=playbackFile(context,fingerprint,window.profile,geometry,phira);
             try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(new BufferedInputStream(file))){
                 PlaybackArchive archive=PlaybackArchive.readHeader(in,file.getChannel().size(),fingerprint);
                 Chart chart=archive.chart();
                 GesturePlan plan=GesturePlan.decodePrepared(chart,window.profile,geometry.viewport,geometry.bounds,in,archive.trackLength,fingerprint);
-                sources.put(chart,new Binding(fingerprint,context.getApplicationContext()));
+                sources.put(chart,new Binding(fingerprint,context.getApplicationContext(),phira));
                 target.setLastModified(System.currentTimeMillis());
                 RuntimeState.INSTANCE.log(tr("读取预计算触点：")+plan.preparedSampleCount()+tr(" 个采样"));
                 return chart;
@@ -206,7 +220,7 @@ public final class PreparedChartStore {
             synchronized(diskLock){
                 try{
                     TapMod.init(source.context);
-                    File target=file(source.context,source.fingerprint+"."+key(profile,viewport,bounds)+".ptg");
+                    File target=playbackFile(source.context,source.fingerprint,profile,new Geometry(viewport,bounds),source.phira);
                     if(exists(target)){
                         GesturePlan ready=restore(target,source.fingerprint,chart,profile,viewport,bounds);
                         target.setLastModified(System.currentTimeMillis());
@@ -228,7 +242,7 @@ public final class PreparedChartStore {
         check(cancel);TapMod.init(context);Binding source=sources.get(chart);
         if(source==null)return GesturePlan.prepareForImport(chart,profile,viewport,bounds,cancel);
         File target;
-        try{target=file(context,source.fingerprint+"."+key(profile,viewport,bounds)+".ptg");}
+        try{target=playbackFile(context,source.fingerprint,profile,new Geometry(viewport,bounds),source.phira);}
         catch(IOException failure){throw new IllegalStateException(tr("无法保存预计算触点"),failure);}
         GesturePlan ready=null;
         byte[] tracks=null;
@@ -280,7 +294,7 @@ public final class PreparedChartStore {
     }
     /** Native Phira loader calls this after its source checksum and parse have passed. */
     public static void afterPhiraLoad(Context context,PhiraLibrary library,String id,Chart chart,byte[] bytes){
-        bind(chart,context,bytes);
+        sources.put(chart,new Binding(digest(bytes),context.getApplicationContext(),true));
     }
     public static void afterChartLoad(ChartLibrary library,Chart chart,String json){
         try{
@@ -314,7 +328,7 @@ public final class PreparedChartStore {
         finally{if(previous==null)importBatch.remove();else importBatch.set(previous);}
     }
     private static boolean verified(Context context,String fingerprint,GestureProfile profile,Geometry geometry){
-        try{synchronized(diskLock){check(null);File target=file(context,fingerprint+"."+key(profile,geometry.viewport,geometry.bounds)+".ptg");if(!target.exists()&&!new File(target+".bak").exists())return false;
+        try{synchronized(diskLock){check(null);File target=playbackFile(context,fingerprint,profile,geometry,true);if(!target.exists()&&!new File(target+".bak").exists())return false;
             try(FileInputStream file=new AtomicFile(target).openRead();DataInputStream in=new DataInputStream(new BufferedInputStream(file))){
                 PlaybackArchive archive=PlaybackArchive.readHeader(in,file.getChannel().size(),fingerprint);
                 PreparedTrajectory.inspectPrepared(in,archive.trackLength,profile,geometry.viewport,geometry.bounds,fingerprint);

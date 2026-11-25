@@ -29,6 +29,28 @@ public final class ChartMultiTouchPlayer {
     private static final int CONTINUATION_RELEASE_MS = 9;
     private ChartMultiTouchPlayer() {}
 
+    // Keep the timed loop free of log I/O. Only retain interruptions of a held
+    // note or the initial admission of its head, not every retry while blocked.
+    private static final class HoldInterruptions {
+        final int[] ids=new int[1024];
+        final long[] times=new long[ids.length], elapsedUs=new long[ids.length];
+        final String[] phases=new String[ids.length], reasons=new String[ids.length];
+        int count;
+        void record(TouchEvent event,long time,String phase,String reason,long deadline){
+            if(event.getNote().getType()!=3)return;
+            int i=count++;if(i>=ids.length)return;
+            ids[i]=event.getNote().getId();times[i]=time;phases[i]=phase;reasons[i]=reason;
+            elapsedUs[i]=deadline==Long.MAX_VALUE?0:Math.max(0,(System.nanoTime()-(deadline-8000000L))/1000L);
+        }
+        void flush(){
+            for(int i=0;i<Math.min(count,ids.length);i++){
+                android.util.Log.i("PhiHoldTrace","chartMs="+times[i]+" note="+ids[i]+" phase="+phases[i]
+                    +" workUs="+elapsedUs[i]+" reason="+reasons[i]);
+            }
+            android.util.Log.i("PhiHoldTrace","interruptions="+count);
+        }
+    }
+
     public static void play(TouchService service, Chart chart, long epoch,
             Viewport viewport, AtomicBoolean stop, Function1<? super String, Unit> status,
             AtomicBoolean playing, AtomicBoolean cancelled) throws InterruptedException {
@@ -42,6 +64,7 @@ public final class ChartMultiTouchPlayer {
             throw new IllegalStateException(tr("已有演奏在运行"));
         cancelled.set(false);
         GestureChannel channel = null;
+        HoldInterruptions interruptions=new HoldInterruptions();
         Map<TouchEvent, GestureChannel.Live> active = new LinkedHashMap<>();
         try {
             if (!service.getGameForeground()) throw new IllegalStateException(tr("目标游戏尚未处于前台"));
@@ -110,8 +133,10 @@ public final class ChartMultiTouchPlayer {
                         GestureChannel.Live live=entry.getValue();
                         boolean keep=entry.getKey().getEndMs()>now;
                         if(keep){
-                            try{if(!TapMod.clearAt(chart,viewport,new Point(live.x,live.y),now/1000.0,retirePrepareDeadline))keep=false;}
-                            catch(TapMod.NoSafePoint blocked){keep=false;}
+                            try{if(!TapMod.clearAt(chart,viewport,new Point(live.x,live.y),now/1000.0,retirePrepareDeadline)){
+                                keep=false;interruptions.record(entry.getKey(),now,"retire","held point unsafe",retirePrepareDeadline);
+                            }}
+                            catch(TapMod.NoSafePoint blocked){keep=false;interruptions.record(entry.getKey(),now,"retire",blocked.getMessage(),retirePrepareDeadline);}
                             if(!keep)blockedContacts.add(entry.getKey());
                         }
                         retirement.add(entry.getKey(),live,
@@ -123,13 +148,22 @@ public final class ChartMultiTouchPlayer {
                         final ChartPlaybackClock.Slice retireTiming=timing;final long retireDeadline=retirePrepareDeadline;
                         List<TouchEvent> rejected=retirement.rejectUnsafe((event,prior,downOffset,upOffset,keep)->{
                             if(!keep)return true;
-                            if(retireTiming.chartAt(retireWall)-retireTiming.chartAt(retireStart)>maxAge||System.nanoTime()>=retireDeadline)return false;
+                            boolean stale=retireTiming.chartAt(retireWall)-retireTiming.chartAt(retireStart)>maxAge;
+                            if(stale||System.nanoTime()>=retireDeadline){
+                                interruptions.record(event,retireTiming.chartAt(retireWall),"retire-submit",stale?"batch age":"deadline before check",retireDeadline);return false;
+                            }
                             Point p=new Point(prior.x,prior.y);
-                            try{TapMod.segment(chart,viewport,p,p,retireTiming.chartAt(retireStart),retireTiming.chartAt(retireWall+upOffset+CONTINUATION_RELEASE_MS),retireDeadline);return System.nanoTime()<retireDeadline;}
-                            catch(TapMod.NoSafePoint blocked){return false;}
+                            try{
+                                TapMod.segment(chart,viewport,p,p,retireTiming.chartAt(retireStart),retireTiming.chartAt(retireWall+upOffset+CONTINUATION_RELEASE_MS),retireDeadline);
+                                if(System.nanoTime()<retireDeadline)return true;
+                                interruptions.record(event,retireTiming.chartAt(retireWall),"retire-submit","deadline after check",retireDeadline);return false;
+                            }catch(TapMod.NoSafePoint blocked){interruptions.record(event,retireTiming.chartAt(retireWall),"retire-submit",blocked.getMessage(),retireDeadline);return false;}
                         });
                         long done=SystemClock.uptimeMillis();maxSafetyMs=Math.max(maxSafetyMs,done-retireWall);
-                        if(!retirement.isEmpty()&&retireTiming.chartAt(done)-retireTiming.chartAt(retireWall)>maxAge)rejected.addAll(retirement.rejectUnsafe((event,prior,downOffset,upOffset,keep)->!keep));
+                        if(!retirement.isEmpty()&&retireTiming.chartAt(done)-retireTiming.chartAt(retireWall)>maxAge)rejected.addAll(retirement.rejectUnsafe((event,prior,downOffset,upOffset,keep)->{
+                            if(keep)interruptions.record(event,retireTiming.chartAt(done),"retire-submit","postvalidation age",retireDeadline);
+                            return !keep;
+                        }));
                         submissionRejected+=new java.util.HashSet<>(rejected).size();
                         for(TouchEvent event:rejected)if(event.getEndMs()>timing.chartAt(done)&&!blockedContacts.contains(event))blockedContacts.add(event);
                     }
@@ -152,6 +186,7 @@ public final class ChartMultiTouchPlayer {
                     if (held.getEndMs()>events.get(cursor).getStartMs()) naturalEnd=false;
                 if (!active.isEmpty() && ((incoming > channel.availableStarts() && !naturalEnd)
                         || channel.oldChain())) {
+                    for(TouchEvent held:active.keySet())interruptions.record(held,now,"reopen","pointer capacity or chain reset",Long.MAX_VALUE);
                     resume.addAll(active.keySet());
                     channel.finish(active.values());
                     active.clear();
@@ -170,12 +205,20 @@ public final class ChartMultiTouchPlayer {
                     end=Math.min(end,Math.max(now+1,timing.chartAt(wall+8)));
                 for(TouchEvent held:active.keySet())end=plan.nextBoundary(held,now,end);
                 for(TouchEvent held:resume)end=plan.nextBoundary(held,now,end);
-                for(int i=cursor;i<events.size()&&events.get(i).getStartMs()<end;i++)end=plan.nextBoundary(events.get(i),now,end);
+                for(int i=cursor;i<events.size()&&events.get(i).getStartMs()<end;i++){
+                    TouchEvent head=events.get(i);
+                    // DOWN can be scheduled inside this very batch; only a later
+                    // change of path needs a boundary. Splitting at the DOWN makes
+                    // a new chord wait for the previous Android gesture callback.
+                    end=plan.nextBoundary(head,Math.max(now,head.getStartMs()),end);
+                }
                 Map<TouchEvent, GestureChannel.Live> work = new LinkedHashMap<>(active);
                 for (TouchEvent e : resume) work.put(e,null);
                 List<TouchEvent> newHeads=new ArrayList<>();
                 while (cursor < events.size() && events.get(cursor).getStartMs() < end){
-                    TouchEvent admitted=events.get(cursor++);work.put(admitted,null);newHeads.add(admitted);
+                    TouchEvent admitted=events.get(cursor++);
+                    if(admitted.getEndMs()<=now){skipped++;continue;}
+                    work.put(admitted,null);newHeads.add(admitted);
                 }
                 // A tap is judged on DOWN. In moving noise, a short stationary stroke
                 // can survive two input ticks even when the following 48 ms path cannot.
@@ -195,20 +238,22 @@ public final class ChartMultiTouchPlayer {
                 // Keep its normal 48 ms contact only when it cannot delay another
                 // head, alter a continuing route, or extend into active noise.
                 if(active.isEmpty()&&work.size()==1&&newHeads.size()==1){
-                    TouchEvent tap=newHeads.get(0);long heldMs=48;
+                    TouchEvent tap=newHeads.get(0);
                     long planned=Math.max(wall,timing.wallAt(tap.getStartMs()));
                     long nextHead=cursor<events.size()?timing.wallAt(events.get(cursor).getStartMs()):Long.MAX_VALUE;
-                    long plannedEnd=timing.chartAt(planned+heldMs);
-                    if(tap.getNote().getType()==1&&!plan.isContinuous(tap)&&nextHead-planned>=heldMs
+                    long release=timing.wallAt(tap.getEndMs());
+                    long plannedEnd=timing.chartAt(release);
+                    if(tap.getNote().getType()==1&&!plan.isContinuous(tap)&&release>planned&&nextHead>=release
                             && (!TapMod.avoids(chart)||!BlockAreaSet.overlaps(chart,timing.chartAt(planned)-TapMod.noiseLookBackMs(),plannedEnd+TapMod.noiseLookAheadMs()))){
                         try{
                             boolean[] moved={false};Point p=safety.point(plan,chart,tap,timing.chartAt(planned),viewport,screen,moved);
                             long ready=SystemClock.uptimeMillis(),down=Math.max(ready,timing.wallAt(tap.getStartMs()));
-                            long actualDown=timing.chartAt(down),actualEnd=timing.chartAt(down+heldMs);
+                            long actualDown=timing.chartAt(down),actualEnd=timing.chartAt(release);
                             if(actualDown-tap.getStartMs()>100){skipped++;continue;}
-                            if(nextHead-down>=heldMs&&(!TapMod.avoids(chart)||!BlockAreaSet.overlaps(chart,actualDown-TapMod.noiseLookBackMs(),actualEnd+TapMod.noiseLookAheadMs()))){
+                            if(release>down&&plan.stationaryTap(tap,p,actualDown,actualEnd)
+                                    &&(!TapMod.avoids(chart)||!BlockAreaSet.overlaps(chart,actualDown-TapMod.noiseLookBackMs(),actualEnd+TapMod.noiseLookAheadMs()))){
                                 GestureBatch<TouchEvent> shot=new GestureBatch<>();
-                                shot.add(tap,null,GestureChannel.path(p.getX(),p.getY(),p.getX(),p.getY()),down-ready,down-ready+heldMs,false,p.getX(),p.getY());
+                                shot.add(tap,null,GestureChannel.path(p.getX(),p.getY(),p.getX(),p.getY()),down-ready,release-ready,false,p.getX(),p.getY());
                                 long submitted=SystemClock.uptimeMillis();shot.rebase(submitted-ready);
                                 maxLate=Math.max(maxLate,timing.chartAt(submitted+shot.startOffset(tap))-Math.round(tap.getNote().getTimeSeconds()*1000));
                                 channel.send(shot);
@@ -232,6 +277,7 @@ public final class ChartMultiTouchPlayer {
                     // including while the chart clock is slewing faster or slower.
                     long downWall=prior==null?Math.max(wall+newPointerOffset,timing.wallAt(e.getStartMs())):wall;
                     long down=timing.chartAt(downWall);
+                    if(prior==null&&down>=e.getEndMs()){skipped++;continue;}
                     long up = Math.max(down + 1, Math.min(e.getEndMs(), end));
                     boolean keep = e.getEndMs() > end;
                     try {
@@ -267,6 +313,7 @@ public final class ChartMultiTouchPlayer {
                         pathPoints.add(to);submittedPaths.put(e,pathPoints);
                         batch.add(e,prior,path,Math.max(0,downWall-wall),Math.max(1,upWall-wall),keep,to.getX(),to.getY());
                     } catch(TapMod.NoSafePoint blocked) {
+                        if(prior!=null||newHeads.contains(e))interruptions.record(e,now,prior==null?"build-head":"build-held",blocked.getMessage(),constructionDeadline);
                         if(prior!=null)batch.add(e,prior,GestureChannel.path(prior.x,prior.y,prior.x,prior.y),0,1,false,prior.x,prior.y);
                         if(e.getEndMs()>end)blockedContacts.add(e);
                     }
@@ -285,9 +332,23 @@ public final class ChartMultiTouchPlayer {
                         List<Point> points=submittedPaths.get(event);if(points==null)return true;
                         // Never spend another search on already stale geometry
                         // while physical prior fingers are still held down.
-                        if(safetyTiming.chartAt(safetyWall)-safetyTiming.chartAt(computeWall)>maxAge||System.nanoTime()>=safetyDeadline)return false;
+                        boolean stale=safetyTiming.chartAt(safetyWall)-safetyTiming.chartAt(computeWall)>maxAge;
+                        if(stale||System.nanoTime()>=safetyDeadline){
+                            if(prior!=null||newHeads.contains(event))interruptions.record(event,safetyTiming.chartAt(safetyWall),
+                                prior==null?"submit-head":"submit-held",stale?"batch age":"deadline before check",safetyDeadline);
+                            return false;
+                        }
                         validationAt.put(event,SystemClock.uptimeMillis());
                         try{
+                            // A negative box query covers every spatial point at every
+                            // guarded time, including Android's constant-arc interpolation,
+                            // its rounded continuation, and the final stationary hold.
+                            long first=prior==null?safetyWall+downOffset:computeWall;
+                            long lastWall=safetyWall+upOffset+(keep?CONTINUATION_RELEASE_MS:0);
+                            if(clearSubmittedBox(chart,viewport,points,safetyTiming.chartAt(first),safetyTiming.chartAt(lastWall))){
+                                checkConstructionBudget(safetyDeadline);
+                                return true;
+                            }
                             if(prior!=null){Point held=new Point(prior.x,prior.y);TapMod.segment(chart,viewport,held,held,safetyTiming.chartAt(computeWall),safetyTiming.chartAt(safetyWall),safetyDeadline);}
                             checkSubmittedPath(chart,viewport,points,safetyTiming,safetyWall+downOffset,safetyWall+upOffset,safetyDeadline);
                             if(keep){
@@ -298,16 +359,27 @@ public final class ChartMultiTouchPlayer {
                                 TapMod.segment(chart,viewport,last,last,safetyTiming.chartAt(arrival),
                                         safetyTiming.chartAt(arrival+CONTINUATION_RELEASE_MS),safetyDeadline);
                             }
-                            return System.nanoTime()<safetyDeadline;
+                            if(System.nanoTime()<safetyDeadline)return true;
+                            if(prior!=null||newHeads.contains(event))interruptions.record(event,safetyTiming.chartAt(safetyWall),
+                                prior==null?"submit-head":"submit-held","deadline after check",safetyDeadline);
+                            return false;
                         }
-                        catch(TapMod.NoSafePoint blocked){return false;}
+                        catch(TapMod.NoSafePoint blocked){
+                            if(prior!=null||newHeads.contains(event))interruptions.record(event,safetyTiming.chartAt(safetyWall),
+                                prior==null?"submit-head":"submit-held",blocked.getMessage(),safetyDeadline);
+                            return false;
+                        }
                     });
                     long checkedWall=SystemClock.uptimeMillis();
                     maxSafetyMs=Math.max(maxSafetyMs,checkedWall-safetyWall);
                     // clearAt/segment already guard the next 12ms. Do not allow
                     // an expensive verification to consume that guard itself.
-                    if(!batch.isEmpty())rejected.addAll(batch.rejectUnsafe((event,prior,downOffset,upOffset,keep)->
-                        rejected.contains(event)||!validationAt.containsKey(event)||safetyTiming.chartAt(checkedWall)-safetyTiming.chartAt(validationAt.get(event))<=maxAge));
+                    if(!batch.isEmpty())rejected.addAll(batch.rejectUnsafe((event,prior,downOffset,upOffset,keep)->{
+                        if(rejected.contains(event)||!validationAt.containsKey(event)||safetyTiming.chartAt(checkedWall)-safetyTiming.chartAt(validationAt.get(event))<=maxAge)return true;
+                        if(prior!=null||newHeads.contains(event))interruptions.record(event,safetyTiming.chartAt(checkedWall),
+                            prior==null?"submit-head":"submit-held","postvalidation age",safetyDeadline);
+                        return false;
+                    }));
                     long checkedTime=timing.chartAt(checkedWall);
                     submissionRejected+=new java.util.HashSet<>(rejected).size();
                     for(TouchEvent event:rejected)if(event.getEndMs()>checkedTime&&!blockedContacts.contains(event))blockedContacts.add(event);
@@ -340,7 +412,7 @@ public final class ChartMultiTouchPlayer {
             if(TapMod.avoids(chart))status.invoke(tr("噪域提交复核：拒绝或抬起 ")+submissionRejected+tr(" 次触点，最大复核耗时 ")+maxSafetyMs+" ms");
         } finally {
             try { if (channel != null) channel.release(active.values()); }
-            finally { if (channel != null) channel.close(); playing.set(false); }
+            finally { if (channel != null) channel.close(); playing.set(false);interruptions.flush(); }
         }
     }
 
@@ -382,6 +454,18 @@ public final class ChartMultiTouchPlayer {
         if(elapsed>down-wall+duration-16 || System.nanoTime()>=deadline)return null;
         batch.rebase(elapsed);
         return batch;
+    }
+
+    private static boolean clearSubmittedBox(Chart chart,Viewport view,List<Point> points,long from,long to){
+        Point first=points.get(0);
+        float minX=first.getX(),maxX=minX,minY=first.getY(),maxY=minY;
+        for(int i=1;i<points.size();i++){
+            Point p=points.get(i);
+            minX=Math.min(minX,p.getX());maxX=Math.max(maxX,p.getX());
+            minY=Math.min(minY,p.getY());maxY=Math.max(maxY,p.getY());
+        }
+        return !BlockAreaSet.mayTouchPath(chart,view,new Point(minX,minY),new Point(maxX,maxY),
+                from/1000.0-TapMod.noiseLookBackMs()/1000.0,to/1000.0+TapMod.noiseLookAheadMs()/1000.0);
     }
 
     private static void checkSubmittedPath(Chart chart,Viewport viewport,List<Point> points,ChartPlaybackClock.Slice timing,long downWall,long upWall,long deadline){

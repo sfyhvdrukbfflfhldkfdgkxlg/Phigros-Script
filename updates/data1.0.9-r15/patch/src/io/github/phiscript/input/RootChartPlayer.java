@@ -57,13 +57,23 @@ public final class RootChartPlayer {
             try(RootClient client=prepared==null?new RootClient(service,screen[0],screen[1]):prepared){
                 status.invoke(tr("Root 谱面演奏：连接手势 ")+plan.connectedGroups+tr(" 组独立轨迹，长键持续保持；音量减停止"));
                 Map<Integer,TouchEvent> active=new LinkedHashMap<>();int cursor=0;
-                long checked=0,lastTime=0,maxLate=0,submissionRejected=0,maxSafetyMs=0;boolean warned=false;int skipped=0;
+                long checked=0,lastSampleTime=0,lastSubmissionTime=0,lastFrameWall=0,maxLate=0,submissionRejected=0,maxSafetyMs=0;boolean warned=false;int skipped=0;
                 Map<Integer,Point> previous=new LinkedHashMap<>();
                 while((cursor<events.size()||!active.isEmpty())&&!stop.get()&&!cancelled.get()&&service.getGameForeground()){
                     long wall=SystemClock.uptimeMillis();ChartPlaybackClock.Slice timing=clock.snapshot(wall);long now=timing.chartAt(wall);
                     if(wall-checked>=250){int[] current=ChartMultiTouchPlayer.dimensions(service);
                         if(current[0]!=screen[0]||current[1]!=screen[1])throw new IllegalStateException(tr("屏幕尺寸变化，请重新开始"));checked=wall;}
                     java.util.Iterator<TouchEvent> it=active.values().iterator();while(it.hasNext())if(it.next().getEndMs()<=now)it.remove();
+                    if(active.isEmpty()&&previous.isEmpty()&&cursor<events.size()&&events.get(cursor).getStartMs()>now){
+                        // No fingers to change. Keep the worker's one-second watchdog alive
+                        // without a full pipe round trip every time the scheduler wakes.
+                        if(wall-lastFrameWall>=200){
+                            client.frame(java.util.Collections.emptyList());lastFrameWall=wall;
+                        }
+                        long untilHead=timing.wallAt(events.get(cursor).getStartMs())-SystemClock.uptimeMillis();
+                        if(untilHead>0)GestureChannel.sleep(Math.min(20,untilHead));
+                        continue;
+                    }
                     Map<Integer,TouchEvent> admittedHeads=new LinkedHashMap<>();
                     while(cursor<events.size()&&events.get(cursor).getStartMs()<=now){
                         TouchEvent event=events.get(cursor);
@@ -79,13 +89,13 @@ public final class RootChartPlayer {
                     final long constructionDeadline=TapMod.avoids(chart)&&io.github.phiscript.engine.BlockAreaSet.overlaps(chart,now-TapMod.noiseLookBackMs(),timing.chartAt(wall+8)+TapMod.noiseLookAheadMs())?System.nanoTime()+8000000L:Long.MAX_VALUE;
                     for(Map.Entry<Integer,TouchEvent> e:active.entrySet()){
                         TouchEvent event=e.getValue();
-                        next=Math.min(next,event.getEndMs());
+                        next=plan.nextBoundary(event,now,Math.min(next,event.getEndMs()));
                         try {
                             if(System.nanoTime()>=constructionDeadline)throw new TapMod.NoSafePoint(tr("噪域本批触点计算超时"));
                             Point old=previous.get(e.getKey());
-                            Point p=safety.point(plan,chart,event,now,viewport,screen,bounded,old,lastTime);
+                            Point p=safety.point(plan,chart,event,now,viewport,screen,bounded,old,lastSampleTime);
                             if(System.nanoTime()>=constructionDeadline)throw new TapMod.NoSafePoint(tr("噪域本批触点计算超时"));
-                            TapMod.segment(chart,viewport,old==null?p:old,p,old==null?now:lastTime,now,constructionDeadline);
+                            TapMod.segment(chart,viewport,old==null?p:old,p,old==null?now:lastSampleTime,now,constructionDeadline);
                             samples.add(new RootTouchState.Sample(e.getKey(),p.getX(),p.getY()));
                         }catch(TapMod.NoSafePoint blocked){
                             // Omitting only this id emits its UP in the next root frame.
@@ -107,7 +117,7 @@ public final class RootChartPlayer {
                                 if(timing.chartAt(at)-timing.chartAt(wall)>maxAge||System.nanoTime()>=safetyDeadline)throw new TapMod.NoSafePoint(tr("旧噪域坐标已过期，释放后重算"));
                                 long actual=timing.chartAt(at);
                                 if(!TapMod.clearAt(chart,viewport,p,actual/1000.0,safetyDeadline))throw new TapMod.NoSafePoint(tr("发送时噪域已移入触点"));
-                                if(old!=null)TapMod.segment(chart,viewport,old,old,lastTime,actual,safetyDeadline);
+                                if(old!=null)TapMod.segment(chart,viewport,old,old,lastSubmissionTime,actual,safetyDeadline);
                                 TapMod.segment(chart,viewport,old==null?p:old,p,actual,actual,safetyDeadline);
                                 // Root keeps this point stationary until the
                                 // next 8ms sample reaches the input channel.
@@ -129,7 +139,8 @@ public final class RootChartPlayer {
                         }
                     }
                     for(RootTouchState.Sample sample:samples)previous.put((int)sample.key,new Point(sample.x,sample.y));
-                    client.frame(samples);previous.keySet().retainAll(active.keySet());lastTime=submissionTime;
+                    client.frame(samples);previous.keySet().retainAll(active.keySet());
+                    lastSampleTime=now;lastSubmissionTime=submissionTime;lastFrameWall=wall;
                     if(bounded[0]&&!warned){status.invoke(tr("部分音符已移入可触控区域，避免系统边缘手势；边缘音符可能无法命中"));warned=true;}
                     GestureChannel.sleep(Math.max(1,Math.min(10,timing.wallAt(next)-SystemClock.uptimeMillis())));
                 }
