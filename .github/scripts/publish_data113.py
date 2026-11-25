@@ -8,7 +8,7 @@ import sys
 import time
 from urllib.error import URLError
 from urllib.parse import quote
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from zipfile import ZipFile
 
 sys.path.insert(0, str(Path(__file__).parent / "data1_1_1"))
@@ -55,8 +55,10 @@ def stage_r3_shard(dist):
 
 
 def stage_drive_mirrors(dist):
+    index_name = "phigros-cloud-plans-v1.json"
     with ZipFile(dist / f"PhigrosScript_{TAG}.apk") as apk:
-        index = json.loads(apk.read("assets/phigros-cloud-plans-v1.json"))
+        index_bytes = apk.read("assets/" + index_name)
+    index = json.loads(index_bytes)
     assets = {}
     for i, shard in enumerate(index["shards"]):
         name = f"phigros-plans-v1-{i:03d}.bin"
@@ -65,9 +67,11 @@ def stage_drive_mirrors(dist):
         require(re.fullmatch(r"[A-Za-z0-9_-]+", shard["drive"]) and 0 < shard["bytes"] <= 32 * 1024 * 1024,
                 f"Invalid Drive file or length for {name}")
         url = "https://drive.usercontent.google.com/download?export=download&confirm=t&id=" + shard["drive"]
+        request = Request(url, headers={"Range": f"bytes=0-{shard['bytes']-1}",
+                                        "Accept-Encoding": "identity", "User-Agent": "PhigrosScript/1.0.0"})
         for attempt in range(3):
             try:
-                with urlopen(url, timeout=90) as response:
+                with urlopen(request, timeout=90) as response:
                     raw = response.read(shard["bytes"] + 1)
                 info = metadata(raw)
                 require(info == {"size": shard["bytes"], "sha256": shard["sha256"]}, f"{name} checksum mismatch")
@@ -79,6 +83,8 @@ def stage_drive_mirrors(dist):
         (dist / name).write_bytes(raw)
         assets[name] = info
     require(len(assets) == 33 and len(index["entries"]) == 1065, "Incomplete 1.0.0 chart library")
+    (dist / index_name).write_bytes(index_bytes)
+    assets[index_name] = metadata(index_bytes)
     return assets
 
 
