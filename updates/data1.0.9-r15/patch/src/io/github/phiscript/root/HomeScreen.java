@@ -39,7 +39,8 @@ public final class HomeScreen {
     private static final int PERFORMANCE=0,LIBRARY=1;
     private final ScrollView[] pages=new ScrollView[2];
     private final TextView[] tabs=new TextView[2];
-    private int primaryState=-1,selectedPage=-1;
+    private GlassTabs dockTabs;
+    private int primaryState=-1,selectedPage=-1,statusTone=-1;
     private boolean motionPaused;
     private final Runnable ticker=new Runnable(){public void run(){
         if(RootPanel.alive(activity)&&root.isAttachedToWindow()&&root.hasWindowFocus()){
@@ -131,7 +132,7 @@ public final class HomeScreen {
             }
         };
         stage.addView(controls,new FrameLayout.LayoutParams(-1,-1));
-        LinearLayout bar=new LinearLayout(activity);bar.setGravity(Gravity.CENTER);
+        GlassTabs bar=new GlassTabs(activity);dockTabs=bar;bar.setGravity(Gravity.CENTER);
         bar.setBackground(GlassSurface.dock(activity));bar.setElevation(dp(3));
         bar.setPadding(dp(6),dp(4),dp(6),dp(4));
         // Keep the two tabs within thumb reach in a broad landscape or tablet window.
@@ -157,17 +158,17 @@ public final class HomeScreen {
         tab.setGravity(Gravity.CENTER);tab.setMinHeight(dp(52));tab.setPadding(dp(4),dp(4),dp(4),dp(4));
         tab.setCompoundDrawablesWithIntrinsicBounds(null,UiDesign.mark(activity,kind),null,null);
         tab.setCompoundDrawablePadding(dp(2));tab.setFocusable(true);tab.setTag(index==PERFORMANCE?"data-tab-performance":"data-tab-library");
+        tab.setBackground(UiDesign.ripple(activity,android.graphics.Color.TRANSPARENT,18));
         LinearLayout.LayoutParams slot=new LinearLayout.LayoutParams(0,-2,1);slot.setMarginStart(dp(4));slot.setMarginEnd(dp(4));
         bar.addView(tab,slot);
     }
     private void selectPage(int index){
         if(index==selectedPage)return;
         UiMotion.switchPage(selectedPage>=0?pages[selectedPage]:null,pages[index]);
-        selectedPage=index;
+        dockTabs.select(index,selectedPage>=0);selectedPage=index;
         for(int i=0;i<tabs.length;i++){
             boolean active=i==index;TextView tab=tabs[i];tab.setSelected(active);
             tab.setTextColor(active?ACCENT:MUTED);tab.setCompoundDrawableTintList(ColorStateList.valueOf(active?ACCENT:MUTED));
-            tab.setBackground(UiDesign.ripple(activity,active?UiDesign.MINT:android.graphics.Color.TRANSPARENT,20));
         }
         activity.getPreferences(0).edit().putInt("home_page",index).apply();
     }
@@ -182,8 +183,11 @@ public final class HomeScreen {
         LinearLayout performance=page(viewport,PERFORMANCE,w("演奏台","Performance"));
         LinearLayout library=page(viewport,LIBRARY,w("谱库","Library"));
         LinearLayout playTools=panels(performance);
-        LinearLayout transport=card(playTools);transport.setBackground(new GlassSurface(activity,20,true));
+        LinearLayout transport=card(playTools);transport.setBackground(GlassSurface.transport(activity));
         badge=text(transport,"",13,ACCENT,true);badge.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        badge.setLayoutParams(new LinearLayout.LayoutParams(-2,-2));
+        badge.setPadding(dp(10),dp(5),dp(10),dp(5));badge.setGravity(Gravity.CENTER_VERTICAL);
+        badge.setCompoundDrawablePadding(dp(6));
         mode=text(transport,"",22,INK,true);mode.setPadding(0,dp(12),dp(8),dp(10));mode.setMinHeight(dp(52));mode.setGravity(Gravity.CENTER_VERTICAL);mode.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
         mode.setBackground(UiDesign.ripple(activity,android.graphics.Color.TRANSPARENT,10));mode.setFocusable(true);mode.setOnClickListener(v->PlayEntry.choose(activity));UiMotion.bindPress(mode);
         summary=text(transport,"",13,MUTED,false);summary.setMinHeight(dp(42));
@@ -193,11 +197,11 @@ public final class HomeScreen {
         });primary.setTag("data-primary-transport");
         text(transport,w("保持游戏横屏 · 音量减键可停止","Keep landscape · Volume down stops"),12,MUTED,false).setPadding(0,dp(12),0,0);
         LinearLayout libraries=panels(library);
-        LinearLayout phigros=card(libraries);label(phigros,"Phigros");
-        phigrosCount=text(phigros,"",13,MUTED,false);
+        LinearLayout phigros=card(libraries);
+        phigrosCount=libraryHeader(phigros,"Phigros",false);
         triad(phigros,"Phigros",new String[]{w("下载","Get charts"),w("导入","Import"),w("删除 / 清理","Delete")},new Runnable[]{this::downloadCharts,this::importCharts,()->PhigrosLibraryManagement.open(activity)},new String[]{"data-phigros-download","data-import","data-phigros-delete"});
-        LinearLayout phira=card(libraries);label(phira,"Phira / Pro");
-        phiraCount=text(phira,"",13,MUTED,false);
+        LinearLayout phira=card(libraries);
+        phiraCount=libraryHeader(phira,"Phira / Pro",true);
         triad(phira,"Phira / Pro",new String[]{w("在线谱库","Online"),w("导入","Import"),w("删除","Delete")},new Runnable[]{()->OnlinePhiraLibraryUi.open(activity),()->{if(!RootPanel.blocked(activity))invoke(activity,"choosePhira");},()->PhiraLibraryManagement.open(activity)},new String[]{"data-phira-online","data-phira-import","data-phira-delete"});
         LinearLayout prepare=UiDesign.row(activity,UiDesign.SETTINGS,w("预计算触点","Prepare touch points"),w("调整设置后，重新准备已缓存谱面","Refresh prepared charts after changing settings"),()->PreparedChartsUi.open(activity));prepare.setTag("data-prepare-charts");library.addView(prepare,params(-1,-2,12));
         LinearLayout systemTools=panels(performance);
@@ -224,6 +228,21 @@ public final class HomeScreen {
         navigation(stage);
         selectPage(activity.getPreferences(0).getInt("home_page",PERFORMANCE)==LIBRARY?LIBRARY:PERFORMANCE);
         update();
+    }
+    private TextView libraryHeader(LinearLayout card,String name,boolean phira){
+        card.setBackground(GlassSurface.library(activity,phira));
+        LinearLayout head=new LinearLayout(activity);head.setGravity(Gravity.CENTER_VERTICAL);
+        card.addView(head,new LinearLayout.LayoutParams(-1,-2));
+        TextView mark=UiDesign.icon(activity,UiDesign.LIBRARY);
+        mark.setBackground(UiDesign.shape(activity,phira?0xe6eeebff:0xdff0ffff,14));
+        mark.setCompoundDrawableTintList(ColorStateList.valueOf(phira?0xff514977:ACCENT));
+        head.addView(mark,new LinearLayout.LayoutParams(dp(42),dp(42)));
+        LinearLayout copy=new LinearLayout(activity);copy.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams slot=new LinearLayout.LayoutParams(0,-2,1);slot.setMarginStart(dp(12));head.addView(copy,slot);
+        TextView title=text(copy,name,22,INK,true);
+        if(android.os.Build.VERSION.SDK_INT>=28)title.setAccessibilityHeading(true);
+        TextView count=text(copy,"",13,MUTED,false);count.setPadding(0,dp(3),0,0);
+        return count;
     }
     private void triad(LinearLayout parent,String platform,String[] labels,Runnable[] actions,String[] tags){
         ChartActions row=new ChartActions(activity);parent.addView(row,params(-1,-2,10));
@@ -265,7 +284,7 @@ public final class HomeScreen {
     private void update(){
         boolean running=RuntimeState.INSTANCE.getRunning().get()||ManualChartControl.isOpen(),busy=RootPanel.isBusy();
         boolean touch=RuntimeState.INSTANCE.getActiveTouchStop().get()!=null;
-        if((running||touch)&&!motionPaused)UiMotion.cancelTree(root);motionPaused=running||touch;
+        if((running||touch)&&!motionPaused){UiMotion.cancelTree(root);dockTabs.settle();}motionPaused=running||touch;
         AppSettings prefs=new AppSettings(activity);
         String currentMode=io.github.phiscript.i18n.UiText.text(ModeRouting.label(prefs));
         UiMotion.state(mode,currentMode+"  ⌄");
@@ -273,8 +292,9 @@ public final class HomeScreen {
         if(!TextUtils.equals(mode.getContentDescription(),modeDescription))mode.setContentDescription(modeDescription);
         boolean importing=RootPhiraImport.isBusy()||PhiraImportControl.isBusy();
         String lastError=!running&&!busy?prefs.text("phigros_last_error",""):"";
-        String status=!lastError.isEmpty()?"上次自动检测已停止":RootPanel.isRootPending()?tr("正在等待 ROOT 授权"):running?(touch?tr("正在演奏"):tr("自动检测已开启")):busy?tr("正在处理谱库"):tr("待机");
+        String status=!lastError.isEmpty()?"上次自动检测已停止":RootPanel.isRootPending()?tr("正在等待 ROOT 授权"):running?(touch?tr("正在演奏"):tr("自动检测已开启")):busy||importing?tr("正在处理谱库"):tr("待机");
         UiMotion.state(badge,io.github.phiscript.i18n.UiText.text(status));
+        showStatusTone(!lastError.isEmpty()?3:RootPanel.isRootPending()?2:running?1:busy||importing?2:0);
         String log=running||importing?RuntimeState.INSTANCE.logText():null;
         String value=log==null?"":log.trim();
         if(!value.isEmpty()){
@@ -303,6 +323,17 @@ public final class HomeScreen {
             UiMotion.state(recordingProfile,profile);
             recordingSettings.setContentDescription(w("画质与声音","Video & audio")+", "+profile);
         }
+    }
+    private void showStatusTone(int tone){
+        if(tone==statusTone)return;
+        statusTone=tone;
+        int ink=tone==3?UiDesign.DANGER:tone==2?0xff745019:tone==1?0xff115e51:0xff3c5864;
+        int fill=tone==3?0xfffce4e7:tone==2?0xfff9edcf:tone==1?0xffd4f4df:0xffe6f1f4;
+        badge.setTextColor(ink);
+        android.graphics.drawable.GradientDrawable capsule=UiDesign.shape(activity,fill,18);
+        capsule.setStroke(dp(1),0xbfffffff);badge.setBackground(capsule);
+        android.graphics.drawable.GradientDrawable dot=UiDesign.shape(activity,ink,8);
+        dot.setBounds(0,0,dp(7),dp(7));badge.setCompoundDrawablesRelative(dot,null,null,null);
     }
     private void downloadCharts(){
         if(RootPanel.blocked(activity))return;

@@ -20,6 +20,7 @@ import io.github.phiscript.assets.PhiraLibrary;
 import io.github.phiscript.input.PreparedChartStore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Locale;
+import java.util.List;
 
 public final class PreparedChartsUi {
     private static final AtomicBoolean busy=new AtomicBoolean();
@@ -38,6 +39,8 @@ public final class PreparedChartsUi {
         AlertDialog dialog=UiDesign.dialog(a,tr("预计算触点")).setView(scroll).setNegativeButton(UiDesign.words("关闭","Close"),null).create();
         body.addView(UiDesign.row(a,UiDesign.LIBRARY,UiDesign.words("准备 Phigros 谱面","Prepare a Phigros chart"),
             UiDesign.words("选择歌曲和难度","Choose a song and difficulty"),()->{dialog.dismiss();RootPanel.choosePreparation(a);}),UiDesign.space(a,-1,-2,12));
+        body.addView(UiDesign.row(a,UiDesign.LIBRARY,UiDesign.words("准备 Phira / Pro 谱面","Prepare a Phira / Pro chart"),
+            UiDesign.words("选择已导入的歌曲和难度","Choose an imported song and difficulty"),()->{dialog.dismiss();choosePhira(a);}),UiDesign.space(a,-1,-2,4));
         body.addView(UiDesign.row(a,UiDesign.IMPORT,UiDesign.words("准备已导入谱面","Prepare imported charts"),
             UiDesign.words("批量准备本地谱面和已缓存的下载","Prepare local charts and cached downloads"),()->{dialog.dismiss();start(a,null,null,null);}),UiDesign.space(a,-1,-2,4));
         UiDesign.show(dialog);
@@ -52,7 +55,26 @@ public final class PreparedChartsUi {
             a.runOnUiThread(()->{if(RootPanel.alive(a)&&dialog.isShowing())UiMotion.state(cache,result);});
         },"phi-prepare-statistics").start();
     }
+    private static void choosePhira(Activity a){
+        if(RootPanel.blocked(a))return;
+        try{
+            PhiraLibrary library=PhiraLibrary.Companion.restore(a);
+            if(library==null||library.getEntries().isEmpty()){
+                RootPanel.message(a,tr("预计算触点"),UiDesign.words("请先导入 Phira 谱面。","Import a Phira chart first."));
+                return;
+            }
+            List<PhiraEntry> entries=library.getEntries();
+            String[] labels=new String[entries.size()];
+            for(int i=0;i<labels.length;i++)labels[i]=entries.get(i).getTitle()+" / "+entries.get(i).getLevel();
+            UiDesign.show(UiDesign.dialog(a,UiDesign.words("选择 Phira / Pro 谱面","Select a Phira / Pro chart"))
+                .setItems(labels,(dialog,index)->start(a,null,null,labels[index],library,entries.get(index)))
+                .setNegativeButton(tr("取消"),null).create());
+        }catch(Exception failure){RootPanel.message(a,tr("无法读取本机谱库"),String.valueOf(failure.getMessage()));}
+    }
     static void start(Activity a,ChartLibrary selectedLibrary,ChartLocation selected,String label){
+        start(a,selectedLibrary,selected,label,null,null);
+    }
+    private static void start(Activity a,ChartLibrary selectedLibrary,ChartLocation selected,String label,PhiraLibrary phira,PhiraEntry imported){
         if(RootPanel.blocked(a)||!busy.compareAndSet(false,true))return;AtomicBoolean stop=new AtomicBoolean();
         AlertDialog dialog=UiDesign.dialog(a,tr("预计算触点")).setCancelable(false)
             .setMessage(label==null?UiDesign.words("正在读取本地谱库…","Reading local libraries…"):label)
@@ -68,7 +90,10 @@ public final class PreparedChartsUi {
             try(PhiraImportControl.Session session=PhiraImportControl.begin()){
                 if(stop.get()||RuntimeState.INSTANCE.getRunning().get())throw new java.util.concurrent.CancellationException(tr("已取消"));
                 int count=0;
-                if(selected!=null){
+                if(imported!=null){
+                    PreparedChartStore.preparePhira(a,phira,imported,stop);
+                    count=1;
+                }else if(selected!=null){
                     ExternalCharts.importSelected(a,selectedLibrary,selected.getSongId(),selected.getDifficulty(),stop);
                     count=1;
                 }else{

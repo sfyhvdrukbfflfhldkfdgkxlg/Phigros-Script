@@ -201,5 +201,28 @@ public final class PointerReplayRegression {
         }
         AppSettings.values.put("tapmod_enabled","false");TapMod.reload();
         for(boolean root:new boolean[]{true,false}){pulse(root);freshFlick(root);}
+        scheduleHeadsInsideHold();
+    }
+
+    private static void scheduleHeadsInsideHold() throws Exception {
+        List<Note> notes=new ArrayList<>();
+        notes.add(ContactRegression.n(0,3,.10,.85,.2,0));
+        for(int i=1;i<=6;i++){
+            double hit=.129+i*.093;
+            notes.add(ContactRegression.n(i,1,hit,hit,.8,1));
+        }
+        Chart chart=ContactRegression.chart(new JSONArray(),notes);
+        TouchService service=ContactRegression.play(chart,false);
+        boolean scheduled=false;
+        for(GestureDescription batch:service.history){
+            boolean hasContinuing=false,hasFutureHead=false;
+            for(GestureDescription.StrokeDescription stroke:batch.strokes){
+                hasContinuing|=stroke.parent>=0;
+                hasFutureHead|=stroke.parent<0&&stroke.start>2;
+            }
+            scheduled|=hasContinuing&&hasFutureHead;
+        }
+        if(!scheduled||service.downs.size()!=notes.size()||!service.roots.isEmpty())
+            throw new AssertionError("Hold and upcoming taps must share the scheduled batch and all release");
     }
 }

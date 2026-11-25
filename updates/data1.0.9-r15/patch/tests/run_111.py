@@ -52,6 +52,8 @@ def main(version, code):
         extra(work, api, host, models, tests)
         if code >= 11006:
             run("java", "-cp", host, "io.github.phiscript.update.UpdateCatalogRegression", "--revisions")
+        if code >= 11008:
+            run("java", "-cp", host, "io.github.phiscript.update.UpdateCatalogRegression", "--numbered")
         replay = ("java", "-Dfile.encoding=UTF-8", "-Xmx1800m", "-cp", host,
                   "io.github.phiscript.input.DesultoryPlaybackRegression")
         paths = [source.resolve() for source in args.replay]

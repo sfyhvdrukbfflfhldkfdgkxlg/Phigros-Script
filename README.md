@@ -6,7 +6,7 @@
 
 ## 中文
 
-本分支构建 **data1.1.3-r3（Android 版本号 11007）**。演奏和谱库页面延伸到系统手势条下方。遇到大面积噪域时，导入器会优先把触点放在当前音符可判定的安全空隙中心。r2 用户可在应用内检查更新。使用公开版 data1.1.3 的用户，请从 GitHub 下载 APK 覆盖安装，再到谱库重新准备一次本地触点。[升级与使用说明](updates/data1.1.3-r3/README.md)
+**1.0.0（Android 版本号 11008）** 使用浅色液态玻璃界面。「演奏」和「谱库」延伸到系统手势条，Phigros 可按曲下载预处理触点。使用 `data1.1.x` 的用户请从本次发行下载 APK 覆盖安装。从旧版升级后，可以在「谱库 → 预计算触点」单独准备要演奏的 Phira 谱面。[下载 1.0.0](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/1.0.0) · [升级与使用说明](updates/1.0.0/README.md)
 
 [GitHub 发行版](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases) · [data1.1.0 使用与构建](updates/data1.1.0/README.md) · [data1.1.0 验证记录](updates/data1.1.0/TESTING.md)
 
@@ -16,9 +16,9 @@ Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导
 
 打开「演奏 → 画质与声音」，启用「录制游戏声音」并保存，首次使用时允许系统录音权限。Android 10 及以上可录制当前游戏允许捕获的内部声音。手动和自动录屏共用此设置。游戏限制捕获或没有可用音轨时，仍会保存视频。可从「最近录屏」查看成片。
 
-支持 Root 与无障碍输入。验证覆盖最终签名 APK 的实际代码、原谱及 Android 主机模型；Android 真机界面、判定与录屏性能仍需实测，不保证任意谱面全连或满分。
+支持 Root 与无障碍输入。本版包含在 iQOO 15 上通过实测的 Phira 触点改动。使用该触点版本，无障碍模式在 Phira Pro《Desultory Signals》AT Lv.18 曾取得 1,000,000 分、2026 全连。
 
-构建入口位于 [build_113r3.py](updates/data1.0.9-r15/patch/build_113r3.py)。根目录保留旧版 Alpha Gradle 工程。
+1.0.0 的构建入口位于 [build_100.py](updates/data1.0.9-r15/patch/build_100.py)。根目录保留旧版 Alpha Gradle 工程。
 
 ## English
 
@@ -29,7 +29,7 @@ Phigros Script is an Android chart player for Phigros, Phira and Phira Pro. It r
 - **Timing and recording.** The default retry delay is 1,700 ms for Phigros and 715 ms for Phira. Phira's chart offset is excluded by default. Recording supports 720p or 1080p at 30 or 60 fps.
 - **Game audio.** Open **Performance → Video & audio**, enable **Record game audio**, tap **Save**, and allow the audio permission. On Android 10 and later, both recording modes can include the active game's internal audio when the game permits capture. If audio is unavailable, the app saves the video. Open **Recent recordings** to view it.
 
-This branch builds **data1.1.3-r3 (Android version code 11007)**. Play and Library scroll beneath the system gesture handle. On charts with widespread noise, preparation prefers the center of a reachable gap inside the note’s judgment band. If you use r2, check for updates in the app. If you use the public data1.1.3 release, install the new APK from GitHub, then prepare your local charts once. [Build script](updates/data1.0.9-r15/patch/build_113r3.py) · [Upgrade and release notes](updates/data1.1.3-r3/README.md)
+**1.0.0 (Android version code 11008)** introduces a light glass interface that extends beneath the system gesture handle. To upgrade from a `data1.1.x` release, download the APK and install it over your existing copy. Open **Library → Prepare touch points** to prepare an individual Phira chart. The touch engine included in this version scored 1,000,000 with a 2,026-note combo on *Desultory Signals* AT Lv.18 in Phira Pro using accessibility input on an iQOO 15. [Download 1.0.0](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/1.0.0) · [Build script](updates/data1.0.9-r15/patch/build_100.py) · [Upgrade and release notes](updates/1.0.0/README.md)
 
 <details>
 <summary>原 Alpha 版本说明</summary>

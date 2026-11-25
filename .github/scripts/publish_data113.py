@@ -2,16 +2,20 @@
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
+import time
+from urllib.error import URLError
 from urllib.parse import quote
+from urllib.request import urlopen
 from zipfile import ZipFile
 
 sys.path.insert(0, str(Path(__file__).parent / "data1_1_1"))
 from publish import REPO, api, check_assets
 from restore import manifest_at, metadata, require, restore
 
-VERSIONS = {"data1.1.3": 11005, "data1.1.3-r2": 11006, "data1.1.3-r3": 11007}
+VERSIONS = {"data1.1.3": 11005, "data1.1.3-r2": 11006, "data1.1.3-r3": 11007, "1.0.0": 11008}
 TAG = sys.argv[3] if len(sys.argv) > 3 else "data1.1.3"
 CODE = VERSIONS[TAG]
 DATA = Path("updates") / TAG / "release-data"
@@ -50,6 +54,34 @@ def stage_r3_shard(dist):
     return {name: info}
 
 
+def stage_drive_mirrors(dist):
+    with ZipFile(dist / f"PhigrosScript_{TAG}.apk") as apk:
+        index = json.loads(apk.read("assets/phigros-cloud-plans-v1.json"))
+    assets = {}
+    for i, shard in enumerate(index["shards"]):
+        name = f"phigros-plans-v1-{i:03d}.bin"
+        require(shard["github"] == f"https://github.com/{REPO}/releases/download/{TAG}/{name}",
+                f"Unexpected mirror URL for {name}")
+        require(re.fullmatch(r"[A-Za-z0-9_-]+", shard["drive"]) and 0 < shard["bytes"] <= 32 * 1024 * 1024,
+                f"Invalid Drive file or length for {name}")
+        url = "https://drive.usercontent.google.com/download?export=download&confirm=t&id=" + shard["drive"]
+        for attempt in range(3):
+            try:
+                with urlopen(url, timeout=90) as response:
+                    raw = response.read(shard["bytes"] + 1)
+                info = metadata(raw)
+                require(info == {"size": shard["bytes"], "sha256": shard["sha256"]}, f"{name} checksum mismatch")
+                break
+            except (TimeoutError, URLError, ValueError):
+                if attempt == 2:
+                    raise
+                time.sleep(2 ** attempt)
+        (dist / name).write_bytes(raw)
+        assets[name] = info
+    require(len(assets) == 33 and len(index["entries"]) == 1065, "Incomplete 1.0.0 chart library")
+    return assets
+
+
 def publish(dist, baseline):
     require(os.environ["GITHUB_REPOSITORY"] == REPO and os.environ["GITHUB_REF"] == "refs/heads/main",
             "Run on the main branch of the release repository")
@@ -61,6 +93,8 @@ def publish(dist, baseline):
     assets = manifest["assets"].copy()
     if TAG == "data1.1.3-r3":
         assets.update(stage_r3_shard(dist))
+    if TAG == "1.0.0":
+        assets.update(stage_drive_mirrors(dist))
     sums = "".join(f"{assets[name]['sha256']}  {name}\n" for name in sorted(assets)).encode("ascii")
     (dist / "SHA256SUMS.txt").write_bytes(sums)
     assets["SHA256SUMS.txt"] = metadata(sums)
@@ -88,7 +122,7 @@ def publish(dist, baseline):
         check_assets(api("GET", endpoint), assets, complete=True)
         api("PATCH", endpoint, body={"draft": False, "make_latest": "true", "body": notes})
     latest = api("GET", "releases/latest")
-    previous = {"data1.1.3-r2": "data1.1.3", "data1.1.3-r3": "data1.1.3-r2"}.get(TAG)
+    previous = {"data1.1.3-r2": "data1.1.3", "data1.1.3-r3": "data1.1.3-r2", "1.0.0": "data1.1.3-r3"}.get(TAG)
     if latest["id"] != release["id"] and latest["tag_name"] == previous:
         # Resume if the release became public before GitHub marked it latest.
         public = api("GET", endpoint)

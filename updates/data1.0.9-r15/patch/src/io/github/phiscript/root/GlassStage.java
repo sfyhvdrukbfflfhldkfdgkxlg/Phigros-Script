@@ -29,7 +29,15 @@ final class GlassStage extends FrameLayout {
     void setDock(View dock) { this.dock = dock; }
 
     void followScroll(View page) {
-        if (lens != null) page.setOnScrollChangeListener((v,x,y,oldX,oldY) -> invalidate());
+        if (lens != null) page.setOnScrollChangeListener((v,x,y,oldX,oldY) -> {
+            lens.dirty = true;
+            invalidate();
+        });
+    }
+
+    @Override public void onDescendantInvalidated(View child, View target) {
+        if (lens != null && child == pages) lens.dirty = true;
+        super.onDescendantInvalidated(child,target);
     }
 
     @Override protected boolean drawChild(Canvas canvas, View child, long time) {
@@ -52,6 +60,7 @@ final class GlassStage extends FrameLayout {
         final Rect bounds = new Rect();
         final Path clip = new Path();
         final int halo, radius;
+        boolean dirty = true;
         Lens(Context context) {
             int blur = UiDesign.dp(context, 9);
             halo = blur * 3;
@@ -59,25 +68,29 @@ final class GlassStage extends FrameLayout {
             node.setRenderEffect(RenderEffect.createBlurEffect(blur, blur, Shader.TileMode.CLAMP));
         }
 
-        void release() { node.discardDisplayList(); }
+        void release() { node.discardDisplayList(); dirty=true; }
 
         void draw(Canvas canvas, FrameLayout source, View dock) {
             // The dock's full-size parent shares this stage's origin, including its inset padding.
             int x = dock.getLeft(), y = dock.getTop(), w = dock.getWidth(), h = dock.getHeight();
             if (bounds.left != x || bounds.top != y || bounds.width() != w || bounds.height() != h) {
+                dirty = true;
                 bounds.set(x, y, x + w, y + h);
                 clip.reset();
                 clip.addRoundRect(x, y, x + w, y + h, radius, radius, Path.Direction.CW);
                 node.setPosition(x - halo, y - halo, x + w + halo, y + h + halo);
             }
-            RecordingCanvas capture = node.beginRecording();
-            try {
-                capture.translate(halo - x, halo - y);
-                // Slight magnification refracts the content where it crosses the glass rim.
-                capture.scale(1.045f, 1.08f, bounds.exactCenterX(), bounds.exactCenterY());
-                source.draw(capture);
-            } finally {
-                node.endRecording();
+            if(dirty || !node.hasDisplayList()){
+                dirty=false;
+                RecordingCanvas capture = node.beginRecording();
+                try {
+                    capture.translate(halo - x, halo - y);
+                    capture.clipRect(x-halo,y-halo,x+w+halo,y+h+halo);
+                    capture.scale(1.045f, 1.08f, bounds.exactCenterX(), bounds.exactCenterY());
+                    source.draw(capture);
+                } finally {
+                    node.endRecording();
+                }
             }
             int save = canvas.save();
             canvas.clipPath(clip);

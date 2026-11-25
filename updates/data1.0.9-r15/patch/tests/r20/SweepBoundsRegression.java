@@ -86,7 +86,25 @@ public final class SweepBoundsRegression {
             throw new AssertionError("A translated enormous source center lost the local touch displacement");
     }
 
+    private static void shortActivationInsideWindow() throws Exception {
+        Chart c=chart(false,false,0);
+        double onset=.630021,release=.630022,offset=c.getOffsetSeconds();
+        JSONObject pulse=new JSONObject().put("bottomLeftPercentage",xy(.4,.4))
+                .put("topRightPercentage",xy(.6,.6)).put("appearTime",onset)
+                .put("enableTime",onset).put("disableTime",release).put("disappearTime",release);
+        BlockAreaSet.capture(new JSONObject().put("blockAreaList",new JSONArray().put(pulse)));
+        BlockAreaSet.bind(c);
+        Viewport v=new Viewport(0,0,1000,600);
+        Point p=new Point(500,300);
+        if(BlockAreaSet.mayTouchPath(c,v,p,p,onset-offset-.001,onset-offset-.0001))
+            throw new AssertionError("A later activation made the entire surrounding time bucket uncertain");
+        if(!BlockAreaSet.mayTouchPath(c,v,p,p,onset-offset-.001,release-offset+.001)
+                || !BlockAreaSet.mayTouchPath(c,v,p,p,onset-offset,onset-offset))
+            throw new AssertionError("Submillisecond noise activation or its first instant was certified clear");
+    }
+
     public static void main(String[] args) throws Exception {
+        shortActivationInsideWindow();
         extremeCoordinates();
         inverseMovingHole();
         Random random = new Random(1020721);

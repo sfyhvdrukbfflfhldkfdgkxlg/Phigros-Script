@@ -40,7 +40,7 @@ def apply(root):
     move-result-wide v2
     invoke-virtual {v6}, Lio/github/phiscript/assets/PhiraLibrary$Record;->getForceAspectRatio()Z
     move-result v4
-    invoke-static/range {v0 .. v4}, Lio/github/phiscript/input/PreparedChartStore;->openPlayback(Landroid/content/Context;Ljava/lang/String;DZ)Lio/github/phiscript/engine/Chart;
+    invoke-static/range {v0 .. v4}, Lio/github/phiscript/input/PreparedChartStore;->openPhiraPlayback(Landroid/content/Context;Ljava/lang/String;DZ)Lio/github/phiscript/engine/Chart;
     move-result-object v0
     return-object v0
     :missing

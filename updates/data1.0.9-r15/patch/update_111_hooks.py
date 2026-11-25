@@ -49,3 +49,18 @@ def recognize_revisions(root):
     text = edit_method(text, ".method public static compare(Ljava/lang/String;Ljava/lang/String;)I",
                        lambda body: replace_once(body, "const/4 v2, 0x3", "const/4 v2, 0x4"))
     path.write_text(text, encoding="utf-8")
+
+
+def recognize_numbered_releases(root):
+    """Use the release series before the numeric tag components on 1.0.0 and later."""
+    path = root / "smali_classes8/io/github/phiscript/update/UpdateCatalog.smali"
+    signature = ".method private static parts(Ljava/lang/String;)[I"
+    text = edit_method(path.read_text(encoding="utf-8"), signature, lambda _: signature + """
+    .locals 1
+    invoke-static {p0}, Lio/github/phiscript/update/ReleaseVersion;->parts(Ljava/lang/String;)[I
+    move-result-object v0
+    return-object v0
+.end method""")
+    text = edit_method(text, ".method public static compare(Ljava/lang/String;Ljava/lang/String;)I",
+                       lambda body: replace_once(body, "const/4 v2, 0x3", "const/4 v2, 0x5"))
+    path.write_text(text, encoding="utf-8")

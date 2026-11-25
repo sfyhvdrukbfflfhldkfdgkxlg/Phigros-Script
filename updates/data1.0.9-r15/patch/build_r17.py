@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 import build_r16 as previous
 import r17_hooks
@@ -20,7 +20,7 @@ APK_NAME="PhigrosScript_data1.0.9-r17.apk"
 
 def build(base,key,cert,output,release="data1.0.9-r17",code=41):
     assert hashlib.sha256(base.read_bytes()).hexdigest()==previous.BASE_SHA256,"Expected exact official R15 APK"
-    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001),("data1.1.2",11002),("data1.1.2",11003),("data1.1.2",11004),("data1.1.3",11005),("data1.1.3-r2",11006),("data1.1.3-r3",11007))
+    assert (release,code) in (("data1.0.9-r17",41),("data1.0.9-r18",42),("data1.0.9-r19",43),("data1.0.9-r20",44),("data1.1.0",11000),("data1.1.1",11001),("data1.1.2",11002),("data1.1.2",11003),("data1.1.2",11004),("data1.1.3",11005),("data1.1.3-r2",11006),("data1.1.3-r3",11007),("data1.1.3-r3-contact-test",11007),("1.0.0",11008))
     sdk=ROOT/"tools/platform/android-35/android.jar"
     bt=ROOT/"tools/build-tools/android-15"
     ecj=ROOT/"tools/ecj.jar"
@@ -52,7 +52,9 @@ def build(base,key,cert,output,release="data1.0.9-r17",code=41):
             timing_111_hooks.apply(decoded)
             import update_111_hooks
             update_111_hooks.apply(decoded)
-            if code >= 11006:
+            if code >= 11008:
+                update_111_hooks.recognize_numbered_releases(decoded)
+            elif code >= 11006:
                 update_111_hooks.recognize_revisions(decoded)
         if code >= 11002:
             import playback_112_hooks
@@ -118,7 +120,13 @@ def build(base,key,cert,output,release="data1.0.9-r17",code=41):
                             data=recording_permissions.add_audio_permissions(data)
                     dst.writestr(info,data)
                 for name,data in replacements.items():
-                    if name not in original.namelist():dst.writestr(name,data)
+                    if name not in original.namelist():
+                        entry = name
+                        if code >= 11008:
+                            # Inherit the baseline timestamp so identical inputs can reproduce the APK.
+                            entry = ZipInfo(name, original.getinfo("AndroidManifest.xml").date_time)
+                            entry.create_system = 0
+                        dst.writestr(entry,data)
         zipalign=bt/("zipalign.exe" if os.name=="nt" else "zipalign")
         aligned=work/"aligned.apk";signed=work/"signed.apk";signer=bt/"lib/apksigner.jar"
         run(zipalign,"-P","16","-f","4",unsigned,aligned)

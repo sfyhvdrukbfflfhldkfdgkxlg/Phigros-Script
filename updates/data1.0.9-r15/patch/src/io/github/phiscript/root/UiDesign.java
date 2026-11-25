@@ -28,8 +28,8 @@ import io.github.phiscript.i18n.UiText;
 public final class UiDesign {
     private static final int STYLED_TEXT=0x7f0f7b04;
     public static final int BG=0xfff5f7f4,SURFACE=0xffffffff,RAISED=0xffedf1ed,
-        INK=0xff172d25,MUTED=0xff4c6258,ACCENT=0xff1d6450,DANGER=0xff9b3340,LINE=0xffd5dfd8,
-        MINT=0xffdfefe5,ON_ACCENT=0xffffffff;
+        INK=0xff162d38,MUTED=0xff304852,ACCENT=0xff145e5a,DANGER=0xff8f3145,LINE=0xffccdae0,
+        MINT=0xffd9f0eb,ON_ACCENT=0xffffffff;
     public static final int PLAY=0,LIBRARY=1,DOWNLOAD=2,IMPORT=3,TRASH=4,SETTINGS=5,SHIELD=6,VIDEO=7,HISTORY=8;
     private UiDesign(){}
     public static int dp(Context c,float n){return Math.round(n*c.getResources().getDisplayMetrics().density);}
@@ -38,6 +38,8 @@ public final class UiDesign {
     public static RippleDrawable ripple(Context c,int color,int radius){
         ColorStateList tint=ColorStateList.valueOf(color==ACCENT||color==DANGER?0x33ffffff:0x24216950);
         Drawable mask=shape(c,0xffffffff,radius);
+        if(color==ACCENT || color==DANGER)
+            return new RippleDrawable(tint,GlassSurface.command(c,color==DANGER),mask);
         if(color==MINT||color==RAISED){
             GlassSurface glass=new GlassSurface(c,radius,color==MINT);
             return new RippleDrawable(tint,glass,mask){
@@ -51,7 +53,7 @@ public final class UiDesign {
         TextView v=new TextView(c);v.setText(UiText.text(value));v.setTextSize(size);v.setTextColor(color);v.setLineSpacing(dp(c,3),1);v.setIncludeFontPadding(false);v.setTag(STYLED_TEXT,true);
         if(bold)v.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return v;
     }
-    public static LinearLayout card(Context c){LinearLayout box=new LinearLayout(c);box.setOrientation(1);box.setBackground(new GlassSurface(c,20,false));box.setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));box.setElevation(dp(c,1));return box;}
+    public static LinearLayout card(Context c){LinearLayout box=new LinearLayout(c);box.setOrientation(1);box.setBackground(new GlassSurface(c,24,false));box.setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));box.setElevation(dp(c,2));return box;}
     public static Button button(Context c,String title,boolean primary,Runnable click){
         Button b=new Button(c);b.setText(UiText.text(title));b.setAllCaps(false);b.setTextSize(primary?17:14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setTextColor(primary?ON_ACCENT:INK);b.setStateListAnimator(null);
         b.setMinHeight(dp(c,primary?56:48));b.setMinimumHeight(dp(c,primary?56:48));b.setPadding(dp(c,12),dp(c,12),dp(c,12),dp(c,12));b.setBackground(ripple(c,primary?ACCENT:RAISED,14));
@@ -113,10 +115,10 @@ public final class UiDesign {
     }
     static Drawable mark(Context c,int kind){return new Mark(c,kind);}
     private static final class Mark extends Drawable {
-        final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);final int size,kind;
+        final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);final Path q=new Path();final int size,kind;
         Mark(Context c,int kind){size=dp(c,22);this.kind=kind;p.setColor(ACCENT);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1.7f);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);setBounds(0,0,size,size);}
         public int getIntrinsicWidth(){return size;}public int getIntrinsicHeight(){return size;}
-        public void draw(Canvas canvas){canvas.save();canvas.translate(getBounds().left,getBounds().top);canvas.scale(size/24f,size/24f);Path q=new Path();
+        public void draw(Canvas canvas){canvas.save();canvas.translate(getBounds().left,getBounds().top);canvas.scale(size/24f,size/24f);q.reset();
             if(kind==PLAY){q.moveTo(8,5);q.lineTo(19,12);q.lineTo(8,19);q.close();canvas.drawPath(q,p);}
             else if(kind==DOWNLOAD||kind==IMPORT){canvas.drawLine(12,3,12,15,p);q.moveTo(7,10);q.lineTo(12,15);q.lineTo(17,10);canvas.drawPath(q,p);canvas.drawLine(5,20,19,20,p);if(kind==IMPORT){canvas.drawLine(4,17,4,20,p);canvas.drawLine(20,17,20,20,p);}}
             else if(kind==TRASH){canvas.drawLine(5,6,19,6,p);canvas.drawRoundRect(7,6,17,21,2,2,p);canvas.drawLine(10,3,14,3,p);canvas.drawLine(10,10,10,17,p);canvas.drawLine(14,10,14,17,p);}

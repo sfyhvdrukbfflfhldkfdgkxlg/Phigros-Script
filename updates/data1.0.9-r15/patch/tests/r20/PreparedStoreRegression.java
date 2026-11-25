@@ -118,5 +118,27 @@ public final class PreparedStoreRegression {
             ok(rejected&&externalDirectory.list().length==0,"cache directory symlink was accepted or wrote outside app namespace");
         }finally{Files.delete(dir.toPath());}
     }
-    public static void main(String[] args)throws Exception{diskLifecycle();namespaces();boundedLru();symlinks();System.out.println("PASS "+checks+" prepared-store checks: real disk encode/restore/corrupt rebuild, geometry/settings/bounds keys, cancellation source retention, namespace isolation, orphan AtomicFile cleanup, file/byte LRU and supported symlink containment.");}
+    private static void phiraContactsUpgrade()throws Exception{
+        try{PreparedChartStore.class.getMethod("openPhiraPlayback",Context.class,String.class,double.class,boolean.class);}
+        catch(NoSuchMethodException historicalBuild){return;}
+        settings();
+        Context c=context("phira-upgrade");
+        byte[] source=bytes("imported Phira chart");
+        PreparedChartStore.ensure(c,bound(c,source),PROFILE,V,B,null);
+        File original=caches(c)[0];
+        byte[] archive=Files.readAllBytes(original.toPath());
+        Chart imported=chart();
+        PreparedChartStore.afterPhiraLoad(c,null,"id",imported,source);
+        int before=calls;
+        PreparedChartStore.ensure(c,imported,PROFILE,V,B,null);
+        ok(calls>before && caches(c).length==2,"old Phira contacts served after engine change");
+        ok(Arrays.equals(archive,Files.readAllBytes(original.toPath())),"legacy Phigros cache overwritten");
+        GesturePlan.clearPrepared();
+        forbid=true;
+        try{
+            PreparedChartStore.loadForPlayback(imported,PROFILE,V,B);
+            PreparedChartStore.loadForPlayback(bound(c,source),PROFILE,V,B);
+        }finally{forbid=false;}
+    }
+    public static void main(String[] args)throws Exception{diskLifecycle();namespaces();boundedLru();symlinks();phiraContactsUpgrade();System.out.println("PASS "+checks+" prepared-store checks: real disk encode/restore/corrupt rebuild, geometry/settings/bounds keys, cancellation source retention, namespace isolation, orphan AtomicFile cleanup, file/byte LRU and supported symlink containment.");}
 }
