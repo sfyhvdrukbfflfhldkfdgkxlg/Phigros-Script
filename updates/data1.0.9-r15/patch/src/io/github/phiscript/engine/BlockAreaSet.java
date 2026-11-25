@@ -486,7 +486,8 @@ public final class BlockAreaSet {
                     if(mask==null || mask.key!=cell || mask.aspect!=aspect){
                         mask=new MaskWindow(set,cell,aspect);set.maskWindows.set(maskSlot,mask);
                     }
-                    if(!mask.clear(x0,x1,y0,y1,set.singleInvert))return true;
+                    if(!mask.clear(x0,x1,y0,y1,set.singleInvert)
+                            && !mask.clearRefined(set,x0,x1,y0,y1,lo,hi))return true;
                 }
             }
         }
@@ -497,15 +498,49 @@ public final class BlockAreaSet {
      * short, binary-exact time window. Unknown motion remains possible but never certain. */
     private static final class MaskWindow {
         final long key;
-        final double aspect;
+        final double aspect,from,to;
         final ArrayList<PoseEnvelope> areas=new ArrayList<>();
+        private volatile MaskWindow[] refined;
         MaskWindow(BlockAreaSet set,long key,double aspect){
-            this.key=key;this.aspect=aspect;
-            double from=key/64.0,to=(key+1)/64.0;
+            this(set,key,aspect,key/64.0,(key+1)/64.0);
+        }
+        private MaskWindow(BlockAreaSet set,long key,double aspect,double from,double to){
+            this.key=key;this.aspect=aspect;this.from=from;this.to=to;
             ArrayList<BlockArea> active=new ArrayList<>();
             if(set.normal.length>0)set.normalIndex.collectWindow(1,0,set.normal.length,from,to,active);
             if(set.subtract.length>0)set.subtractIndex.collectWindow(1,0,set.subtract.length,from,to,active);
             for(BlockArea area:active)areas.add(new PoseEnvelope(area,aspect,from,to));
+        }
+        // Restrict ambiguous bounds to short stretches with a single set of active
+        // transform segments. Adjacent representable timestamps guarantee each
+        // activation/keyframe is checked with precisely its new transform.
+        boolean clearRefined(BlockAreaSet set,double x0,double x1,double y0,double y1,double lo,double hi){
+            MaskWindow[] parts=refined;
+            if(parts==null){
+                ArrayList<MaskWindow> built=new ArrayList<>();
+                int change=Arrays.binarySearch(set.changeTimes,from);
+                change=change<0?-change-1:change+1;
+                double start=from;
+                for(int slice=1;slice<=8;slice++){
+                    double end=from+slice/512.0;
+                    while(change<set.changeTimes.length&&set.changeTimes[change]<=end){
+                        double boundary=set.changeTimes[change++];
+                        if(built.size()>=40){refined=new MaskWindow[0];return false;}
+                        if(start<boundary)built.add(new MaskWindow(set,key,aspect,start,Math.nextDown(boundary)));
+                        start=boundary;
+                    }
+                    if(start<end || slice==8)built.add(new MaskWindow(set,key,aspect,start,end));
+                    start=end;
+                }
+                parts=built.toArray(new MaskWindow[built.size()]);
+                refined=parts;
+            }
+            if(parts.length==0)return false;
+            for(MaskWindow part:parts){
+                if(part.to<lo||part.from>hi)continue;
+                if(!part.clear(x0,x1,y0,y1,set.singleInvert))return false;
+            }
+            return true;
         }
         boolean clear(double x0,double x1,double y0,double y1,boolean single){
             boolean possiblePositive=false,certainPositive=false;
