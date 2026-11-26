@@ -1,0 +1,29 @@
+name: Publish Phigros Script 1.0.1
+on:
+  push:
+    branches: [main]
+    paths:
+      - updates/1.0.1/release-data/manifest.json
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-1-0-1
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Publish the signed APK, source archive and checksums
+        run: |
+          gh release download data1.0.9-r15 --repo "$GITHUB_REPOSITORY" --pattern PhigrosScript_data1.0.9-r15.apk --dir "$RUNNER_TEMP/base"
+          python3 .github/scripts/publish_data113.py "$RUNNER_TEMP/dist" "$RUNNER_TEMP/base/PhigrosScript_data1.0.9-r15.apk" 1.0.1

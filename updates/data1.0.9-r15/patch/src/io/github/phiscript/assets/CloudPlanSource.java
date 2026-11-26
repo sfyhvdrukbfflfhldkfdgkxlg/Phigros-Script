@@ -17,13 +17,14 @@ import org.json.JSONObject;
 
 /** The APK pins the identity, range and digest of each server-generated touch archive. */
 final class CloudPlanSource {
-    private static final String INDEX="phigros-cloud-plans-v1.json";
+    static final String INDEX="phigros-cloud-plans-v1.json";
     private static JSONObject manifest;
+    private static String indexDigest;
     private static volatile long driveUnavailableUntil;
 
     private CloudPlanSource(){}
 
-    private static synchronized JSONObject index(Context context)throws Exception{
+    static synchronized JSONObject index(Context context)throws Exception{
         if(manifest!=null)return manifest;
         try(InputStream input=context.getAssets().open(INDEX)){
             ByteArrayOutputStream output=new ByteArrayOutputStream();
@@ -32,13 +33,15 @@ final class CloudPlanSource {
                 if(output.size()+n>4*1024*1024)throw new IOException(words("云端谱库目录过大","Cloud chart index is too large"));
                 output.write(block,0,n);
             }
-            JSONObject result=new JSONObject(new String(output.toByteArray(),StandardCharsets.UTF_8));
+            byte[] bytes=output.toByteArray();
+            JSONObject result=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
             if(result.getInt("version")!=1)throw new IOException(words("云端谱库版本不支持","Unsupported cloud chart index"));
             result.getJSONObject("entries");result.getJSONArray("shards");
-            manifest=result;
+            indexDigest=PreparedChartStore.digest(bytes);manifest=result;
             return result;
         }
     }
+    static synchronized String indexHash(Context context)throws Exception{index(context);return indexDigest;}
 
     static Chart load(Context context,JSONObject entry,AtomicBoolean cancel)throws Exception{
         ChartDownload.check(cancel);
@@ -57,12 +60,20 @@ final class CloudPlanSource {
         String sha=plan.getString("sha256");
         if(size<=0||size>65*1024*1024||!sha.matches("[0-9a-f]{64}"))
             throw new IOException(words("云端谱面校验信息无效","Invalid cloud chart verification data"));
-        JSONObject shard=index.getJSONArray("shards").getJSONObject(plan.getInt("shard"));
-        RuntimeState.INSTANCE.log(words("下载演奏时间轴与触点：","Downloading timeline and touches: ")+entry.getString("title")+" / "+entry.getString("difficulty"));
+        int number=plan.getInt("shard");
+        JSONObject shard=index.getJSONArray("shards").getJSONObject(number);
         String id=shard.optString("drive");
         byte[] bytes=null;
+        try{bytes=OfflineCloudPlans.read(context,indexDigest,index.getJSONArray("shards"),number,offset,length,sha,cancel);}
+        catch(IOException failed){
+            ChartDownload.check(cancel);
+            RuntimeState.INSTANCE.log(words("本地触点分片损坏，请重新导入离线包。正在尝试在线下载。",
+                    "The local touch shard is damaged. Reimport the offline pack. Trying an online copy."));
+        }
+        RuntimeState.INSTANCE.log((bytes==null?words("下载演奏时间轴与触点：","Downloading timeline and touches: "):
+                words("读取离线时间轴与触点：","Reading offline timeline and touches: "))+entry.getString("title")+" / "+entry.getString("difficulty"));
         long retryAfter=driveUnavailableUntil;
-        if(id.matches("[a-zA-Z0-9_-]{10,128}")&&(retryAfter==0||System.nanoTime()-retryAfter>=0)){
+        if(bytes==null&&id.matches("[a-zA-Z0-9_-]{10,128}")&&(retryAfter==0||System.nanoTime()-retryAfter>=0)){
             try{
                 bytes=download("https://drive.usercontent.google.com/download?export=download&confirm=t&id="+id,offset,length,sha,cancel);
             }catch(IOException failure){

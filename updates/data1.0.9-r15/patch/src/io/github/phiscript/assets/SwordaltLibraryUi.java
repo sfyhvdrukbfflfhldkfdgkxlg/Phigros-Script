@@ -6,6 +6,8 @@ import org.json.*;import java.io.*;import java.util.*;
 /** Separate original-chart source with explicit single-chart and offline-package imports. */
 public final class SwordaltLibraryUi {
     private static final int PICK_PACK=42372;
+    private static final int PICK_FEIJIPAN_PACK=42373;
+    private static final int PICK_OFFLINE_TOUCHES=42374;
     private SwordaltLibraryUi(){}
     public static void open(Activity a){
         if(RootPanel.blocked(a))return;
@@ -24,9 +26,71 @@ public final class SwordaltLibraryUi {
                     if(index==0)ExternalCharts.useSwordalt(a);
                     else if(index==1)search(a,catalog);
                     else if(index==2)ExternalCharts.swordaltWork(a,UiDesign.words("更新 Swordalt 目录","Update Swordalt catalog"),cancel->ExternalCharts.fromSwordaltCatalog(a,SwordaltSource.refresh(a,cancel)));
-                    else{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE);a.startActivityForResult(pick,PICK_PACK);}
+                    else pickPack(a,PICK_PACK);
                 }).setNegativeButton(UiDesign.words("关闭","Close"),null).create());
         }catch(Exception e){ExternalCharts.message(a,UiDesign.words("原谱目录不可用","Chart catalog unavailable"),e.getMessage());}
+    }
+
+    public static void openFeijipan(Activity a){
+        if(RootPanel.blocked(a))return;
+        UiDesign.show(UiDesign.dialog(a,UiDesign.words("小飞机网盘 · 离线谱库","Feijipan · Offline chart library"))
+                .setItems(new String[]{UiDesign.words("预计算触点包 · 离线演奏（推荐）","Prepared touch pack · Offline playback (recommended)"),
+                        UiDesign.words("原谱 ZIP · 按曲准备触点","Original chart ZIP · Prepare touches per song")},
+                        (dialog,choice)->openFeijipanPack(a,choice==0))
+                .setNegativeButton(UiDesign.words("关闭","Close"),null).create());
+    }
+
+    private static void openFeijipanPack(Activity a,boolean touches){
+        String shareUrl=touches?OfflineCloudPlans.SHARE_URL:FeijipanOfflinePack.SHARE_URL;
+        String name=touches?OfflineCloudPlans.NAME:FeijipanOfflinePack.NAME;
+        String instructions=touches?UiDesign.words(
+                "打开分享页下载预计算触点 ZIP（约 413 MiB）。网盘可能要求使用官方客户端。回到此处选择 ZIP，校验安装后即可离线识别曲目、读取时间轴和触点。",
+                "Open the share page to download the prepared touch ZIP (about 413 MiB). You may need the official Feijipan app. Return here to select, verify and install it. Song recognition and touch playback then work offline."):UiDesign.words(
+                "打开分享页，通过小飞机网盘下载完整 ZIP（约 348 MiB）。网盘可能要求使用官方客户端。下载完成后回到此处，选择 ZIP 校验并导入。解压后约占 2.6 GiB，触点可按曲准备。",
+                "Open the share page and download the complete ZIP (about 348 MiB) from Feijipan. You may need the official Feijipan app. Return here to select, verify and import the ZIP. The unpacked charts use about 2.6 GiB. Prepare touch coordinates per song.");
+        AlertDialog dialog=UiDesign.dialog(a,touches?UiDesign.words("预计算触点包","Prepared touch pack"):UiDesign.words("原谱 ZIP","Original chart ZIP"))
+                .setMessage(instructions+"\n\n"+name)
+                .setPositiveButton(UiDesign.words("打开分享页","Open share page"),null)
+                .setNeutralButton(UiDesign.words("选择已下载 ZIP","Choose downloaded ZIP"),(d,w)->pickPack(a,touches?PICK_OFFLINE_TOUCHES:PICK_FEIJIPAN_PACK))
+                .setNegativeButton(UiDesign.words("关闭","Close"),null).create();
+        UiDesign.show(dialog);
+        // Keep both steps available when the browser returns to this activity.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+            try{a.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(shareUrl)).addCategory(Intent.CATEGORY_BROWSABLE));}
+            catch(ActivityNotFoundException|SecurityException failure){
+                UiDesign.show(UiDesign.dialog(a,UiDesign.words("无法打开分享页","Could not open the share page"))
+                        .setMessage(shareUrl).setPositiveButton(UiDesign.words("复制链接","Copy link"),(d,w)->{
+                            android.content.ClipboardManager clipboard=(android.content.ClipboardManager)a.getSystemService(Context.CLIPBOARD_SERVICE);
+                            if(clipboard!=null)clipboard.setPrimaryClip(ClipData.newPlainText("Feijipan",shareUrl));
+                        }).setNegativeButton(UiDesign.words("关闭","Close"),null).create());
+            }
+        });
+    }
+
+    static boolean openPublishedFeijipan(Activity a,java.net.URI link){
+        String address=publishedFeijipanShare(link);
+        if(address==null)return false;
+        openFeijipanPack(a,OfflineCloudPlans.SHARE_URL.equals(address));
+        return true;
+    }
+
+    static String publishedFeijipanShare(java.net.URI link){
+        if(!"https".equalsIgnoreCase(link.getScheme())||!"share.feijipan.com".equalsIgnoreCase(link.getHost())
+                ||link.getUserInfo()!=null||(link.getPort()!=-1&&link.getPort()!=443))return null;
+        String path=link.getPath();
+        if(path.endsWith("/"))path=path.substring(0,path.length()-1);
+        if(java.net.URI.create(OfflineCloudPlans.SHARE_URL).getPath().equals(path))return OfflineCloudPlans.SHARE_URL;
+        if(java.net.URI.create(FeijipanOfflinePack.SHARE_URL).getPath().equals(path))return FeijipanOfflinePack.SHARE_URL;
+        return null;
+    }
+
+    private static void pickPack(Activity a,int request){
+        Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE);
+        try{a.startActivityForResult(pick,request);}
+        catch(ActivityNotFoundException|SecurityException failure){
+            ExternalCharts.message(a,UiDesign.words("无法选择 ZIP","Could not select a ZIP"),
+                    UiDesign.words("请启用系统文件选择器后重试。","Enable the system file picker and try again."));
+        }
     }
     private static void search(Activity a,JSONObject catalog){
         EditText input=new EditText(a);input.setSingleLine(true);input.setHint(UiDesign.words("曲名 / 曲师","Song title / Composer"));
@@ -46,7 +110,18 @@ public final class SwordaltLibraryUi {
         }catch(Exception e){ExternalCharts.message(a,UiDesign.words("无法选取谱面","Unable to select chart"),e.getMessage());}
     }
     public static boolean result(Activity a,int request,int result,Intent data){
-        if(request!=PICK_PACK)return false;if(result!=Activity.RESULT_OK||data==null||data.getData()==null)return true;Uri uri=data.getData();
+        if(request!=PICK_PACK&&request!=PICK_FEIJIPAN_PACK&&request!=PICK_OFFLINE_TOUCHES)return false;
+        if(result!=Activity.RESULT_OK||data==null||data.getData()==null)return true;Uri uri=data.getData();
+        if(request==PICK_OFFLINE_TOUCHES){ExternalCharts.installOfflineTouches(a,uri);return true;}
+        if(request==PICK_FEIJIPAN_PACK){
+            ExternalCharts.swordaltWork(a,UiDesign.words("校验并导入离线谱库","Verify and import offline charts"),cancel->{
+                RuntimeState.INSTANCE.log(UiDesign.words("正在校验整个 ZIP 的 SHA-256…","Checking the SHA-256 of the complete ZIP…"));
+                JSONObject catalog=FeijipanOfflinePack.install(a,uri,cancel);
+                RuntimeState.INSTANCE.log(UiDesign.words("离线谱面已保存。请在预计算触点中选择要演奏的曲目。","Offline charts saved. Use Prepare touches for the songs you plan to play."));
+                return ExternalCharts.fromSwordaltCatalog(a,catalog);
+            });
+            return true;
+        }
         ExternalCharts.swordaltWork(a,UiDesign.words("导入 Swordalt 离线谱库","Import Swordalt offline library"),cancel->{InputStream stream=a.getContentResolver().openInputStream(uri);if(stream==null)throw new IOException(UiDesign.words("无法读取离线包","Unable to read the offline ZIP"));ChartLibrary library=ExternalCharts.fromSwordaltCatalog(a,SwordaltSource.importPack(a,stream,cancel));RuntimeState.INSTANCE.log(UiDesign.words("离线谱面已保存。请在预计算触点中选择要演奏的曲目。","Offline charts saved. Use Prepare touches for the songs you plan to play."));return library;});return true;
     }
 }

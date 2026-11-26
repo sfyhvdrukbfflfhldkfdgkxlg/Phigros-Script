@@ -257,7 +257,7 @@ public final class ExternalCharts {
             byte[] bytes=read(context.getAssets().open(SwordaltSource.ASSET),4*1024*1024);
             JSONObject catalog=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
             catalog.put("phiscriptCloudPlans",1);
-            drive=fromSwordaltCatalog(context,catalog,"Google Drive");
+            drive=fromSwordaltCatalog(context,catalog,UiDesign.words("Phigros · 预计算谱库","Phigros · Prepared chart library"));
         }
         return drive;
     }
@@ -273,6 +273,15 @@ public final class ExternalCharts {
     }
     public static void useSwordalt(Activity a){if(RootPanel.blocked(a))return;try{if(swordalt==null)swordalt=fromSwordaltCatalog(a,SwordaltSource.saved(a));commitPhigros(a,swordalt,"swordalt");HomeScreen.refresh(a);message(a,tr("Swordalt 谱库已启用"),catalogPreparationTip());}catch(Exception e){message(a,tr("Swordalt 目录未就绪"),e.getMessage());}}
     static void swordaltWork(Activity a,String title,Job job){work(a,title,job,"swordalt");}
+    static void installOfflineTouches(Activity a,Uri uri){
+        work(a,UiDesign.words("校验并安装离线触点","Verify and install offline touches"),cancel->{
+            try(InputStream stream=a.getContentResolver().openInputStream(uri)){
+                if(stream==null)throw new IOException(UiDesign.words("无法打开所选 ZIP","Could not open the selected ZIP"));
+                OfflineCloudPlans.install(a,stream,cancel);
+            }
+            return driveLibrary(a);
+        },"drive");
+    }
     private static String availability(ChartLibrary lib){Adapter a=adapters.get(lib);return a==null||a.share==null?lib.getLocations().size()+tr(" 张谱面"):tr("小飞机 ")+a.share+tr("：可用 ")+lib.getLocations().size()+" / "+a.expectedCharts+tr(" 张谱面")+(a.expectedCharts>lib.getLocations().size()?tr("。缺少的文件未加入演奏目录，请补齐上传后更新目录。"):"。");}
     private static String catalogPreparationTip(){
         return UiDesign.words(
@@ -303,10 +312,11 @@ public final class ExternalCharts {
         if(RuntimeState.INSTANCE.getRunning().get()||!busy.compareAndSet(false,true)){message(a,tr("任务进行中"),tr("请先停止当前识别或演奏"));return;}
         AtomicBoolean cancel=new AtomicBoolean();Thread[] worker=new Thread[1];ProgressDialog dialog=new ProgressDialog(a);dialog.setTitle(title);dialog.setMessage(tr("正在处理，可从运行记录查看进度…"));dialog.setIndeterminate(true);dialog.setCancelable(false);dialog.setButton(DialogInterface.BUTTON_NEGATIVE,tr("取消"),(d,w)->{cancel.set(true);if(worker[0]!=null)worker[0].interrupt();PhiraImportControl.cancel();});UiDesign.show(dialog);HomeScreen.refresh(a);
         worker[0]=new Thread(()->{ChartLibrary done=null;String error=null;try{done=job.run(cancel);}catch(OutOfMemoryError e){error=tr("设备可用内存不足，请关闭其他应用后分批导入。");}catch(Exception e){error=phigrosMessage(e.getMessage()==null?e.toString():e.getMessage());}final ChartLibrary result=done;final String failure=error;
-            a.runOnUiThread(()->{busy.set(false);if(!a.isDestroyed())dialog.dismiss();if(result!=null){if("cloud".equals(mode))cloud=result;else if("swordalt".equals(mode))swordalt=result;else local=result;commitPhigros(a,result,mode);HomeScreen.refresh(a);message(a,title,"cloud".equals(mode)?tr("已保存并启用。")+availability(result):tr("已保存并启用 ")+result.getLocations().size()+tr(" 张谱面"));}else message(a,title,failure);HomeScreen.refresh(a);});},"phi-external-import");worker[0].start();
+            a.runOnUiThread(()->{busy.set(false);if(!a.isDestroyed())dialog.dismiss();if(result!=null){if("cloud".equals(mode))cloud=result;else if("swordalt".equals(mode))swordalt=result;else if("drive".equals(mode))drive=result;else local=result;commitPhigros(a,result,mode);HomeScreen.refresh(a);message(a,title,"cloud".equals(mode)?tr("已保存并启用。")+availability(result):tr("已保存并启用 ")+result.getLocations().size()+tr(" 张谱面"));}else message(a,title,failure);HomeScreen.refresh(a);});},"phi-external-import");worker[0].start();
     }
     public static void network(Activity a){if(RootPanel.blocked(a))return;EditText field=new EditText(a);field.setSingleLine(true);field.setHint("https://…");
-        UiDesign.show(UiDesign.dialog(a,UiDesign.words("从链接导入谱面","Import from a link")).setMessage(UiDesign.words("输入 JSON、PEZ 或 ZIP 谱面的 HTTPS 下载链接。","Enter the HTTPS download link for a JSON, PEZ or ZIP chart.")).setView(UiDesign.inputBox(a,null,field)).setPositiveButton(tr("连接"),(d,w)->{String link=field.getText().toString().trim();try{java.net.URI uri=new java.net.URI(link);if(!"https".equalsIgnoreCase(uri.getScheme()))throw new IllegalArgumentException(tr("请使用 HTTPS 链接"));
+        UiDesign.show(UiDesign.dialog(a,UiDesign.words("从链接导入谱面","Import from a link")).setMessage(UiDesign.words("输入小飞机谱库分享链接，或 JSON、PEZ、ZIP 谱面的 HTTPS 下载链接。","Enter a Feijipan library share link or an HTTPS download link for a JSON, PEZ or ZIP chart.")).setView(UiDesign.inputBox(a,null,field)).setPositiveButton(tr("连接"),(d,w)->{String link=field.getText().toString().trim();try{java.net.URI uri=new java.net.URI(link);if(!"https".equalsIgnoreCase(uri.getScheme()))throw new IllegalArgumentException(tr("请使用 HTTPS 链接"));
+            if(SwordaltLibraryUi.openPublishedFeijipan(a,uri))return;
             if("swordalt.github.io".equalsIgnoreCase(uri.getHost())&&uri.getPath().startsWith("/phigros-chart-downloader")){SwordaltLibraryUi.open(a);}
             else if("share.feijipan.com".equalsIgnoreCase(uri.getHost())){String path=uri.getPath();if(!path.matches("/s/[A-Za-z0-9]{4,32}/?"))throw new IllegalArgumentException(tr("分享链接格式不正确"));String id=path.split("/")[2];work(a,tr("连接联网谱库"),cancel->{JSONObject j=FeijipanSource.catalog(id,cancel);ChartLibrary lib=fromCatalog(a,j);ChartDownload.check(cancel);atomic(new File(base(a),"catalog.json"),j.toString().getBytes(StandardCharsets.UTF_8));return lib;},"cloud");}
             else work(a,tr("下载并导入谱面"),cancel->{byte[] bytes=ChartDownload.get(link,64*1024*1024,cancel,null);String name=uri.getPath()==null?"chart.pez":new File(uri.getPath()).getName();File file=File.createTempFile("download-","-"+name.replaceAll("[^A-Za-z0-9._-]","_"),a.getCacheDir());try{try(FileOutputStream out=new FileOutputStream(file)){out.write(namedPackage(bytes,name));}ChartDownload.check(cancel);PhiraLibrary imported;try(PhiraImportControl.Session ignored=PhiraImportControl.begin()){imported=PhiraLibrary.Companion.importFiles(new Storage(a),Collections.singletonList(Uri.fromFile(file)),s->{RuntimeState.INSTANCE.log(phigrosMessage(s));return Unit.INSTANCE;});}return fromLocal(a,imported);}finally{file.delete();}},"local");

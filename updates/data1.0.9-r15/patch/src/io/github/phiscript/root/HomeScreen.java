@@ -339,11 +339,13 @@ public final class HomeScreen {
         if(RootPanel.blocked(activity))return;
         UiDesign.show(UiDesign.dialog(activity,w("下载 Phigros 谱面","Get Phigros charts")).setItems(new String[]{
             w("Google 云盘 · 识别后自动下载","Google Drive · Download on song recognition"),
+            w("小飞机网盘 · 下载离线谱库","Feijipan · Download offline library"),
             w("Swordalt · 原谱与离线包","Swordalt · Original charts and offline ZIPs"),
             w("从链接导入谱面","Import from a link")
         },(d,i)->{
             if(i==0)io.github.phiscript.assets.ExternalCharts.useDrive(activity);
-            else if(i==1)io.github.phiscript.assets.SwordaltLibraryUi.open(activity);
+            else if(i==1)io.github.phiscript.assets.SwordaltLibraryUi.openFeijipan(activity);
+            else if(i==2)io.github.phiscript.assets.SwordaltLibraryUi.open(activity);
             else io.github.phiscript.assets.ExternalCharts.network(activity);
         }).setNegativeButton(io.github.phiscript.i18n.UiText.text("取消"),null).create());
     }

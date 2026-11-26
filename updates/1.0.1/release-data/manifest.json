@@ -1,0 +1,70 @@
+{
+  "version": "1.0.1",
+  "version_code": 11009,
+  "base_sha256": "d7d38b37f3ba821261c5c9917366c5600d7432c5836a1b8fb4e2b27bba58c5b8",
+  "patch_tree": "ff275204435c494e06bcfa82a5859dab954d1434",
+  "assets": {
+    "PhigrosScript_1.0.1.apk": {
+      "size": 48738779,
+      "sha256": "f853fbf47b0f8c8da42b1d12f0ac08c21dd794ca9c2f215294ed372fd4ca7c00"
+    },
+    "PhigrosScript_1.0.1_Source.zip": {
+      "size": 1549763,
+      "sha256": "4e0bf4e49b46059006eadc2a77ef4959921f62f2b4e55e034603a90b008f7bab"
+    }
+  },
+  "parts": [
+    {
+      "size": 196608,
+      "sha256": "82544aac00cc7b967a7db9946ac3deefa32710f49736a39b171a42d19543623d"
+    },
+    {
+      "size": 196608,
+      "sha256": "b90a30f79c0a5639c2a2e6b6d403dd685331d65dfc30f2e9382be71815f1341b"
+    },
+    {
+      "size": 196608,
+      "sha256": "594e03c9597ef59c2e90d3c2d59a73fe89e7fb1d22655048f9d77ba2a843cdbd"
+    },
+    {
+      "size": 196608,
+      "sha256": "e8e5c93ec1d798201230402f9a0fbca41d161653a56b6f640f2bd2f62fac0055"
+    },
+    {
+      "size": 196608,
+      "sha256": "f1e49cc0e2d5cd17736672314b41df553781f5d415a2b5776d0598c3d3b9e8ba"
+    },
+    {
+      "size": 196608,
+      "sha256": "5362fd2d8e0089dc3744dbfb004728fe6978570fc22c4be1305b9741f1ca7e2c"
+    },
+    {
+      "size": 196608,
+      "sha256": "181dd4f5c929dbb3a8b5d3e3b5b194627271223ab9f5a767b3c6841f70b338d9"
+    },
+    {
+      "size": 196608,
+      "sha256": "aeb08debb5e400a23ed10e5e84f9c237950354651bf57e6e5fed95908872b105"
+    },
+    {
+      "size": 196608,
+      "sha256": "92994c49d064c7a0474a1b730bc89aa8b751562718962093a8ca39808201bbb7"
+    },
+    {
+      "size": 196608,
+      "sha256": "79968c7697c78dc89f17164b5bd5f966f44c87b4f0bd25054f56b2e154317658"
+    },
+    {
+      "size": 196608,
+      "sha256": "1d081b0f3a7bf9d11f96e2fe070a31fa7be5561123e487afe90de64699876cee"
+    },
+    {
+      "size": 196608,
+      "sha256": "746301b43cc0e524aa7020d3a755219ef48b65b8aad21ba9aa9c12813b57938f"
+    },
+    {
+      "size": 138473,
+      "sha256": "4edebf8062c7d1196b2d7992b56193837009da0ceb14c57df29baa8a3d91dd97"
+    }
+  ]
+}

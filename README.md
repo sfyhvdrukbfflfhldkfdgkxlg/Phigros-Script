@@ -6,11 +6,13 @@
 
 ## 中文
 
-**1.0.0（Android 版本号 11008）** 使用浅色液态玻璃界面。「演奏」和「谱库」延伸到系统手势条，Phigros 可按曲下载预处理触点。使用 `data1.1.x` 的用户请从本次发行下载 APK 覆盖安装。从旧版升级后，可以在「谱库 → 预计算触点」单独准备要演奏的 Phira 谱面。[下载 1.0.0](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/1.0.0) · [升级与使用说明](updates/1.0.0/README.md)
+**1.0.1（Android 版本号 11009）** 支持一次导入 Phigros 4.1.0 全部 1,065 张谱面的预处理触点。打开「谱库 → Phigros → 下载 → 小飞机网盘」获取约 413 MiB 的触点 ZIP，导入后即可离线读取。也可选择原谱 ZIP，或继续按曲从云端下载。下载时可能需要小飞机官方客户端。已安装 1.0.0 的用户可直接覆盖升级。[下载 1.0.1](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/1.0.1) · [升级与导入说明](updates/1.0.1/README.md)
 
 [GitHub 发行版](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases) · [data1.1.0 使用与构建](updates/data1.1.0/README.md) · [data1.1.0 验证记录](updates/data1.1.0/TESTING.md)
 
-Phigros 默认使用云端预处理谱库。确认曲目和难度后，首次只下载该谱的时间轴、触点与噪域数据，下次可离线演奏。Phira 与本地导入的谱面在准备阶段生成触点。遇到噪域时保留可安全通过的拖动、长按和红键手势，只调整受阻的路径。两个小飞机谱库入口已隐藏。
+旧 `data` 版在「检查更新」中看到 `data1.1.4-to-1.0.0` 时，可先覆盖安装官方 1.0.0，再次检查更新至 1.0.1。也可直接下载安装 1.0.1。
+
+Phigros 默认使用云端预处理谱库。确认曲目和难度后，首次只下载该谱的时间轴、触点与噪域数据，下次可离线演奏。Phira 与本地导入的谱面在准备阶段生成触点。遇到噪域时保留可安全通过的拖动、长按和红键手势，只调整受阻的路径。
 
 Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导入删除与 Phira 管理并列显示。课题模式三首歌逐首校准；录屏提供 720p / 1080p、30 / 60fps 档位。界面采用统一卡片与图标，自定义动效统一线性，演奏时停止动效。
 
@@ -18,18 +20,20 @@ Phira 在线谱库支持曲名识别或编号导入；Phigros 下载、本地导
 
 支持 Root 与无障碍输入。本版包含在 iQOO 15 上通过实测的 Phira 触点改动。使用该触点版本，无障碍模式在 Phira Pro《Desultory Signals》AT Lv.18 曾取得 1,000,000 分、2026 全连。
 
-1.0.0 的构建入口位于 [build_100.py](updates/data1.0.9-r15/patch/build_100.py)。根目录保留旧版 Alpha Gradle 工程。
+使用补丁构建脚本生成当前 APK。根目录保留旧版 Alpha Gradle 工程。[1.0.1 构建脚本](updates/data1.0.9-r15/patch/build_101.py) · [1.0.0 发行记录](updates/1.0.0/README.md)
 
 ## English
 
 Phigros Script is an Android chart player for Phigros, Phira and Phira Pro. It recognizes the song and difficulty, then plays the chart using Android accessibility gestures or root touch input. [Download the latest APK](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/latest)
+
+If **Check for updates** in an older `data` release offers `data1.1.4-to-1.0.0`, install the official 1.0.0 APK it provides. Check again to upgrade to 1.0.1, or install the 1.0.1 APK directly.
 
 - **Phigros.** Confirm the song and difficulty to download its timeline, touch coordinates and noise areas. Once cached, the chart can be played offline. In Challenge Mode, the app recalibrates at the start of each of the three songs.
 - **Phira and Phira Pro.** Import a local chart, or find one in the online library by song recognition or chart ID. The app prepares its touch coordinates during import.
 - **Timing and recording.** The default retry delay is 1,700 ms for Phigros and 715 ms for Phira. Phira's chart offset is excluded by default. Recording supports 720p or 1080p at 30 or 60 fps.
 - **Game audio.** Open **Performance → Video & audio**, enable **Record game audio**, tap **Save**, and allow the audio permission. On Android 10 and later, both recording modes can include the active game's internal audio when the game permits capture. If audio is unavailable, the app saves the video. Open **Recent recordings** to view it.
 
-**1.0.0 (Android version code 11008)** introduces a light glass interface that extends beneath the system gesture handle. To upgrade from a `data1.1.x` release, download the APK and install it over your existing copy. Open **Library → Prepare touch points** to prepare an individual Phira chart. The touch engine included in this version scored 1,000,000 with a 2,026-note combo on *Desultory Signals* AT Lv.18 in Phira Pro using accessibility input on an iQOO 15. [Download 1.0.0](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/1.0.0) · [Build script](updates/data1.0.9-r15/patch/build_100.py) · [Upgrade and release notes](updates/1.0.0/README.md)
+**1.0.1 (Android version code 11009)** adds an offline touch-plan pack for all 1,065 charts in Phigros 4.1.0. Open **Library → Phigros → Get charts → Feijipan** and import the 413 MiB ZIP. The source-chart ZIP and per-chart downloads from Google Drive and GitHub are also available. Feijipan may require its official client for the download. Install this APK over 1.0.0 to update. The touch engine introduced in 1.0.0 achieved 1,000,000 points and a 2,026-note combo on *Desultory Signals* AT Lv.18 in Phira Pro using accessibility input on an iQOO 15. [Download 1.0.1](https://github.com/sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script/releases/tag/1.0.1) · [Build script](updates/data1.0.9-r15/patch/build_101.py) · [Upgrade and import instructions](updates/1.0.1/README.md)
 
 <details>
 <summary>原 Alpha 版本说明</summary>

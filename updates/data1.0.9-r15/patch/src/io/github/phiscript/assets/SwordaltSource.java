@@ -162,6 +162,9 @@ public final class SwordaltSource {
         check(cancel);saveCatalog(c,result);return result;
     }
     public static JSONObject importPack(Context c,InputStream source,AtomicBoolean cancel)throws Exception{
+        return importPack(c,source,cancel,null);
+    }
+    static JSONObject importPack(Context c,InputStream source,AtomicBoolean cancel,String expectedCatalogHash)throws Exception{
         JSONObject catalog=null;Map<String,JSONObject> entries=new HashMap<>();Set<String> seenNames=new HashSet<>(),imported=new HashSet<>();long inflated=0;int count=0;
         try(ZipInputStream zip=new ZipInputStream(source)){
             ZipEntry item;while((item=zip.getNextEntry())!=null){check(cancel);String name=item.getName();
@@ -171,7 +174,16 @@ public final class SwordaltSource {
                 boolean metadata=name.equals("swordalt-catalog.json"),chart=name.startsWith("charts/")&&name.endsWith(".json");int limit=metadata?MAX_CATALOG:catalog!=null?limit(catalog):MAX_JSON;
                 ByteArrayOutputStream out=metadata||chart?new ByteArrayOutputStream():null;long entryBytes=0;byte[] buffer=new byte[16384];int n;
                 while((n=zip.read(buffer))!=-1){check(cancel);entryBytes+=n;inflated+=n;if(entryBytes>limit||inflated>MAX_LIBRARY)throw new IOException(tr("离线包解压数据超过限制"));if(out!=null)out.write(buffer,0,n);}
-                if(metadata){if(catalog!=null||!imported.isEmpty())throw new IOException(tr("离线包目录顺序无效"));catalog=validate(new JSONObject(new String(out.toByteArray(),StandardCharsets.UTF_8)));JSONArray list=catalog.getJSONArray("entries");for(int i=0;i<list.length();i++){JSONObject e=list.getJSONObject(i);entries.put(e.getString("path"),e);}}
+                if(metadata){
+                    if(catalog!=null||!imported.isEmpty())throw new IOException(tr("离线包目录顺序无效"));
+                    byte[] manifest=out.toByteArray();
+                    if(expectedCatalogHash!=null&&!expectedCatalogHash.equals(PreparedChartStore.digest(manifest)))
+                        throw new IOException(io.github.phiscript.root.UiDesign.words("所选文件的谱库目录与发行包不符，请重新选择完整 ZIP。",
+                                "The chart catalog does not match the release. Select the complete ZIP again."));
+                    catalog=validate(new JSONObject(new String(manifest,StandardCharsets.UTF_8)));
+                    JSONArray list=catalog.getJSONArray("entries");
+                    for(int i=0;i<list.length();i++){JSONObject e=list.getJSONObject(i);entries.put(e.getString("path"),e);}
+                }
                 else if(chart){if(catalog==null)throw new IOException(tr("离线包缺少前置目录"));String path=name.substring(7);JSONObject e=entries.get(path);if(e==null||!imported.add(path))throw new IOException(tr("离线包中有未登记或重复谱面"));byte[] bytes=out.toByteArray();if(!verified(bytes,e))throw new IOException(tr("离线谱面校验失败：")+path);store(c,catalog,e,bytes);if(imported.size()%20==0)RuntimeState.INSTANCE.log(tr("导入 Swordalt 原谱：")+imported.size()+" / "+entries.size());}
                 zip.closeEntry();
             }

@@ -18,18 +18,24 @@ def check_download_menu(jar):
     for action in (b"useNewShare", b"useCloud"):
         assert action not in home and action in adapter, f"Expected a hidden, retained loader: {action}"
 
-def main(version, code):
+def main(version, code, patch_checks=None):
     parser = argparse.ArgumentParser(description=f"Verify the signed {version} APK and its playback paths.")
     parser.add_argument("apk", type=Path)
     parser.add_argument("--replay", type=Path, nargs="+", default=[],
                         help="Optional original Desultory Signals JSON charts to check")
     parser.add_argument("--cloud-smoke", action="store_true",
                         help="Download a published noise chart and reopen it with networking disabled")
+    if patch_checks is not None:
+        parser.add_argument("--previous", type=Path, help="Also verify the official preceding APK for an in-place upgrade")
+        parser.add_argument("--offline-plans", type=Path, help="Import and verify the published offline touch-plan ZIP")
+        parser.add_argument("--offline-sources", type=Path, help="Import and verify the published offline source-chart ZIP")
     args = parser.parse_args()
     apk = args.apk.resolve()
     base = ROOT/"upload/baseline-r15.apk"
     check(base, apk, version, code)
     run("python", "patch/tests/icon_resource_check.py", base, apk)
+    if patch_checks is not None:
+        patch_checks(apk, args.previous.resolve() if args.previous else None)
     def checks(work, api, host, models, tests):
         with ZipFile(work/"final.jar") as classes:
             has_game_audio = "io/github/phiscript/record/GameAudioMuxer.class" in classes.namelist()
@@ -54,6 +60,14 @@ def main(version, code):
             run("java", "-cp", host, "io.github.phiscript.update.UpdateCatalogRegression", "--revisions")
         if code >= 11008:
             run("java", "-cp", host, "io.github.phiscript.update.UpdateCatalogRegression", "--numbered")
+        if patch_checks is not None and args.offline_plans:
+            compile_to(tests, host, "patch/tests/cloud/OfflineCloudPackRegression.java")
+            run("java", "-Dfile.encoding=UTF-8", "-Xmx750m", "-cp", host,
+                "io.github.phiscript.assets.OfflineCloudPackRegression", apk, args.offline_plans.resolve())
+        if patch_checks is not None and args.offline_sources:
+            compile_to(tests, host, "patch/tests/src/FeijipanOfflinePackRegression.java")
+            run("java", "-Dfile.encoding=UTF-8", "-Xmx750m", "-cp", host,
+                "io.github.phiscript.assets.FeijipanOfflinePackRegression", args.offline_sources.resolve(), work / "feijipan-sources")
         replay = ("java", "-Dfile.encoding=UTF-8", "-Xmx1800m", "-cp", host,
                   "io.github.phiscript.input.DesultoryPlaybackRegression")
         paths = [source.resolve() for source in args.replay]
