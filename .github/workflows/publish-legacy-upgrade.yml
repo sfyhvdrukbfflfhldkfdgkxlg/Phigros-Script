@@ -1,0 +1,33 @@
+name: Publish legacy updater link to 1.0.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-legacy-upgrade.yml
+      - .github/scripts/publish_legacy_bridge.py
+      - .github/scripts/test_legacy_bridge.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-legacy-upgrade-to-1-0-0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'sfyhvdrukbfflfhldkfdgkxlg/Phigros-Script' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Test idempotence and draft recovery
+        run: python3 .github/scripts/test_legacy_bridge.py
+      - name: Verify the original signed APK and publish the compatibility entry
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download 1.0.0 --repo "$GITHUB_REPOSITORY" --pattern PhigrosScript_1.0.0.apk --dir "$RUNNER_TEMP/formal"
+          python3 .github/scripts/publish_legacy_bridge.py "$RUNNER_TEMP/formal/PhigrosScript_1.0.0.apk"
